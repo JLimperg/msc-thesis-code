@@ -1,0 +1,340 @@
+{-# OPTIONS --postfix-projections #-}
+
+open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
+open import Relation.Binary using (module Preorder) renaming (Preorder to Preorder')
+open import Function using (id; _∘_; _∘′_)
+
+open import Data.Empty using (⊥) -- renaming (preorder to Zero)
+open import Data.Unit using (⊤) renaming (preorder to One)
+open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Data.Product using (_×_; ∃; Σ; proj₁; proj₂; _,_; <_,_>)
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Fin using (Fin; zero; suc)
+open import Data.Vec using (Vec; []; _∷_; lookup)
+
+open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
+
+lone = lsuc lzero
+Preorder = Preorder' lzero lzero lzero
+
+Zero : Preorder
+Zero .Preorder.Carrier = ⊥
+Zero .Preorder._≈_ ()
+Zero .Preorder._∼_ ()
+Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.refl {}
+Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.sym {}
+Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.trans {}
+Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.reflexive {}
+Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.trans {}
+
+_+̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A ⊎ B → C ⊎ D
+f +̇ g = [ inj₁ ∘ f , inj₂ ∘ g ]
+
+_×̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A × B → C × D
+f ×̇ g = < f ∘ proj₁ , g ∘ proj₂ >
+
+-- Trees branching over small preorders
+
+data Tree : Set₁ where
+  sup : (I : Preorder) (f : Preorder.Carrier I → Tree) → Tree
+
+data _≤_ (α : Tree) : (β : Tree) → Set where
+  refl : α ≤ α
+  lt   : ∀ {I f} i (le : α ≤ f i) → α ≤ sup I f
+
+data _<_ (α : Tree) : (β : Tree) → Set where
+  lt   : ∀ {I f} i (le : α ≤ f i) → α < sup I f
+
+≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
+≤-from-< (lt i α≤fi) = lt i α≤fi
+
+-- Wellfoundedness of _<_
+
+acc-dest : ∀{I f} (h : Acc _<_ (sup I f)) i → Acc _<_ (f i)
+acc-dest (acc h) i = acc λ α α<fi → h α (lt i (≤-from-< α<fi))
+
+acc-down : ∀{α β} (α≤β : α ≤ β) → Acc _<_ β → Acc _<_ α
+acc-down refl = id
+acc-down (lt i α≤fi) h = acc-down α≤fi (acc-dest h i)
+
+acc-sup : ∀{I f} (h : ∀ i → Acc _<_ (f i)) → Acc _<_ (sup I f)
+acc-sup h = acc λ{ α (lt i α≤fi) → acc-down α≤fi (h i)}
+
+wf : WellFounded _<_
+wf (sup I f) = acc-sup λ i → wf (f i)
+
+-- mutual
+--   data _<_ (α : Tree) : (β : Tree) → Set where
+--     <sup : ∀ {I} {f : Preorder.Carrier I → Tree} {i} (le : α ≤ f i) → α < sup I f
+
+--   data _≤_ (α : Tree) : (β : Tree) → Set where
+--     refl : α ≤ α
+--     lt   : ∀{β} (lt : α < β) → α ≤ β
+
+mutual
+  predL : ∀{β I f i} (α≤β : sup I f ≤ β) → f i ≤ β
+  predL = ≤-from-< ∘ predL<
+
+  predL< : ∀{β I f i} (α≤β : sup I f ≤ β) → f i < β
+  predL< refl       = lt _ refl
+  predL< (lt i α≤β) = lt i (predL α≤β)
+
+trans-≤ : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) → α ≤ γ
+trans-≤ α≤β refl    = α≤β
+trans-≤ α≤β (lt i β≤γ) = lt i (trans-≤ α≤β β≤γ)
+
+Resp-PO : (I : Preorder) (f : Preorder.Carrier I → Tree) → Set
+Resp-PO I f = ∀{i j} (i≤j : Preorder._∼_ I i j) → f i ≤ f j
+
+data IsON : Tree → Set₁ where
+  sup : ∀{I f} (mon : Resp-PO I f) (node : ∀ i → IsON (f i)) → IsON (sup I f)
+
+record ON : Set₂ where
+  constructor on; field
+    tree : Tree
+    isOn : IsON tree
+open ON
+
+on-≤ : ∀{a b}  (a≤b : a ≤ b) (β : IsON b) → IsON a
+on-≤ refl     β              = β
+on-≤ (lt i a≤b) (sup mon f) = on-≤ a≤b (f i)
+
+-- Zero
+
+tzero : Tree
+tzero = sup Zero λ()
+
+iozero : IsON tzero
+iozero = sup (λ{}) λ()
+
+ozero : ON
+ozero = on tzero iozero
+
+-- Successor
+
+tsuc : Tree → Tree
+tsuc t = sup One (λ _ → t)
+
+iosuc : ∀{t : Tree} (α : IsON t) → IsON (tsuc t)
+iosuc α = sup (λ _ → refl) (λ _ → α)
+
+osuc : ON → ON
+osuc (on t α) = on (tsuc t) (iosuc α)
+
+-- ω
+
+embℕ : (n : ℕ) → Tree
+embℕ zero = tzero
+embℕ (suc n) = tsuc (embℕ n)
+
+tomega : Tree
+tomega = {!sup {!ℕ!} embℕ !}
+
+-- Tree recursion
+
+fix : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ α → C α
+fix {ℓ} {C} t = wfRec ℓ C λ α → t {α}
+  where open All wf
+
+-- {-# TERMINATING #-}
+-- fix t (sup I f) = t λ{ β (lt i β≤fi) → fix t β}
+
+-- Not provable with current _≤_
+-- cong-tsuc : ∀{a b : Tree} (a≤b : a ≤ b) → tsuc a ≤ tsuc b
+-- cong-tsuc a≤b = {!!}
+
+-- Category of sets and functions
+
+HMap : ∀ ℓ (F G : Set ℓ → Set ℓ) → Set (lsuc ℓ)
+HMap ℓ F G = ∀{A B} (g : A → B) → F A → G B
+
+Map : ∀ ℓ (F : Set ℓ → Set ℓ) → Set (lsuc ℓ)
+Map ℓ F = HMap ℓ F F
+
+-- Inductive types
+
+Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
+Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)
+
+-- Monotonicity
+
+mapMu : ∀{ℓ F G} (m : HMap ℓ F G) α → Mu α F → Mu α G
+mapMu m (sup I f) (i , x) = i , m (mapMu m (f i)) x
+
+monMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Mu α F → Mu β F
+monMu m refl = id
+monMu m {sup I f} (lt i α≤β) (j , x) = i , m (monMu m (predL α≤β)) x
+
+-- Constructor
+
+inMu₁ : ∀{ℓ α F} (x : F (Mu α F)) → Mu {ℓ} (tsuc α) F
+inMu₁ x = _ , x
+
+inMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α<β : α < β) (x : F (Mu α F)) → Mu β F
+inMu m (lt i α≤β) x = i , m (monMu m α≤β) x
+
+-- Destructor
+
+outMu : ∀{ℓ F α} (x : Mu {ℓ} (tsuc α) F) → F (Mu α F)
+outMu (_ , x) = x
+
+-- Wellfounded recursion
+
+-- {-# TERMINATING #-}
+-- fixMu : ∀{ℓ} {F : Set ℓ → Set ℓ} {C : Tree → Set ℓ}
+--   → (t : ∀ {α} (r : ∀ β (β<α : β < α) (y : Mu β F) → C β) (x : Mu α F) → C α)
+--   → ∀ α (x : Mu α F) → C α
+-- fixMu t (sup I f) = t λ{ β (lt i β≤fi) → fixMu t β}
+
+-- Fixed point
+
+Mu∞ : ∀{ℓ} (F : Set ℓ → Set ℓ) → Set (ℓ ⊔ lone)
+Mu∞ F = ∃ λ α → Mu α F
+
+inMu∞ : ∀ (F : ∀{ℓ} → Set ℓ → Set ℓ) {ℓ} (x : F (Mu∞ {ℓ} F)) → Mu∞ {ℓ} F
+inMu∞ F = {!!}
+
+-- Coinductive types
+
+Nu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
+Nu (sup I f) F = ∀ i → F (Nu (f i) F)
+
+mapNu : ∀{ℓ F G} (m : HMap ℓ F G) α → Nu α F → Nu α G
+mapNu m (sup I f) x i = m (mapNu m (f i)) (x i)
+
+-- Strictly positive types
+
+TyVar = Fin
+
+data _≥_ : (n m : ℕ) → Set where
+  id≥  : ∀{n} → n ≥ n
+  weak : ∀{n m} (n≤m : n ≥ m) → suc n ≥ m
+  lift : ∀{n m} (n≤m : n ≥ m) → suc n ≥ suc m
+
+wkTyVar : ∀ {n m} → TyVar m → n ≥ m → TyVar n
+wkTyVar X       id≥ = X
+wkTyVar X       (weak n≥m) = Fin.suc (wkTyVar X n≥m)
+wkTyVar zero    (lift n≥m) = zero
+wkTyVar (suc X) (lift n≥m) = suc (wkTyVar X n≥m)
+
+{-
+module Refinement where
+
+  data Ty (n : ℕ) : Set where
+    Var : (X : TyVar n) → Ty n
+    0̂ 1̂ : Ty n
+    _+̂_ _×̂_ : (a b : Ty n) → Ty n
+    _→̂_ : (a : Ty 0) (b : Ty n) → Ty n
+    μ̂ ν̂ : (a : Ty (suc n)) → Ty n
+
+  wkTy : ∀{n m} (a : Ty m) (n≥m : n ≥ m) → Ty n
+  wkTy = {!!}
+
+  -- Refined types with embedded ordinals
+
+  data RTy {n : ℕ} : (a : Ty n) → Set₂ where
+    Var : ∀{x} → RTy (Var x)
+    0̂ : RTy 0̂
+    1̂ : RTy 1̂
+    _+̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a +̂ b)
+    _×̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a ×̂ b)
+    _→̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a →̂ b)
+    μ̂ : ∀{a} (A : RTy a) → RTy (μ̂ a)
+    ν̂ : ∀{a} (A : RTy a) → RTy (ν̂ a)
+    Inf  Sup : ∀{a} (F : ON → RTy a) → RTy a
+    Inf< Sup< : ∀{a} (α : ON) (F : ∀ β (β<α : β < tree α) → RTy a) → RTy a
+    -- Mu  : (α : ON) (F : Ty (suc n)) (∀ β (lt : β < α) → Ty n) → Ty n
+
+  -- Subtyping refined types
+
+  data _<:_ {n} : {a : Ty n} (A B : RTy a) → Set₂ where
+    μ̂ : ∀{a}{A B : RTy (μ̂ a)} (A<:B : A <: B) → μ̂ A <: μ̂ B
+    ν̂ : ∀{a}{A B : RTy (μ̂ a)} (A<:B : A <: B) → ν̂ A <: ν̂ B
+    InfL : ∀{a} {F : ON → RTy a} {B : RTy a} {α} (Fα<:B : F α <: B) → Inf F <: B
+    SupR : ∀{a} {F : ON → RTy a} {A : RTy a} {α} (A<:Fα : A <: F α) → A <: Sup F
+    InfR : ∀{a} {F : ON → RTy a} {A : RTy a} (F<:A : ∀ α → A <: F α) → A <: Inf F
+    SupL : ∀{a} {F : ON → RTy a} {B : RTy a} (F<:A : ∀ α → F α <: B) → Sup F <: B
+
+  ⊥̂ : ∀{n} {a : Ty n} → RTy a
+  ⊥̂ = Inf< ozero λ{ β (lt {i = ()} z) }
+-}
+
+data Ty (n : ℕ) : Set₂ where
+  Var : (X : TyVar n) → Ty n
+  0̂ 1̂ : Ty n
+  _+̂_ _×̂_ : (a b : Ty n) → Ty n
+  _→̂_ : (a : Ty 0) (b : Ty n) → Ty n
+  μ̂ ν̂ : (α : ON) (f : Ty (suc n)) → Ty n
+
+wkTy : ∀{n m} (a : Ty m) (n≥m : n ≥ m) → Ty n
+wkTy (Var X) n≥m = Var (wkTyVar X n≥m)
+wkTy 0̂       n≥m = 0̂
+wkTy 1̂       n≥m = 1̂
+wkTy (a +̂ b) n≥m = wkTy a n≥m +̂ wkTy b n≥m
+wkTy (a ×̂ b) n≥m = wkTy a n≥m ×̂ wkTy b n≥m
+wkTy (a →̂ b) n≥m = a →̂ wkTy b n≥m
+wkTy (μ̂ α a) n≥m = μ̂ α (wkTy a (lift n≥m))
+wkTy (ν̂ α a) n≥m = ν̂ α (wkTy a (lift n≥m))
+
+-- Type interpretation
+
+⦅_⦆ : ∀{n} (a : Ty n) {ℓ} (ρ : Vec (Set ℓ) n) → Set ℓ
+⦅ Var X ⦆ ρ = lookup X ρ
+⦅ 0̂ ⦆ ρ = Lift ⊥
+⦅ 1̂ ⦆ ρ = Lift ⊤
+⦅ a +̂ b ⦆ ρ = ⦅ a ⦆ ρ ⊎ ⦅ b ⦆ ρ
+⦅ a ×̂ b ⦆ ρ = ⦅ a ⦆ ρ × ⦅ b ⦆ ρ
+⦅ a →̂ b ⦆ {ℓ} ρ = ⦅ a ⦆ {ℓ} [] → ⦅ b ⦆ ρ
+⦅ μ̂ α f ⦆ ρ = Mu (tree α) λ X → ⦅ f ⦆ (X ∷ ρ)
+⦅ ν̂ α f ⦆ ρ = Nu (tree α) λ X → ⦅ f ⦆ (X ∷ ρ)
+
+-- Functoriality
+
+data Arr {ℓ} : ∀ {n} (ρ₁ ρ₂ : Vec (Set ℓ) n) → Set ℓ where
+  [] : Arr [] []
+  _∷_ : ∀{n} {A B : Set ℓ} {ρ₁ ρ₂ : Vec _ n} (f : A → B) (fs : Arr {ℓ} ρ₁ ρ₂) → Arr (A ∷ ρ₁) (B ∷ ρ₂)
+
+lookupArr : ∀ {n} {ρ ρ′ : Vec Set n} (X : Fin n) → Arr ρ ρ′ → lookup X ρ → lookup X ρ′
+lookupArr zero    (f ∷ fs) = f
+lookupArr (suc X) (f ∷ fs) = lookupArr X fs
+
+map : ∀{n} (a : Ty n) {ρ ρ′} (fs : Arr ρ ρ′) → ⦅ a ⦆ ρ → ⦅ a ⦆ ρ′
+map (Var X) fs = lookupArr X fs
+map 0̂       fs ()
+map 1̂       fs = _
+map (a +̂ b) fs = map a fs +̇ map b fs
+map (a ×̂ b) fs = map a fs ×̇ map b fs
+map (a →̂ b) fs g = map b fs ∘′ g
+map (μ̂ α F) fs = mapMu (λ g → map F (g ∷ fs)) (tree α)
+map (ν̂ α F) fs = mapNu (λ g → map F (g ∷ fs)) (tree α)
+
+-- Size expressions
+
+-- IsChain : (ω : Tree) (
+
+mutual
+
+  data SizeCxt : Set where
+    ε : SizeCxt
+    _∙_ : (Ξ : SizeCxt) (s : SizeBound Ξ) → SizeCxt
+
+  data SizeExpr : (Ξ : SizeCxt) → Set where
+
+  data SizeBound : (Ξ : SizeCxt) → Set where
+    Size : ∀{Ξ} → SizeBound Ξ
+    <_   : ∀{Ξ} (s : SizeExpr Ξ) → SizeBound Ξ
+    wk   : ∀{Ξ} ({a} b : SizeBound Ξ) → SizeBound (Ξ ∙ a)
+
+  data SizeVar : (Ξ : SizeCxt) (s : SizeBound Ξ) → Set where
+    vz : ∀{Ξ} {s : SizeBound Ξ} → SizeVar (Ξ ∙ s) (wk s)
+
+
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
