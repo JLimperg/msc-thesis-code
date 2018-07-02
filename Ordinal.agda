@@ -2,6 +2,7 @@
 
 open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary using (module Preorder) renaming (Preorder to Preorder')
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 open import Function using (id; _∘_; _∘′_)
 
 open import Data.Empty using (⊥) -- renaming (preorder to Zero)
@@ -15,18 +16,19 @@ open import Data.Vec using (Vec; []; _∷_; lookup)
 
 open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
 
+
 lone = lsuc lzero
 Preorder = Preorder' lzero lzero lzero
 
-Zero : Preorder
-Zero .Preorder.Carrier = ⊥
-Zero .Preorder._≈_ ()
-Zero .Preorder._∼_ ()
-Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.refl {}
-Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.sym {}
-Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.trans {}
-Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.reflexive {}
-Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.trans {}
+-- Zero : Preorder
+-- Zero .Preorder.Carrier = ⊥
+-- Zero .Preorder._≈_ ()
+-- Zero .Preorder._∼_ ()
+-- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.refl {}
+-- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.sym {}
+-- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.trans {}
+-- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.reflexive {}
+-- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.trans {}
 
 _+̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A ⊎ B → C ⊎ D
 f +̇ g = [ inj₁ ∘ f , inj₂ ∘ g ]
@@ -37,7 +39,7 @@ f ×̇ g = < f ∘ proj₁ , g ∘ proj₂ >
 -- Trees branching over small preorders
 
 data Tree : Set₁ where
-  sup : (I : Preorder) (f : Preorder.Carrier I → Tree) → Tree
+  sup : (I : Set) (f : I → Tree) → Tree
 
 data _≤_ (α : Tree) : (β : Tree) → Set where
   refl : α ≤ α
@@ -64,6 +66,25 @@ acc-sup h = acc λ{ α (lt i α≤fi) → acc-down α≤fi (h i)}
 wf : WellFounded _<_
 wf (sup I f) = acc-sup λ i → wf (f i)
 
+-- Tree recursion
+
+fix : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ α → C α
+fix {ℓ} {C} t = wfRec ℓ C λ α → t {α}
+  where open All wf
+
+-- {-# TERMINATING #-}
+-- fix t (sup I f) = t λ{ β (lt i β≤fi) → fix t β}
+
+-- Irreflexivity from well-foundedness
+
+irrefl' :  ∀{α} (α<α : α < α) (r : Acc _<_ α) → ⊥
+irrefl' α<α (acc h) = irrefl' α<α (h _ α<α)
+
+irrefl :  ∀{α} (α<α : α < α) → ⊥
+irrefl {α} α<α = irrefl' α<α (wf α)
+
 -- mutual
 --   data _<_ (α : Tree) : (β : Tree) → Set where
 --     <sup : ∀ {I} {f : Preorder.Carrier I → Tree} {i} (le : α ≤ f i) → α < sup I f
@@ -84,43 +105,62 @@ trans-≤ : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) → α ≤
 trans-≤ α≤β refl    = α≤β
 trans-≤ α≤β (lt i β≤γ) = lt i (trans-≤ α≤β β≤γ)
 
-Resp-PO : (I : Preorder) (f : Preorder.Carrier I → Tree) → Set
-Resp-PO I f = ∀{i j} (i≤j : Preorder._∼_ I i j) → f i ≤ f j
+trans-≤-< : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β < γ) → α < γ
+trans-≤-< α≤β (lt i β≤γ) = lt i (trans-≤ α≤β β≤γ)
 
-data IsON : Tree → Set₁ where
-  sup : ∀{I f} (mon : Resp-PO I f) (node : ∀ i → IsON (f i)) → IsON (sup I f)
+trans-≤-refl : ∀{α β} (α≤β : α ≤ β) → trans-≤ refl α≤β ≡ α≤β
+trans-≤-refl refl = refl
+trans-≤-refl (lt i α≤β) = cong (lt i) (trans-≤-refl α≤β)
 
-record ON : Set₂ where
-  constructor on; field
-    tree : Tree
-    isOn : IsON tree
-open ON
+-- WRONG:
+-- trans-≤-lt : ∀{I} {f : I → Tree} {i} {β γ} (fi≤β : f i ≤ β) (β≤γ : β ≤ γ) →
+--   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
+-- trans-≤-lt = ?
 
-on-≤ : ∀{a b}  (a≤b : a ≤ b) (β : IsON b) → IsON a
-on-≤ refl     β              = β
-on-≤ (lt i a≤b) (sup mon f) = on-≤ a≤b (f i)
+
+-- Resp-PO : (I : Preorder) (f : Preorder.Carrier I → Tree) → Set
+-- Resp-PO I f = ∀{i j} (i≤j : Preorder._∼_ I i j) → f i ≤ f j
+
+-- data IsON : Tree → Set₁ where
+--   sup : ∀{I f} (mon : Resp-PO I f) (node : ∀ i → IsON (f i)) → IsON (sup I f)
+
+-- record ON : Set₂ where
+--   constructor on; field
+--     tree : Tree
+--     isOn : IsON tree
+-- open ON
+
+-- on-≤ : ∀{a b}  (a≤b : a ≤ b) (β : IsON b) → IsON a
+-- on-≤ refl     β              = β
+-- on-≤ (lt i a≤b) (sup mon f) = on-≤ a≤b (f i)
 
 -- Zero
 
 tzero : Tree
-tzero = sup Zero λ()
+tzero = sup ⊥ λ()
 
-iozero : IsON tzero
-iozero = sup (λ{}) λ()
+-- tzero : Tree
+-- tzero = sup Zero λ()
 
-ozero : ON
-ozero = on tzero iozero
+-- iozero : IsON tzero
+-- iozero = sup (λ{}) λ()
+
+-- ozero : ON
+-- ozero = on tzero iozero
 
 -- Successor
 
 tsuc : Tree → Tree
-tsuc t = sup One (λ _ → t)
+tsuc t = sup ⊤ (λ _ → t)
 
-iosuc : ∀{t : Tree} (α : IsON t) → IsON (tsuc t)
-iosuc α = sup (λ _ → refl) (λ _ → α)
+-- tsuc : Tree → Tree
+-- tsuc t = sup One (λ _ → t)
 
-osuc : ON → ON
-osuc (on t α) = on (tsuc t) (iosuc α)
+-- iosuc : ∀{t : Tree} (α : IsON t) → IsON (tsuc t)
+-- iosuc α = sup (λ _ → refl) (λ _ → α)
+
+-- osuc : ON → ON
+-- osuc (on t α) = on (tsuc t) (iosuc α)
 
 -- ω
 
@@ -129,18 +169,7 @@ embℕ zero = tzero
 embℕ (suc n) = tsuc (embℕ n)
 
 tomega : Tree
-tomega = {!sup {!ℕ!} embℕ !}
-
--- Tree recursion
-
-fix : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ α → C α
-fix {ℓ} {C} t = wfRec ℓ C λ α → t {α}
-  where open All wf
-
--- {-# TERMINATING #-}
--- fix t (sup I f) = t λ{ β (lt i β≤fi) → fix t β}
+tomega = sup ℕ embℕ
 
 -- Not provable with current _≤_
 -- cong-tsuc : ∀{a b : Tree} (a≤b : a ≤ b) → tsuc a ≤ tsuc b
@@ -157,7 +186,7 @@ Map ℓ F = HMap ℓ F F
 -- Inductive types
 
 Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
-Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)
+Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)  -- This should be an irrelevant size (union type)
 
 -- Monotonicity
 
@@ -166,7 +195,29 @@ mapMu m (sup I f) (i , x) = i , m (mapMu m (f i)) x
 
 monMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Mu α F → Mu β F
 monMu m refl = id
-monMu m {sup I f} (lt i α≤β) (j , x) = i , m (monMu m (predL α≤β)) x
+monMu m {sup I f} (lt i α≤β) (_ , x) = i , m (monMu m (predL α≤β)) x
+
+monMu-trans : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
+               (β≤γ : β ≤ γ) x →
+             monMu m β≤γ (monMu m α≤β x) ≡ monMu m (trans-≤ α≤β β≤γ) x
+monMu-trans m α≤β refl x = refl
+monMu-trans m refl β≤γ x rewrite trans-≤-refl β≤γ = refl
+monMu-trans m {sup I f} {sup J g} (lt i₁ α≤β) (lt i β≤γ) (j , x) = {!!}
+  -- monMu-trans m α≤β β≤γ x
+{-
+monMu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Mu α F) → monMu m α≤β x ≡ monMu m α≤β' x
+monMu-irr m refl refl x = refl
+monMu-irr m refl (lt i α≤β') x = {!!}
+monMu-irr m (lt i α≤β) refl x = {!!}
+monMu-irr m {sup I f} (lt i α≤fi) (lt j α≤fj) x = {!!}
+  -- Cannot prove this since size component of x is different
+  -- (i ≠ j)
+
+monMu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
+               (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) x →
+             monMu m β≤γ (monMu m α≤β x) ≡ monMu m α≤γ x
+monMu-coh m refl β≤γ α≤γ x = {!refl!}
+monMu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
 
 -- Constructor
 
@@ -205,6 +256,53 @@ Nu (sup I f) F = ∀ i → F (Nu (f i) F)
 mapNu : ∀{ℓ F G} (m : HMap ℓ F G) α → Nu α F → Nu α G
 mapNu m (sup I f) x i = m (mapNu m (f i)) (x i)
 
+monNu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Nu β F → Nu α F
+monNu m refl = id
+monNu m {sup I f} (lt i α≤β) x _ = m (monNu m (predL α≤β)) (x i)
+
+monNu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Nu β F) → monNu m α≤β x ≡ monNu m α≤β' x
+monNu-irr m refl refl x = refl
+monNu-irr m refl (lt i α≤β') x = {!!}
+monNu-irr m (lt i α≤β) refl x = {!!}
+monNu-irr m {sup I f} (lt i α≤fi) (lt j α≤fj) x = {!x j!}
+
+monNu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
+               (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) x →
+             monNu m α≤β (monNu m β≤γ x) ≡ monNu m α≤γ x
+monNu-coh m refl β≤γ α≤γ x = {!refl!}
+monNu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
+
+-- A chain it a functor from Tree to Set
+
+record IsChain {ℓ} (A : Tree → Set ℓ) : Set (ℓ ⊔ lone) where
+  constructor isChain; field
+
+    mapCh : ∀{α β} (α≤β : α ≤ β) → (A α → A β)
+
+    cohCh : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) →
+
+      mapCh β≤γ ∘ mapCh α≤β ≡ mapCh α≤γ
+open IsChain
+
+muChain : ∀{ℓ F} (m : Map ℓ F) → IsChain (λ α → Mu α F)
+muChain m .mapCh = monMu m
+muChain m .cohCh = {!monMu-comp!}
+
+record IsOpChain {ℓ} (A : Tree → Set ℓ) : Set (ℓ ⊔ lone) where
+  constructor isChain; field
+
+    mapOpCh : ∀{α β} (α≤β : α ≤ β) → (A β → A α)
+
+    cohOpCh : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) →
+
+      mapOpCh α≤β ∘ mapOpCh β≤γ ≡ mapOpCh α≤γ
+open IsOpChain
+
+nuChain : ∀{ℓ F} (m : Map ℓ F) → IsOpChain (λ α → Nu α F)
+nuChain m .mapOpCh = monNu m
+nuChain m .cohOpCh = {!monMu-comp!}
+
+{-
 -- Strictly positive types
 
 TyVar = Fin
@@ -267,7 +365,7 @@ data Ty (n : ℕ) : Set₂ where
   0̂ 1̂ : Ty n
   _+̂_ _×̂_ : (a b : Ty n) → Ty n
   _→̂_ : (a : Ty 0) (b : Ty n) → Ty n
-  μ̂ ν̂ : (α : ON) (f : Ty (suc n)) → Ty n
+  μ̂ ν̂ : (α : Tree) (f : Ty (suc n)) → Ty n
 
 wkTy : ∀{n m} (a : Ty m) (n≥m : n ≥ m) → Ty n
 wkTy (Var X) n≥m = Var (wkTyVar X n≥m)
@@ -288,8 +386,8 @@ wkTy (ν̂ α a) n≥m = ν̂ α (wkTy a (lift n≥m))
 ⦅ a +̂ b ⦆ ρ = ⦅ a ⦆ ρ ⊎ ⦅ b ⦆ ρ
 ⦅ a ×̂ b ⦆ ρ = ⦅ a ⦆ ρ × ⦅ b ⦆ ρ
 ⦅ a →̂ b ⦆ {ℓ} ρ = ⦅ a ⦆ {ℓ} [] → ⦅ b ⦆ ρ
-⦅ μ̂ α f ⦆ ρ = Mu (tree α) λ X → ⦅ f ⦆ (X ∷ ρ)
-⦅ ν̂ α f ⦆ ρ = Nu (tree α) λ X → ⦅ f ⦆ (X ∷ ρ)
+⦅ μ̂ α f ⦆ ρ = Mu α λ X → ⦅ f ⦆ (X ∷ ρ)
+⦅ ν̂ α f ⦆ ρ = Nu α λ X → ⦅ f ⦆ (X ∷ ρ)
 
 -- Functoriality
 
@@ -308,12 +406,22 @@ map 1̂       fs = _
 map (a +̂ b) fs = map a fs +̇ map b fs
 map (a ×̂ b) fs = map a fs ×̇ map b fs
 map (a →̂ b) fs g = map b fs ∘′ g
-map (μ̂ α F) fs = mapMu (λ g → map F (g ∷ fs)) (tree α)
-map (ν̂ α F) fs = mapNu (λ g → map F (g ∷ fs)) (tree α)
+map (μ̂ α F) fs = mapMu (λ g → map F (g ∷ fs)) α
+map (ν̂ α F) fs = mapNu (λ g → map F (g ∷ fs)) α
+
+
+record IsBoundedChain (ω : Tree) (A : ∀{α}.(α<ω : α < ω) → Set) : Set₁ where
+  constructor isBoundedChain; field
+
+    mapCh : ∀{β}.(β<ω : β < ω){α}.(α≤β : α ≤ β) →
+      let .α<ω : _; α<ω = trans-≤-< α≤β β<ω in
+      (A α<ω → A β<ω)
+
+    cohCh : ∀{γ}.(γ<ω : γ < ω){α β} .(α≤β : α ≤ β) .(β≤γ : β ≤ γ) .(α≤γ : α ≤ γ) →
+      let .β<ω : _; β<ω = trans-≤-< β≤γ γ<ω in
+      mapCh γ<ω β≤γ ∘ mapCh β<ω α≤β ≡ mapCh γ<ω α≤γ
 
 -- Size expressions
-
--- IsChain : (ω : Tree) (
 
 mutual
 
