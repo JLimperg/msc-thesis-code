@@ -33,8 +33,8 @@ Preorder = Preorder' lzero lzero lzero
 _+̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A ⊎ B → C ⊎ D
 f +̇ g = [ inj₁ ∘ f , inj₂ ∘ g ]
 
-_×̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A × B → C × D
-f ×̇ g = < f ∘ proj₁ , g ∘ proj₂ >
+_×̇′_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A × B → C × D
+f ×̇′ g = < f ∘ proj₁ , g ∘ proj₂ >
 
 -- Trees branching over small preorders
 
@@ -404,7 +404,7 @@ map (Var X) fs = lookupArr X fs
 map 0̂       fs ()
 map 1̂       fs = _
 map (a +̂ b) fs = map a fs +̇ map b fs
-map (a ×̂ b) fs = map a fs ×̇ map b fs
+map (a ×̂ b) fs = map a fs ×̇′ map b fs
 map (a →̂ b) fs g = map b fs ∘′ g
 map (μ̂ α F) fs = mapMu (λ g → map F (g ∷ fs)) α
 map (ν̂ α F) fs = mapNu (λ g → map F (g ∷ fs)) α
