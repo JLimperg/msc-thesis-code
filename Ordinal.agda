@@ -204,7 +204,7 @@ monMu-trans m α≤β refl x = refl
 monMu-trans m refl β≤γ x rewrite trans-≤-refl β≤γ = refl
 monMu-trans m {sup I f} {sup J g} (lt i₁ α≤β) (lt i β≤γ) (j , x) = {!!}
   -- monMu-trans m α≤β β≤γ x
-{-
+
 monMu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Mu α F) → monMu m α≤β x ≡ monMu m α≤β' x
 monMu-irr m refl refl x = refl
 monMu-irr m refl (lt i α≤β') x = {!!}
