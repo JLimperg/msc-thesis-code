@@ -2,7 +2,7 @@
 
 open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary using (module Preorder) renaming (Preorder to Preorder')
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
 open import Function using (id; _∘_; _∘′_)
 
 open import Data.Empty using (⊥) -- renaming (preorder to Zero)
@@ -48,6 +48,30 @@ data _≤_ (α : Tree) : (β : Tree) → Set where
 data _<_ (α : Tree) : (β : Tree) → Set where
   lt   : ∀ {I f} i (le : α ≤ f i) → α < sup I f
 
+-- Tree≤ β ≅ ∃ (\ α → α ≤ β)   but in Set rather than Set₁
+data Tree≤_ : (β : Tree) → Set where
+  refl : ∀ {α} → Tree≤ α -- α gets forced
+  lt   : ∀ {I f} i (le : Tree≤ f i) → Tree≤ sup I f
+
+-- Tree< β ≅ ∃ (\ α → α < β)   but in Set rather than Set₁
+data Tree<_ : (β : Tree) → Set where
+  lt   : ∀ {I f} i (le : Tree≤ f i) → Tree< sup I f
+
+theα≤ : ∀ {β} → Tree≤ β → Tree
+theα≤ {β} refl = β
+theα≤ (lt i le) = theα≤ le
+
+theα< : ∀ {β} → Tree< β → Tree
+theα< (lt i le) = theα≤ le
+
+theproof≤ : ∀ {β} (le : Tree≤ β) → theα≤ le ≤ β
+theproof≤ refl = refl
+theproof≤ (lt i le) = lt i (theproof≤ le)
+
+theproof< : ∀ {β} (lt : Tree< β) → theα< lt < β
+theproof< (lt i le) = lt i (theproof≤ le)
+
+
 ≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
 ≤-from-< (lt i α≤fi) = lt i α≤fi
 
@@ -68,11 +92,34 @@ wf (sup I f) = acc-sup λ i → wf (f i)
 
 -- Tree recursion
 
-fix : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ α → C α
-fix {ℓ} {C} t = wfRec ℓ C λ α → t {α}
-  where open All wf
+mutual
+  fix : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ α → C α
+  fix {ℓ} {C} t α = t (fix< t)
+
+  fix< : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → β < α → C β
+  fix< {ℓ} {C} t β (lt i le) = fix≤ t β le
+
+  fix≤ : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → β ≤ α → C β
+  fix≤ {ℓ} {C} t β refl = fix t β
+  fix≤ {ℓ} {C} t β (lt i le) = fix≤ t β le
+
+  fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
+  fix≤-unfold {ℓ} {C} t β refl = refl
+  fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+
+  fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → (le : β < α) → fix< t β le ≡ fix t β
+  fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+
 
 -- {-# TERMINATING #-}
 -- fix t (sup I f) = t λ{ β (lt i β≤fi) → fix t β}
@@ -185,8 +232,46 @@ Map ℓ F = HMap ℓ F F
 
 -- Inductive types
 
+-- Sized Mu defined by structural recursion
 Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
 Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)  -- This should be an irrelevant size (union type)
+
+
+-- Sized Mu defined by well-founded recursion
+◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
+◆ A α = Σ (Tree< α) \ α< → A (theα< α<)
+
+Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
+Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ α< → F (rec (theα< α<) (theproof< α<)))
+
+-- if we erased types these would just be the identity function
+Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
+  → ∀ α → (◆ (\ i → F (Mu^ F i)) α) → Mu^ F α
+Mu^-fold {F = F} map
+  = fix \ { {β} rec (γ , x) → γ , map (subst (λ A → A) (sym (fix<-unfold _ _ (theproof< γ)))) x }
+
+Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
+  → ∀ α → Mu^ F α → (◆ (\ i → F (Mu^ F i)) α)
+Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
+           → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
+
+
+-- for each strictly positive functor there should be a closure ordinal
+-- postulate
+--   closure : ∀{ℓ} (F : Set ℓ → Set ℓ) → {- StrPos F -} -> Tree
+
+-- theMu : ∀{ℓ} (F : Set ℓ → Set ℓ) → Set ℓ
+-- theMu F = Mu^ F (closure F)
+
+-- conjecture: we should implement expand to get con
+-- module _ {ℓ} (F : Set ℓ → Set ℓ) (map : ∀ {A B} → (A → B) → F A → F B) where
+--   expand : F (theMu F) → {- StrPos F -} → ◆ (\ i → F (Mu^ F i)) (closure F)
+--   expand x = {!!}
+
+--   con : F (theMu F) → theMu F
+--   con x = Mu^-fold map (closure F) (expand x)
+
+
 
 -- Monotonicity
 
