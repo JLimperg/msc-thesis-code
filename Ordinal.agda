@@ -37,6 +37,7 @@ _×̇′_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A × B → C × D
 f ×̇′ g = < f ∘ proj₁ , g ∘ proj₂ >
 
 -- Trees branching over small preorders
+-- Tree = 𝕎 Set id
 
 data Tree : Set₁ where
   sup : (I : Set) (f : I → Tree) → Tree
@@ -236,7 +237,6 @@ Map ℓ F = HMap ℓ F F
 Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
 Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)  -- This should be an irrelevant size (union type)
 
-
 -- Sized Mu defined by well-founded recursion
 ◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
 ◆ A α = Σ (Tree< α) \ α< → A (theα< α<)
@@ -281,6 +281,11 @@ mapMu m (sup I f) (i , x) = i , m (mapMu m (f i)) x
 monMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Mu α F → Mu β F
 monMu m refl = id
 monMu m {sup I f} (lt i α≤β) (_ , x) = i , m (monMu m (predL α≤β)) x
+
+-- Equality
+
+EqMu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) (m : Map ℓ F) (t t' : Mu α F) → Set ℓ
+EqMu (sup I f) F m (i , t) (j , u) = m (monMu m (lt {f = f} i refl)) t ≡ m (monMu m (lt j refl)) u
 
 monMu-trans : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
                (β≤γ : β ≤ γ) x →
