@@ -16,6 +16,12 @@ open import Data.Vec using (Vec; []; _∷_; lookup)
 
 open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
 
+-- Symmetric-Transitive closure of a relation.
+-- (There might be better choices of constructors).
+data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → Set (ℓ ⊔ ℓ') where
+  `base : ∀ {x y} → R x y → SymTrans R x y
+  `sym : ∀ {x y} → SymTrans R y x → SymTrans R x y
+  `trans : ∀ {x y z} → SymTrans R x y → SymTrans R y z → SymTrans R x z
 
 lone = lsuc lzero
 Preorder = Preorder' lzero lzero lzero
@@ -255,6 +261,17 @@ Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) →
 Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
            → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
 
+monMu^ : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
+              → ∀ {α β} → α ≤ β → Mu^ F α → Mu^ F β
+monMu^ = {!!}
+
+EqMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
+                       (m : Map ℓ F) (α : Tree) (t t' : Mu^ F α) → Set ℓ
+EqMu^ F Frel m = fix \ {α} rec → SymTrans \ t t' →
+  let
+     (β , t) = Mu^-unfold m α t
+     (β' , t') = Mu^-unfold m α t'
+   in Σ (theα< β ≤ theα< β') \ β≤β' → Frel (rec (theα< β') (theproof< β')) (m (monMu^ m β≤β') t) t'
 
 -- for each strictly positive functor there should be a closure ordinal
 -- postulate
@@ -281,13 +298,6 @@ mapMu m (sup I f) (i , x) = i , m (mapMu m (f i)) x
 monMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Mu α F → Mu β F
 monMu m refl = id
 monMu m {sup I f} (lt i α≤β) (_ , x) = i , m (monMu m (predL α≤β)) x
-
--- Symmetric-Transitive closure of a relation.
--- (There might be better choices of constructors).
-data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → Set (ℓ ⊔ ℓ') where
-  `base : ∀ {x y} → R x y → SymTrans R x y
-  `sym : ∀ {x y} → SymTrans R y x → SymTrans R x y
-  `trans : ∀ {x y z} → SymTrans R x y → SymTrans R y z → SymTrans R x z
 
 -- Equality
 {-
