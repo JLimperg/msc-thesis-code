@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module Ordinal.Container.Finite where
 
 open import Data.Empty using (⊥)

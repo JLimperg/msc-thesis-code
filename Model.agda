@@ -19,7 +19,7 @@ open import Ordinal using
   (sup ; _≤_ ; _<_ ; lt ; refl) renaming
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
 open import Ordinal.Container.Finite using
-  (Mu ; monMu ; monMuℕ ; EqMu)
+  (Mu ; monMu ; monMuℕ ; _≈_)
 open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 open import Util.Container.Finite using (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; liftEq ; μ ; sup)
 open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
@@ -112,7 +112,7 @@ bwd∘fwd (sup (sh , pos))
 
 
 fwd∘bwd : ∀ {ℂ n} (x : Mu (ℕ→Ordinal n) ℂ)
-  → EqMu (fwd (bwd x)) (monMuℕ (bwd-height x) x)
+  → fwd (bwd x) ≈ monMuℕ (bwd-height x) x
 fwd∘bwd {S ▷ P} {zero} ((), _)
 fwd∘bwd {ℂ@(S ▷ P)} {suc n} (_ , s , pos)
   = `base
