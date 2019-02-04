@@ -1,20 +1,26 @@
 {-# OPTIONS --postfix-projections #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary using (module Preorder) renaming (Preorder to Preorder')
+open import Relation.Binary using (Rel ; module Preorder)
+  renaming (Preorder to Preorder')
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
 open import Function using (id; _∘_; _∘′_)
 
 open import Data.Empty using (⊥) -- renaming (preorder to Zero)
 open import Data.Unit using (⊤) renaming (preorder to One)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
-open import Data.Product using (_×_; ∃; Σ; proj₁; proj₂; _,_; <_,_>)
+open import Data.Product using
+  (_×_; ∃; Σ; Σ-syntax ; ∃-syntax ; proj₁; proj₂ ; _,_; <_,_>)
 
 open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Vec using (Vec; []; _∷_; lookup)
 
 open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
+
+import Data.Nat as ℕ
+
 
 -- Symmetric-Transitive closure of a relation.
 -- (There might be better choices of constructors).
@@ -81,6 +87,7 @@ theproof< (lt i le) = lt i (theproof≤ le)
 
 ≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
 ≤-from-< (lt i α≤fi) = lt i α≤fi
+
 
 -- Wellfoundedness of _<_
 
@@ -241,7 +248,7 @@ Map ℓ F = HMap ℓ F F
 
 -- Sized Mu defined by structural recursion
 Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
-Mu (sup I f) F = ∃ λ i → F (Mu (f i) F)  -- This should be an irrelevant size (union type)
+Mu (sup I f) F = ∃[ i ] F (Mu (f i) F)  -- This should be an irrelevant size (union type)
 
 -- Sized Mu defined by well-founded recursion
 ◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
@@ -315,15 +322,16 @@ monMu m {sup I f} (lt i α≤β) (_ , x) = i , m (monMu m (predL α≤β)) x
 
 -}
 
-EqMu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
-                       (m : Map ℓ F) (t t' : Mu α F) → Set ℓ
-EqMu (sup I f) F Frel m = SymTrans \ d d' →
-                                     let (i  , t ) = d
-                                         (i' , t') = d'
-                                         β  = f i
-                                         β' = f i'
-                                     in  Σ (β ≤ β') \ β≤β' →
-                                            Frel (EqMu β' F Frel m) (m (monMu m β≤β') t) t'
+EqMu : ∀ {ℓ} (α : Tree) (F : Set ℓ → Set ℓ)
+  → (Frel : ∀ {A} → (A → A → Set ℓ) → F A → F A → Set ℓ)
+  → (map : Map ℓ F)
+  → (t t′ : Mu α F)
+  → Set ℓ
+EqMu (sup I f) F Frel map = SymTrans λ where
+  (i , t) (i′ , t′) →
+    let β  = f i
+        β′ = f i′ in
+    Σ[ β≤β′ ∈ β ≤ β′ ] Frel (EqMu β′ F Frel map) (map (monMu map β≤β′) t) t′
 
 monMu-trans : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
                (β≤γ : β ≤ γ) x →
