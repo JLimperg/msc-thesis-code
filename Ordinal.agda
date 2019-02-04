@@ -235,6 +235,16 @@ tomega = sup ℕ embℕ
 -- Not provable with current _≤_
 -- cong-tsuc : ∀{a b : Tree} (a≤b : a ≤ b) → tsuc a ≤ tsuc b
 -- cong-tsuc a≤b = {!!}
+--
+-- And thus probably also not provable:
+--
+-- ≤-tzero-embℕ : ∀ {n} → tzero ≤ embℕ n
+-- ≤-tzero-embℕ {zero} = refl
+-- ≤-tzero-embℕ {suc n} = lt _ ≤-tzero-embℕ
+--
+-- embℕ-≤ : ∀ {n m} → n ℕ.≤ m → embℕ n ≤ embℕ m
+-- embℕ-≤ ℕ.z≤n = ≤-tzero-embℕ
+-- embℕ-≤ (ℕ.s≤s n≤m) = {!!} -- needs cong-tsuc
 
 -- Category of sets and functions
 
@@ -340,13 +350,40 @@ EqMu (sup I f) F Frel map = SymTrans λ where
         β′ = f i′ in
     Σ[ β≤β′ ∈ β ≤ β′ ] Frel (EqMu β′ F Frel map) (map (monMu map β≤β′) t) t′
 
-monMu-trans : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
-               (β≤γ : β ≤ γ) x →
-             monMu m β≤γ (monMu m α≤β x) ≡ monMu m (trans-≤ α≤β β≤γ) x
-monMu-trans m α≤β refl x = refl
-monMu-trans m refl β≤γ x rewrite trans-≤-refl β≤γ = refl
-monMu-trans m {sup I f} {sup J g} (lt i₁ α≤β) (lt i β≤γ) (j , x) = {!!}
-  -- monMu-trans m α≤β β≤γ x
+
+module _ {ℓ} {F : Set ℓ → Set ℓ}
+  (Frel : ∀ {A} → Rel A ℓ → Rel (F A) ℓ)
+  (map : Map ℓ F)
+  where
+
+  private
+    EqMu′ : ∀ {α} (t t′ : Mu α F) → Set ℓ
+    EqMu′ = EqMu _ F Frel map
+
+
+  EqMu-refl : ∀ {α} {t : Mu α F} → EqMu′ t t
+  EqMu-refl {sup I f} {t} = `base (refl , {!!})
+
+
+  monMu-mono : ∀ {α β} (α≤β : α ≤ β) {t t′}
+    → EqMu′ t t′
+    → EqMu′ (monMu map α≤β t) (monMu map α≤β t′)
+  monMu-mono {sup I f} {sup .I .f} refl {sh , pos} {sh′ , pos′} eq = eq
+  monMu-mono {sup I f} {sup I′ f′} (lt i α≤β) {sh , pos} {sh′ , pos′} (`base (fsh≤fsh′ , eq))
+    = `base (refl , {!!})
+  monMu-mono {sup I f} {sup I′ f′} α≤β (`sym eq)
+    = `sym (monMu-mono α≤β eq)
+  monMu-mono {sup I f} {sup I′ f′} α≤β (`trans eq₁ eq₂)
+    = `trans (monMu-mono α≤β eq₁) (monMu-mono α≤β eq₂)
+
+
+  monMu-trans : ∀ {α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) x
+    → EqMu′
+        (monMu map β≤γ (monMu map α≤β x))
+        (monMu map (trans-≤ α≤β β≤γ) x)
+  monMu-trans {α} {.(sup I f)} {sup I f} α≤β refl x = {!`base!}
+  monMu-trans {α} {β} {sup I f} α≤β (lt i β≤γ) x = {!!}
+
 
 monMu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Mu α F) → monMu m α≤β x ≡ monMu m α≤β' x
 monMu-irr m refl refl x = refl
@@ -356,10 +393,12 @@ monMu-irr m {sup I f} (lt i α≤fi) (lt j α≤fj) x = {!!}
   -- Cannot prove this since size component of x is different
   -- (i ≠ j)
 
-monMu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
-               (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) x →
-             monMu m β≤γ (monMu m α≤β x) ≡ monMu m α≤γ x
-monMu-coh m refl β≤γ α≤γ x = {!refl!}
+monMu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ}
+  → ∀ (α≤β : α ≤ β) (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) x
+  → monMu m β≤γ (monMu m α≤β x) ≡ monMu m α≤γ x
+monMu-coh m refl refl refl x = refl
+monMu-coh m refl refl (lt i α≤γ) (i′ , f) = {!!}
+monMu-coh m refl (lt i β≤γ) α≤γ x = {!!}
 monMu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
 
 -- Constructor
