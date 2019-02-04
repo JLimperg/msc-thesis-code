@@ -306,6 +306,13 @@ monMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Mu α F →
 monMu m refl = id
 monMu m {sup I f} (lt i α≤β) (_ , x) = i , m (monMu m (predL α≤β)) x
 
+monMuℕ : ∀ {ℓ} {F : Set ℓ → Set ℓ} (map : Map ℓ F) {n m}
+  → n ℕ.≤ m
+  → Mu (embℕ n) F
+  → Mu (embℕ m) F
+monMuℕ map ℕ.z≤n (() , _)
+monMuℕ map (ℕ.s≤s n≤m) (_ , s) = _ , map (monMuℕ map n≤m) s
+
 -- Equality
 {-
    Given a functor "D : S → Set" we can build the colimit as the quotient
