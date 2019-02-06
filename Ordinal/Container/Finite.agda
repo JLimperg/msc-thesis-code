@@ -11,7 +11,7 @@ open import Function using (_∘_ ; id)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; inspect ; [_])
 
 open import Ordinal using
-  (sup ; _≤_ ; refl ; lt ; predL) renaming
+  (sup ; _≤_ ; refl ; lt ; predL; irrefl; trans-≤-<) renaming
   (Tree to Ordinal ; embℕ to ℕ→Ordinal)
 open import Util.Container.Finite
 open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
@@ -70,11 +70,8 @@ monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`trans eq e
 -- Properties of monMu
 
 mutual
-  -- Looks unprovable.
   tmp₂ : ∀ {I f i} → sup I f ≤ f i → ⊥
-  tmp₂ {I} {f} {i} x with f i | inspect f i
-  tmp₂ {.I₁} {.f₁} {i} refl | sup I₁ f₁ | [ eq ] = {!!}
-  tmp₂ {I} {f} {i} (lt i₁ x) | sup I₁ f₁ | [ eq ] = {!!}
+  tmp₂ h = irrefl (trans-≤-< h (lt _ refl))
 
   tmp : ∀ {α} (x : α ≤ α) → x ≡ refl
   tmp {sup I f} refl = refl
