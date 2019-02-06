@@ -1,7 +1,7 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Ordinal.Container.Finite where
 
-open import Data.Empty using (⊥)
+open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Nat as ℕ using
   (ℕ ; zero ; suc) renaming
@@ -102,6 +102,6 @@ monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`trans eq eq₁) = {!!}
 monMu-irr : ∀ {ℂ α β} {α≤β₁ α≤β₂ : α ≤ β} {x y : Mu α ℂ}
   → monMu α≤β₁ x ≈ monMu α≤β₂ x
 monMu-irr {ℂ} {α} {.α} {refl} {refl} {x} {y} = ≈-refl
-monMu-irr {ℂ} {.(sup _ _)} {.(sup _ _)} {refl} {lt i α≤β₂} {fst , fst₁ , snd} {fst₂ , fst₃ , snd₁} = `base ({!!} , {!!})
+monMu-irr {ℂ} {.(sup _ _)} {.(sup _ _)} {refl} {lt i α≤β₂} {j , sh , pos} {j' , sh' , pos'} = ⊥-elim (tmp₂ α≤β₂)
 monMu-irr {ℂ} {sup .J .g} {sup J g} {lt i α≤β₁} {refl} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , refl , {!!})
 monMu-irr {ℂ} {sup I f} {sup J g} {lt i α≤β₁} {lt i₁ α≤β₂} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , {!!} , {!!})

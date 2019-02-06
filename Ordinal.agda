@@ -95,7 +95,24 @@ toTree≤ (α , lt i α≤β) = lt i (toTree≤ (α , α≤β))
 toTree< : ∀{β} → (∃ λ α → α < β) → Tree< β
 toTree< (α , lt i le) = lt i (toTree≤ (α , le))
 
-{-
+-- Proof of isomorphism
+
+isoTree≤₁ : ∀{β} (≤β : Tree≤ β) → toTree≤ (the≤ ≤β , theproof≤ ≤β) ≡ ≤β
+isoTree≤₁ refl = refl
+isoTree≤₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
+
+isoTree≤₂ₐ : ∀{α β} (α≤β : α ≤ β) → the≤ (toTree≤ (α , α≤β)) ≡ α
+isoTree≤₂ₐ refl = refl
+isoTree≤₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
+
+
+isoTree<₁ : ∀{β} (<β : Tree< β) → toTree< (the< <β , theproof< <β) ≡ <β
+isoTree<₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
+
+isoTree<₂ₐ : ∀{α β} (α<β : α < β) → the< (toTree< (α , α<β)) ≡ α
+isoTree<₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
+
+
 
 ≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
 ≤-from-< (lt i α≤fi) = lt i α≤fi
@@ -143,7 +160,7 @@ mutual
 
   fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
     → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → (le : β < α) → fix< t β le ≡ fix t β
+    → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
   fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
 
 
@@ -190,6 +207,24 @@ trans-≤-refl (lt i α≤β) = cong (lt i) (trans-≤-refl α≤β)
 --   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
 -- trans-≤-lt = ?
 
+
+trans-<-≤ : ∀{α β γ} (α<β : α < β) (β≤γ : β ≤ γ) → α < γ
+trans-<-≤ α<β refl = α<β
+trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
+
+
+
+castTree≤ : ∀{α β} (α≤β : α ≤ β) → Tree≤ α → Tree≤ β
+castTree≤ α≤β ≤α = toTree≤ (the≤ ≤α , trans-≤ (theproof≤ ≤α) α≤β)
+
+the≤-cast : ∀{α β} (α≤β : α ≤ β) (≤α : Tree≤ α) → the≤ (castTree≤ α≤β ≤α) ≡ the≤ ≤α
+the≤-cast α≤β ≤α = isoTree≤₂ₐ {the≤ ≤α} (trans-≤ (theproof≤ ≤α) α≤β)
+
+castTree< : ∀{α β} (α≤β : α ≤ β) → Tree< α → Tree< β
+castTree< α≤β <α = toTree< (the< <α , trans-<-≤ (theproof< <α) α≤β)
+
+the<-cast : ∀{α β} (α≤β : α ≤ β) (<α : Tree< α) → the< (castTree< α≤β <α) ≡ the< <α
+the<-cast α≤β <α = isoTree<₂ₐ {the< <α} (trans-<-≤ (theproof< <α) α≤β)
 
 -- Resp-PO : (I : Preorder) (f : Preorder.Carrier I → Tree) → Set
 -- Resp-PO I f = ∀{i j} (i≤j : Preorder._∼_ I i j) → f i ≤ f j
@@ -276,8 +311,13 @@ Mu (sup I f) F = ∃[ i ] F (Mu (f i) F)  -- This should be an irrelevant size (
 ◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
 ◆ A α = Σ (Tree< α) \ <α → A (the< <α)
 
+MuBody : ∀{ℓ} (F : Set ℓ → Set ℓ) {α} (rec : ∀ β (β<α : β < α) → Set ℓ) → Set ℓ
+MuBody F {α} rec = Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α))
+
 Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
-Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α)))
+Mu^ F = fix (MuBody F)
+
+-- Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α)))
 
 -- if we erased types these would just be the identity function
 Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
@@ -290,9 +330,13 @@ Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) →
 Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
            → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
 
-monMu^ : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
-              → ∀ {α β} → α ≤ β → Mu^ F α → Mu^ F β
-monMu^ = {!!}
+monMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) {α β} → α ≤ β → Mu^ F α → Mu^ F β
+monMu^ F {β = β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
+monMu^ F {β = β} α≤β (<α , FMu<α) .proj₂ =
+  subst F (sym (fix<-unfold (MuBody F) (the< (castTree< α≤β <α)) (theproof< (castTree< α≤β <α))))
+ (subst (λ z → F (Mu^ F z)) (sym (the<-cast α≤β <α))
+ (subst F (fix<-unfold (MuBody F) (the< <α) (theproof< <α))
+  FMu<α))
 
 EqMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
                        (m : Map ℓ F) (α : Tree) (t t' : Mu^ F α) → Set ℓ
@@ -300,7 +344,7 @@ EqMu^ F Frel m = fix \ {α} rec → SymTrans \ t t' →
   let
      (β , t) = Mu^-unfold m α t
      (β' , t') = Mu^-unfold m α t'
-   in Σ (the< β ≤ the< β') \ β≤β' → Frel (rec (the< β') (theproof< β')) (m (monMu^ m β≤β') t) t'
+   in Σ (the< β ≤ the< β') \ β≤β' → Frel (rec (the< β') (theproof< β')) (m (monMu^ F β≤β') t) t'
 
 -- for each strictly positive functor there should be a closure ordinal
 -- postulate
