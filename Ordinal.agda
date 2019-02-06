@@ -70,20 +70,32 @@ data Tree≤_ : (β : Tree) → Set where
 data Tree<_ : (β : Tree) → Set where
   lt   : ∀ {I f} i (le : Tree≤ f i) → Tree< sup I f
 
-theα≤ : ∀ {β} → Tree≤ β → Tree
-theα≤ {β} refl = β
-theα≤ (lt i le) = theα≤ le
+-- The → part of the isomorphism
 
-theα< : ∀ {β} → Tree< β → Tree
-theα< (lt i le) = theα≤ le
+the≤ : ∀ {β} → Tree≤ β → Tree
+the≤ {β} refl = β
+the≤ (lt i le) = the≤ le
 
-theproof≤ : ∀ {β} (le : Tree≤ β) → theα≤ le ≤ β
+the< : ∀ {β} → Tree< β → Tree
+the< (lt i le) = the≤ le
+
+theproof≤ : ∀ {β} (le : Tree≤ β) → the≤ le ≤ β
 theproof≤ refl = refl
 theproof≤ (lt i le) = lt i (theproof≤ le)
 
-theproof< : ∀ {β} (lt : Tree< β) → theα< lt < β
+theproof< : ∀ {β} (lt : Tree< β) → the< lt < β
 theproof< (lt i le) = lt i (theproof≤ le)
 
+-- The ← part of the isomorphism
+
+toTree≤ : ∀{β} → (∃ λ α → α ≤ β) → Tree≤ β
+toTree≤ (α , refl) = refl
+toTree≤ (α , lt i α≤β) = lt i (toTree≤ (α , α≤β))
+
+toTree< : ∀{β} → (∃ λ α → α < β) → Tree< β
+toTree< (α , lt i le) = lt i (toTree≤ (α , le))
+
+{-
 
 ≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
 ≤-from-< (lt i α≤fi) = lt i α≤fi
@@ -262,10 +274,10 @@ Mu (sup I f) F = ∃[ i ] F (Mu (f i) F)  -- This should be an irrelevant size (
 
 -- Sized Mu defined by well-founded recursion
 ◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
-◆ A α = Σ (Tree< α) \ α< → A (theα< α<)
+◆ A α = Σ (Tree< α) \ <α → A (the< <α)
 
 Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
-Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ α< → F (rec (theα< α<) (theproof< α<)))
+Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α)))
 
 -- if we erased types these would just be the identity function
 Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
@@ -288,7 +300,7 @@ EqMu^ F Frel m = fix \ {α} rec → SymTrans \ t t' →
   let
      (β , t) = Mu^-unfold m α t
      (β' , t') = Mu^-unfold m α t'
-   in Σ (theα< β ≤ theα< β') \ β≤β' → Frel (rec (theα< β') (theproof< β')) (m (monMu^ m β≤β') t) t'
+   in Σ (the< β ≤ the< β') \ β≤β' → Frel (rec (the< β') (theproof< β')) (m (monMu^ m β≤β') t) t'
 
 -- for each strictly positive functor there should be a closure ordinal
 -- postulate
