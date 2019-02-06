@@ -280,8 +280,13 @@ tomega : Tree
 tomega = sup ℕ embℕ
 
 -- Not provable with current _≤_
+-- {-# TERMINATING #-}
 -- cong-tsuc : ∀{a b : Tree} (a≤b : a ≤ b) → tsuc a ≤ tsuc b
--- cong-tsuc a≤b = {!!}
+-- cong-tsuc {a = sup I f} {b = sup I f} refl = refl
+-- cong-tsuc {sup I f} {sup J g} (lt i a≤b)
+--   = trans-≤
+--       (cong-tsuc {a = sup I f} {b = g i} a≤b)
+--       (cong-tsuc {a = g i} {b = sup J g} (lt i refl))
 --
 -- And thus probably also not provable:
 --
