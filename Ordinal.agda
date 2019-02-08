@@ -1,5 +1,4 @@
 {-# OPTIONS --postfix-projections #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Data.Empty using (⊥)
 open import Data.Fin using (Fin; zero; suc)
@@ -441,58 +440,3 @@ module _ {ℓ} (F : Set ℓ → Set ℓ) where
         let (β , t)   = Mu^-unfold α t
             (β′ , t′) = Mu^-unfold α t′ in
         Σ[ β≤β′ ∈ the< β ≤ the< β′ ] Frel (rec β′) (map (monMu^ β≤β′) t) t′
-
-
--- Coinductive types
-
-Nu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
-Nu (sup I f) F = ∀ i → F (Nu (f i) F)
-
-mapNu : ∀{ℓ F G} (m : HMap ℓ F G) α → Nu α F → Nu α G
-mapNu m (sup I f) x i = m (mapNu m (f i)) (x i)
-
-monNu : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β : α ≤ β) → Nu β F → Nu α F
-monNu m refl = id
-monNu m {sup I f} (lt i α≤β) x _ = m (monNu m (predL α≤β)) (x i)
-
-monNu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Nu β F) → monNu m α≤β x ≡ monNu m α≤β' x
-monNu-irr m refl refl x = refl
-monNu-irr m refl (lt i α≤β') x = {!!}
-monNu-irr m (lt i α≤β) refl x = {!!}
-monNu-irr m {sup I f} (lt i α≤fi) (lt j α≤fj) x = {!x j!}
-
-monNu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
-               (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) x →
-             monNu m α≤β (monNu m β≤γ x) ≡ monNu m α≤γ x
-monNu-coh m refl β≤γ α≤γ x = {!refl!}
-monNu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
-
--- A chain is a functor from Tree to Set
-
-record IsChain {ℓ} (A : Tree → Set ℓ) : Set (ℓ ⊔ lone) where
-  constructor isChain; field
-
-    mapCh : ∀{α β} (α≤β : α ≤ β) → (A α → A β)
-
-    cohCh : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) →
-
-      mapCh β≤γ ∘ mapCh α≤β ≡ mapCh α≤γ
-open IsChain
-
-muChain : ∀{ℓ F} (m : Map ℓ F) → IsChain (λ α → Mu α F)
-muChain m .mapCh = monMu m
-muChain m .cohCh = {!monMu-comp!}
-
-record IsOpChain {ℓ} (A : Tree → Set ℓ) : Set (ℓ ⊔ lone) where
-  constructor isChain; field
-
-    mapOpCh : ∀{α β} (α≤β : α ≤ β) → (A β → A α)
-
-    cohOpCh : ∀{α β γ} (α≤β : α ≤ β) (β≤γ : β ≤ γ) (α≤γ : α ≤ γ) →
-
-      mapOpCh α≤β ∘ mapOpCh β≤γ ≡ mapOpCh α≤γ
-open IsOpChain
-
-nuChain : ∀{ℓ F} (m : Map ℓ F) → IsOpChain (λ α → Nu α F)
-nuChain m .mapOpCh = monNu m
-nuChain m .cohOpCh = {!monMu-comp!}
