@@ -1,23 +1,22 @@
 {-# OPTIONS --postfix-projections #-}
 {-# OPTIONS --allow-unsolved-metas #-}
 
-open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
-open import Relation.Binary using (Rel ; module Preorder)
-  renaming (Preorder to Preorder')
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
-open import Function using (id; _∘_; _∘′_)
-
-open import Data.Empty using (⊥) -- renaming (preorder to Zero)
-open import Data.Unit using (⊤) renaming (preorder to One)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Data.Empty using (⊥)
+open import Data.Fin using (Fin; zero; suc)
+open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Product using
   (_×_; ∃; Σ; Σ-syntax ; ∃-syntax ; proj₁; proj₂ ; _,_; <_,_>)
-
-open import Data.Nat.Base using (ℕ; zero; suc)
-open import Data.Fin using (Fin; zero; suc)
+open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
+open import Data.Unit using (⊤)
 open import Data.Vec using (Vec; []; _∷_; lookup)
-
+open import Function using (id; _∘_; _∘′_)
 open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
+open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
+open import Relation.Binary using (Rel)
+
+open import Util.Relation.Binary.PropositionalEquality using
+  ( _≡_; refl; cong; subst; sym ; trans ; module ≡-Reasoning ; cast ; subst-trans
+  ; subst-cong ; sym-cancel-l )
 
 import Data.Nat as ℕ
 
@@ -32,7 +31,6 @@ data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → 
   `trans : ∀ {x y z} → SymTrans R x y → SymTrans R y z → SymTrans R x z
 
 lone = lsuc lzero
-Preorder = Preorder' lzero lzero lzero
 
 
 -- Ordinals, ≤, <
@@ -154,33 +152,70 @@ isoTree<₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
 
 -- Tree recursion
 
-mutual
-  fix : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ α → C α
-  fix {ℓ} {C} t α = t (fix< t)
+Rec : ∀ {ℓ} (C : Tree → Set ℓ) → Set (lone ⊔ ℓ)
+Rec C = ∀ {α} (r : (<α : Tree< α) → C (the< <α)) → C α
 
-  fix< : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → β < α → C β
-  fix< {ℓ} {C} t β (lt i le) = fix≤ t β le
+module _ {ℓ} {C : Tree → Set ℓ} where
 
-  fix≤ : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → β ≤ α → C β
-  fix≤ {ℓ} {C} t β refl = fix t β
-  fix≤ {ℓ} {C} t β (lt i le) = fix≤ t β le
+  mutual
+    fix : Rec C → ∀ α → C α
+    fix t _ = t (fix< t)
 
-fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
-fix≤-unfold {ℓ} {C} t β refl = refl
-fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+    fix< : Rec C → ∀ {α} (<α : Tree< α) → C (the< <α)
+    fix< t (lt i le) = fix≤ t le
 
-fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
-fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+    fix≤ : Rec C → ∀ {α} (≤α : Tree≤ α) → C (the≤ ≤α)
+    fix≤ t {α} refl = fix t α
+    fix≤ t (lt i le) = fix≤ t le
+
+  fix≤-unfold : ∀ (t : Rec C) {α} (≤α : Tree≤ α)
+    → fix≤ t ≤α ≡ fix t (the≤ ≤α)
+  fix≤-unfold t refl = refl
+  fix≤-unfold t (lt i le) = fix≤-unfold t le
+
+  fix<-unfold : ∀ (t : Rec C) {α} (<α : Tree< α)
+    → fix< t <α ≡ fix t (the< <α)
+  fix<-unfold t (lt i le) = fix≤-unfold t le
+
+  fix≤-irr : ∀ (t : Rec C) {α β} (≤α : Tree≤ α) (≤β : Tree≤ β)
+    → (eq : the≤ ≤α ≡ the≤ ≤β)
+    → subst C eq (fix≤ t ≤α) ≡ fix≤ t ≤β
+  fix≤-irr t ≤α ≤β eq = let open ≡-Reasoning in
+    begin
+      subst C eq (fix≤ t ≤α)
+    ≡⟨ cong (subst C eq) (fix≤-unfold t ≤α) ⟩
+      subst C eq (fix t (the≤ ≤α))
+    ≡⟨ cong (subst C eq) (sym (subst-cong (fix t) (sym eq))) ⟩
+      subst C eq (subst C (sym eq) (fix t (the≤ ≤β)))
+    ≡⟨ subst-trans (sym eq) eq ⟩
+      subst C (trans (sym eq) (eq)) (fix t (the≤ ≤β))
+    ≡⟨ cong (λ eq → subst C eq (fix t (the≤ ≤β))) (sym-cancel-l eq) ⟩
+      subst C refl (fix t (the≤ ≤β))
+    ≡⟨⟩
+      fix t (the≤ ≤β)
+    ≡⟨ sym (fix≤-unfold t ≤β) ⟩
+      fix≤ t ≤β
+    ∎
+
+  fix<-irr : ∀ (t : Rec C) {α β} (<α : Tree< α) (<β : Tree< β)
+    → (eq : the< <α ≡ the< <β)
+    → subst C eq (fix< t <α) ≡ fix< t <β
+  fix<-irr t <α <β eq = let open ≡-Reasoning in
+    begin
+      subst C eq (fix< t <α)
+    ≡⟨ cong (subst C eq) (fix<-unfold t <α) ⟩
+      subst C eq (fix t (the< <α))
+    ≡⟨ cong (subst C eq) (sym (subst-cong (fix t) (sym eq))) ⟩
+      subst C eq (subst C (sym eq) (fix t (the< <β)))
+    ≡⟨ subst-trans (sym eq) eq ⟩
+      subst C (trans (sym eq) (eq)) (fix t (the< <β))
+    ≡⟨ cong (λ eq → subst C eq (fix t (the< <β))) (sym-cancel-l eq) ⟩
+      subst C refl (fix t (the< <β))
+    ≡⟨⟩
+      fix t (the< <β)
+    ≡⟨ sym (fix<-unfold t <β) ⟩
+      fix< t <β
+    ∎
 
 
 -- Upcasting Tree≤
@@ -368,39 +403,40 @@ monMu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
 -- Inductive types using well-founded recursion
 
 ◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
-◆ A α = Σ (Tree< α) \ <α → A (the< <α)
+◆ A α = Σ[ <α ∈ Tree< α ] A (the< <α)
 
-MuBody : ∀{ℓ} (F : Set ℓ → Set ℓ) {α} (rec : ∀ β (β<α : β < α) → Set ℓ) → Set ℓ
-MuBody F {α} rec = Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α))
 
-Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
-Mu^ F = fix (MuBody F)
+module _ {ℓ} (F : Set ℓ → Set ℓ) where
 
--- if we erased types these would just be the identity function
-Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
-  → ∀ α → (◆ (\ i → F (Mu^ F i)) α) → Mu^ F α
-Mu^-fold {F = F} map
-  = fix \ { {β} rec (γ , x) → γ , map (subst (λ A → A) (sym (fix<-unfold _ _ (theproof< γ)))) x }
+  MuBody : ∀ {α} (rec : Tree< α → Set ℓ) → Set ℓ
+  MuBody {α} rec = Σ[ <α ∈ Tree< α ] F (rec <α)
 
-Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
-  → ∀ α → Mu^ F α → (◆ (\ i → F (Mu^ F i)) α)
-Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
-  → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
+  Mu^ : (α : Tree) → Set ℓ
+  Mu^ = fix MuBody
 
-monMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) {α β} → α ≤ β → Mu^ F α → Mu^ F β
-monMu^ F {β = β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
-monMu^ F {β = β} α≤β (<α , FMu<α) .proj₂ =
-    subst F (sym (fix<-unfold (MuBody F) (the< (castTree< α≤β <α)) (theproof< (castTree< α≤β <α))))
-   (subst (λ z → F (Mu^ F z)) (sym (the<-castTree< α≤β <α))
-   (subst F (fix<-unfold (MuBody F) (the< <α) (theproof< <α))
-    FMu<α))
+  monMu^ : ∀ {α β} → α ≤ β → Mu^ α → Mu^ β
+  monMu^ {α} {β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
+  monMu^ {α} {β} α≤β (<α , FMu<α) .proj₂ =
+    subst F (sym (fix<-unfold MuBody (castTree< α≤β <α)))
+     (subst (λ z → F (Mu^ z)) (sym (the<-castTree< α≤β <α))
+      (subst F (fix<-unfold MuBody <α) FMu<α))
 
-EqMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
-  (m : Map ℓ F) (α : Tree) (t t' : Mu^ F α) → Set ℓ
-EqMu^ F Frel m = fix λ {α} rec → SymTrans λ t t′ →
-  let (β , t)   = Mu^-unfold m α t
-      (β′ , t′) = Mu^-unfold m α t′ in
-  Σ[ β≤β′ ∈ (the< β ≤ the< β′) ] Frel (rec (the< β′) (theproof< β′)) (m (monMu^ F β≤β′) t) t′
+  module _ (map : Map ℓ F) where
+
+    -- if we erased types these would just be the identity function
+    Mu^-fold : ∀ α → (◆ (\ i → F (Mu^ i)) α) → Mu^ α
+    Mu^-fold = fix λ { rec (<α , x) → <α , map (cast (sym (fix<-unfold _ <α))) x }
+
+    Mu^-unfold : ∀ α → Mu^ α → (◆ (\ i → F (Mu^ i)) α)
+    Mu^-unfold = fix λ { rec (<α , x) → <α , map (cast (fix<-unfold _ <α)) x }
+
+    module _ (Frel : ∀ {A} → Rel A ℓ → Rel (F A) ℓ) where
+
+      EqMu^ : ∀ α (t t′ : Mu^ α) → Set ℓ
+      EqMu^ = fix λ {α} rec → SymTrans λ t t′ →
+        let (β , t)   = Mu^-unfold α t
+            (β′ , t′) = Mu^-unfold α t′ in
+        Σ[ β≤β′ ∈ the< β ≤ the< β′ ] Frel (rec β′) (map (monMu^ β≤β′) t) t′
 
 
 -- Coinductive types
