@@ -22,6 +22,8 @@ open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
 import Data.Nat as ℕ
 
 
+-- Preliminaries
+
 -- Symmetric-Transitive closure of a relation.
 -- (There might be better choices of constructors).
 data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → Set (ℓ ⊔ ℓ') where
@@ -33,10 +35,9 @@ lone = lsuc lzero
 Preorder = Preorder' lzero lzero lzero
 
 
+-- Ordinals, ≤, <
 
--- Trees branching over small preorders
 -- Tree = 𝕎 Set id
-
 data Tree : Set₁ where
   sup : (I : Set) (f : I → Tree) → Tree
 
@@ -56,55 +57,11 @@ data Tree≤_ : (β : Tree) → Set where
 data Tree<_ : (β : Tree) → Set where
   lt   : ∀ {I f} i (le : Tree≤ f i) → Tree< sup I f
 
--- The → part of the isomorphism
 
-the≤ : ∀ {β} → Tree≤ β → Tree
-the≤ {β} refl = β
-the≤ (lt i le) = the≤ le
-
-the< : ∀ {β} → Tree< β → Tree
-the< (lt i le) = the≤ le
-
-theproof≤ : ∀ {β} (le : Tree≤ β) → the≤ le ≤ β
-theproof≤ refl = refl
-theproof≤ (lt i le) = lt i (theproof≤ le)
-
-theproof< : ∀ {β} (lt : Tree< β) → the< lt < β
-theproof< (lt i le) = lt i (theproof≤ le)
-
--- The ← part of the isomorphism
-
-toTree≤ : ∀{β} → (∃ λ α → α ≤ β) → Tree≤ β
-toTree≤ (α , refl) = refl
-toTree≤ (α , lt i α≤β) = lt i (toTree≤ (α , α≤β))
-
-toTree< : ∀{β} → (∃ λ α → α < β) → Tree< β
-toTree< (α , lt i le) = lt i (toTree≤ (α , le))
-
--- Proof of isomorphism
-
-isoTree≤₁ : ∀{β} (≤β : Tree≤ β) → toTree≤ (the≤ ≤β , theproof≤ ≤β) ≡ ≤β
-isoTree≤₁ refl = refl
-isoTree≤₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
-
-isoTree≤₂ₐ : ∀{α β} (α≤β : α ≤ β) → the≤ (toTree≤ (α , α≤β)) ≡ α
-isoTree≤₂ₐ refl = refl
-isoTree≤₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
-
-
-isoTree<₁ : ∀{β} (<β : Tree< β) → toTree< (the< <β , theproof< <β) ≡ <β
-isoTree<₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
-
-isoTree<₂ₐ : ∀{α β} (α<β : α < β) → the< (toTree< (α , α<β)) ≡ α
-isoTree<₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
-
-
+-- Properties of ≤/<
 
 ≤-from-< : ∀{α β} (α<β : α < β) → α ≤ β
 ≤-from-< (lt i α≤fi) = lt i α≤fi
-
-
--- Wellfoundedness of _<_
 
 acc-dest : ∀{I f} (h : Acc _<_ (sup I f)) i → Acc _<_ (f i)
 acc-dest (acc h) i = acc λ α α<fi → h α (lt i (≤-from-< α<fi))
@@ -118,39 +75,6 @@ acc-sup h = acc λ{ α (lt i α≤fi) → acc-down α≤fi (h i)}
 
 wf : WellFounded _<_
 wf (sup I f) = acc-sup λ i → wf (f i)
-
--- Tree recursion
-
-mutual
-  fix : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ α → C α
-  fix {ℓ} {C} t α = t (fix< t)
-
-  fix< : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → β < α → C β
-  fix< {ℓ} {C} t β (lt i le) = fix≤ t β le
-
-  fix≤ : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → β ≤ α → C β
-  fix≤ {ℓ} {C} t β refl = fix t β
-  fix≤ {ℓ} {C} t β (lt i le) = fix≤ t β le
-
-fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
-fix≤-unfold {ℓ} {C} t β refl = refl
-fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
-
-fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-  → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
-fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
-
-
--- Irreflexivity from well-foundedness
 
 irrefl' :  ∀{α} (α<α : α < α) (r : Acc _<_ α) → ⊥
 irrefl' α<α (acc h) = irrefl' α<α (h _ α<α)
@@ -186,17 +110,95 @@ trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
 --   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
 -- trans-≤-lt = ?
 
+
+-- Isomorphism between Tree≤ β and ∃[ α ] (α ≤ β)
+
+the≤ : ∀ {β} → Tree≤ β → Tree
+the≤ {β} refl = β
+the≤ (lt i le) = the≤ le
+
+theproof≤ : ∀ {β} (le : Tree≤ β) → the≤ le ≤ β
+theproof≤ refl = refl
+theproof≤ (lt i le) = lt i (theproof≤ le)
+
+toTree≤ : ∀{β} → (∃[ α ] (α ≤ β)) → Tree≤ β
+toTree≤ (α , refl) = refl
+toTree≤ (α , lt i α≤β) = lt i (toTree≤ (α , α≤β))
+
+isoTree≤₁ : ∀{β} (≤β : Tree≤ β) → toTree≤ (the≤ ≤β , theproof≤ ≤β) ≡ ≤β
+isoTree≤₁ refl = refl
+isoTree≤₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
+
+isoTree≤₂ₐ : ∀{α β} (α≤β : α ≤ β) → the≤ (toTree≤ (α , α≤β)) ≡ α
+isoTree≤₂ₐ refl = refl
+isoTree≤₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
+
+
+-- Isomorphism between Tree< β and ∃[ α ] (α < β)
+
+the< : ∀ {β} → Tree< β → Tree
+the< (lt i le) = the≤ le
+
+theproof< : ∀ {β} (lt : Tree< β) → the< lt < β
+theproof< (lt i le) = lt i (theproof≤ le)
+
+toTree< : ∀{β} → (∃[ α ] (α < β)) → Tree< β
+toTree< (α , lt i le) = lt i (toTree≤ (α , le))
+
+isoTree<₁ : ∀{β} (<β : Tree< β) → toTree< (the< <β , theproof< <β) ≡ <β
+isoTree<₁ (lt i ≤β) = cong (lt i) (isoTree≤₁ ≤β)
+
+isoTree<₂ₐ : ∀{α β} (α<β : α < β) → the< (toTree< (α , α<β)) ≡ α
+isoTree<₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
+
+
+-- Tree recursion
+
+mutual
+  fix : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ α → C α
+  fix {ℓ} {C} t α = t (fix< t)
+
+  fix< : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → β < α → C β
+  fix< {ℓ} {C} t β (lt i le) = fix≤ t β le
+
+  fix≤ : ∀{ℓ} {C : Tree → Set ℓ}
+    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+    → ∀ {α} β → β ≤ α → C β
+  fix≤ {ℓ} {C} t β refl = fix t β
+  fix≤ {ℓ} {C} t β (lt i le) = fix≤ t β le
+
+fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
+fix≤-unfold {ℓ} {C} t β refl = refl
+fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+
+fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
+fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+
+
+-- Upcasting Tree≤
+
 castTree≤ : ∀{α β} (α≤β : α ≤ β) → Tree≤ α → Tree≤ β
 castTree≤ α≤β ≤α = toTree≤ (the≤ ≤α , trans-≤ (theproof≤ ≤α) α≤β)
 
-the≤-cast : ∀{α β} (α≤β : α ≤ β) (≤α : Tree≤ α) → the≤ (castTree≤ α≤β ≤α) ≡ the≤ ≤α
-the≤-cast α≤β ≤α = isoTree≤₂ₐ {the≤ ≤α} (trans-≤ (theproof≤ ≤α) α≤β)
+the≤-castTree≤ : ∀{α β} (α≤β : α ≤ β) (≤α : Tree≤ α) → the≤ (castTree≤ α≤β ≤α) ≡ the≤ ≤α
+the≤-castTree≤ α≤β ≤α = isoTree≤₂ₐ {the≤ ≤α} (trans-≤ (theproof≤ ≤α) α≤β)
+
+
+-- Upcasting Tree<
 
 castTree< : ∀{α β} (α≤β : α ≤ β) → Tree< α → Tree< β
 castTree< α≤β <α = toTree< (the< <α , trans-<-≤ (theproof< <α) α≤β)
 
-the<-cast : ∀{α β} (α≤β : α ≤ β) (<α : Tree< α) → the< (castTree< α≤β <α) ≡ the< <α
-the<-cast α≤β <α = isoTree<₂ₐ {the< <α} (trans-<-≤ (theproof< <α) α≤β)
+the<-castTree< : ∀{α β} (α≤β : α ≤ β) (<α : Tree< α) → the< (castTree< α≤β <α) ≡ the< <α
+the<-castTree< α≤β <α = isoTree<₂ₐ {the< <α} (trans-<-≤ (theproof< <α) α≤β)
 
 
 -- Natural numbers and ω
@@ -243,48 +245,10 @@ Map : ∀ ℓ (F : Set ℓ → Set ℓ) → Set (lsuc ℓ)
 Map ℓ F = HMap ℓ F F
 
 
--- Inductive types
+-- Inductive types using structural recursion
 
--- Sized Mu defined by structural recursion
 Mu : ∀{ℓ} (α : Tree) (F : Set ℓ → Set ℓ) → Set ℓ
 Mu (sup I f) F = ∃[ i ] F (Mu (f i) F)  -- This should be an irrelevant size (union type)
-
--- Sized Mu defined by well-founded recursion
-◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
-◆ A α = Σ (Tree< α) \ <α → A (the< <α)
-
-MuBody : ∀{ℓ} (F : Set ℓ → Set ℓ) {α} (rec : ∀ β (β<α : β < α) → Set ℓ) → Set ℓ
-MuBody F {α} rec = Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α))
-
-Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
-Mu^ F = fix (MuBody F)
-
--- if we erased types these would just be the identity function
-Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
-  → ∀ α → (◆ (\ i → F (Mu^ F i)) α) → Mu^ F α
-Mu^-fold {F = F} map
-  = fix \ { {β} rec (γ , x) → γ , map (subst (λ A → A) (sym (fix<-unfold _ _ (theproof< γ)))) x }
-
-Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
-  → ∀ α → Mu^ F α → (◆ (\ i → F (Mu^ F i)) α)
-Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
-           → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
-
-monMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) {α β} → α ≤ β → Mu^ F α → Mu^ F β
-monMu^ F {β = β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
-monMu^ F {β = β} α≤β (<α , FMu<α) .proj₂ =
-  subst F (sym (fix<-unfold (MuBody F) (the< (castTree< α≤β <α)) (theproof< (castTree< α≤β <α))))
- (subst (λ z → F (Mu^ F z)) (sym (the<-cast α≤β <α))
- (subst F (fix<-unfold (MuBody F) (the< <α) (theproof< <α))
-  FMu<α))
-
-EqMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
-                       (m : Map ℓ F) (α : Tree) (t t' : Mu^ F α) → Set ℓ
-EqMu^ F Frel m = fix \ {α} rec → SymTrans \ t t' →
-  let
-     (β , t) = Mu^-unfold m α t
-     (β' , t') = Mu^-unfold m α t'
-   in Σ (the< β ≤ the< β') \ β≤β' → Frel (rec (the< β') (theproof< β')) (m (monMu^ F β≤β') t) t'
 
 -- for each strictly positive functor there should be a closure ordinal
 -- postulate
@@ -300,7 +264,6 @@ EqMu^ F Frel m = fix \ {α} rec → SymTrans \ t t' →
 
 --   con : F (theMu F) → theMu F
 --   con x = Mu^-fold map (closure F) (expand x)
-
 
 
 -- Monotonicity
@@ -362,6 +325,8 @@ module _ {ℓ} {F : Set ℓ → Set ℓ}
   EqMu-refl {sup I f} {t} = `base (refl , {!!})
 
 
+-- Properties of monMu
+
   monMu-mono : ∀ {α β} (α≤β : α ≤ β) {t t′}
     → EqMu′ t t′
     → EqMu′ (monMu map α≤β t) (monMu map α≤β t′)
@@ -382,7 +347,8 @@ module _ {ℓ} {F : Set ℓ → Set ℓ}
   monMu-trans {α} {β} {sup I f} α≤β (lt i β≤γ) x = {!!}
 
 
-monMu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Mu α F) → monMu m α≤β x ≡ monMu m α≤β' x
+monMu-irr : ∀{ℓ F} (m : Map ℓ F) {α β} (α≤β α≤β' : α ≤ β) (x : Mu α F)
+  → monMu m α≤β x ≡ monMu m α≤β' x
 monMu-irr m refl refl x = refl
 monMu-irr m refl (lt i α≤β') x = {!!}
 monMu-irr m (lt i α≤β) refl x = {!!}
@@ -397,6 +363,44 @@ monMu-coh m refl refl refl x = refl
 monMu-coh m refl refl (lt i α≤γ) (i′ , f) = {!!}
 monMu-coh m refl (lt i β≤γ) α≤γ x = {!!}
 monMu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
+
+
+-- Inductive types using well-founded recursion
+
+◆ : ∀ {ℓ} → (Tree → Set ℓ) → Tree → Set ℓ
+◆ A α = Σ (Tree< α) \ <α → A (the< <α)
+
+MuBody : ∀{ℓ} (F : Set ℓ → Set ℓ) {α} (rec : ∀ β (β<α : β < α) → Set ℓ) → Set ℓ
+MuBody F {α} rec = Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α))
+
+Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
+Mu^ F = fix (MuBody F)
+
+-- if we erased types these would just be the identity function
+Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
+  → ∀ α → (◆ (\ i → F (Mu^ F i)) α) → Mu^ F α
+Mu^-fold {F = F} map
+  = fix \ { {β} rec (γ , x) → γ , map (subst (λ A → A) (sym (fix<-unfold _ _ (theproof< γ)))) x }
+
+Mu^-unfold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
+  → ∀ α → Mu^ F α → (◆ (\ i → F (Mu^ F i)) α)
+Mu^-unfold {F = F} map = fix \ { {β} rec (γ , x)
+  → γ , map (subst (λ A → A) ((fix<-unfold _ _ (theproof< γ)))) x }
+
+monMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) {α β} → α ≤ β → Mu^ F α → Mu^ F β
+monMu^ F {β = β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
+monMu^ F {β = β} α≤β (<α , FMu<α) .proj₂ =
+    subst F (sym (fix<-unfold (MuBody F) (the< (castTree< α≤β <α)) (theproof< (castTree< α≤β <α))))
+   (subst (λ z → F (Mu^ F z)) (sym (the<-castTree< α≤β <α))
+   (subst F (fix<-unfold (MuBody F) (the< <α) (theproof< <α))
+    FMu<α))
+
+EqMu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) (Frel : ∀ {A} → (R : A → A → Set ℓ) → F A → F A → Set ℓ)
+  (m : Map ℓ F) (α : Tree) (t t' : Mu^ F α) → Set ℓ
+EqMu^ F Frel m = fix λ {α} rec → SymTrans λ t t′ →
+  let (β , t)   = Mu^-unfold m α t
+      (β′ , t′) = Mu^-unfold m α t′ in
+  Σ[ β≤β′ ∈ (the< β ≤ the< β′) ] Frel (rec (the< β′) (theproof< β′)) (m (monMu^ F β≤β′) t) t′
 
 
 -- Coinductive types
