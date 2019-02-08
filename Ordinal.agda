@@ -32,21 +32,7 @@ data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → 
 lone = lsuc lzero
 Preorder = Preorder' lzero lzero lzero
 
--- Zero : Preorder
--- Zero .Preorder.Carrier = ⊥
--- Zero .Preorder._≈_ ()
--- Zero .Preorder._∼_ ()
--- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.refl {}
--- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.sym {}
--- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.isEquivalence .Relation.Binary.IsEquivalence.trans {}
--- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.reflexive {}
--- Zero .Preorder.isPreorder .Relation.Binary.IsPreorder.trans {}
 
-_+̇_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A ⊎ B → C ⊎ D
-f +̇ g = [ inj₁ ∘ f , inj₂ ∘ g ]
-
-_×̇′_ : ∀{A B C D : Set} (f : A → C) (g : B → D) → A × B → C × D
-f ×̇′ g = < f ∘ proj₁ , g ∘ proj₂ >
 
 -- Trees branching over small preorders
 -- Tree = 𝕎 Set id
@@ -152,20 +138,17 @@ mutual
   fix≤ {ℓ} {C} t β refl = fix t β
   fix≤ {ℓ} {C} t β (lt i le) = fix≤ t β le
 
-  fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
-  fix≤-unfold {ℓ} {C} t β refl = refl
-  fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+fix≤-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ {α} β → (le : β ≤ α) → fix≤ t β le ≡ fix t β
+fix≤-unfold {ℓ} {C} t β refl = refl
+fix≤-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
 
-  fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
-    → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
-    → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
-  fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
+fix<-unfold : ∀{ℓ} {C : Tree → Set ℓ}
+  → (t : ∀ {α} (r : ∀ β (β<α : β < α) → C β) → C α)
+  → ∀ {α} β → (β<α : β < α) → fix< t β β<α ≡ fix t β
+fix<-unfold {ℓ} {C} t β (lt i le) = fix≤-unfold t β le
 
-
--- {-# TERMINATING #-}
--- fix t (sup I f) = t λ{ β (lt i β≤fi) → fix t β}
 
 -- Irreflexivity from well-foundedness
 
@@ -174,14 +157,6 @@ irrefl' α<α (acc h) = irrefl' α<α (h _ α<α)
 
 irrefl :  ∀{α} (α<α : α < α) → ⊥
 irrefl {α} α<α = irrefl' α<α (wf α)
-
--- mutual
---   data _<_ (α : Tree) : (β : Tree) → Set where
---     <sup : ∀ {I} {f : Preorder.Carrier I → Tree} {i} (le : α ≤ f i) → α < sup I f
-
---   data _≤_ (α : Tree) : (β : Tree) → Set where
---     refl : α ≤ α
---     lt   : ∀{β} (lt : α < β) → α ≤ β
 
 mutual
   predL : ∀{β I f i} (α≤β : sup I f ≤ β) → f i ≤ β
@@ -202,17 +177,14 @@ trans-≤-refl : ∀{α β} (α≤β : α ≤ β) → trans-≤ refl α≤β ≡
 trans-≤-refl refl = refl
 trans-≤-refl (lt i α≤β) = cong (lt i) (trans-≤-refl α≤β)
 
--- WRONG:
--- trans-≤-lt : ∀{I} {f : I → Tree} {i} {β γ} (fi≤β : f i ≤ β) (β≤γ : β ≤ γ) →
---   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
--- trans-≤-lt = ?
-
-
 trans-<-≤ : ∀{α β γ} (α<β : α < β) (β≤γ : β ≤ γ) → α < γ
 trans-<-≤ α<β refl = α<β
 trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
 
-
+-- WRONG:
+-- trans-≤-lt : ∀{I} {f : I → Tree} {i} {β γ} (fi≤β : f i ≤ β) (β≤γ : β ≤ γ) →
+--   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
+-- trans-≤-lt = ?
 
 castTree≤ : ∀{α β} (α≤β : α ≤ β) → Tree≤ α → Tree≤ β
 castTree≤ α≤β ≤α = toTree≤ (the≤ ≤α , trans-≤ (theproof≤ ≤α) α≤β)
@@ -226,51 +198,14 @@ castTree< α≤β <α = toTree< (the< <α , trans-<-≤ (theproof< <α) α≤β)
 the<-cast : ∀{α β} (α≤β : α ≤ β) (<α : Tree< α) → the< (castTree< α≤β <α) ≡ the< <α
 the<-cast α≤β <α = isoTree<₂ₐ {the< <α} (trans-<-≤ (theproof< <α) α≤β)
 
--- Resp-PO : (I : Preorder) (f : Preorder.Carrier I → Tree) → Set
--- Resp-PO I f = ∀{i j} (i≤j : Preorder._∼_ I i j) → f i ≤ f j
 
--- data IsON : Tree → Set₁ where
---   sup : ∀{I f} (mon : Resp-PO I f) (node : ∀ i → IsON (f i)) → IsON (sup I f)
-
--- record ON : Set₂ where
---   constructor on; field
---     tree : Tree
---     isOn : IsON tree
--- open ON
-
--- on-≤ : ∀{a b}  (a≤b : a ≤ b) (β : IsON b) → IsON a
--- on-≤ refl     β              = β
--- on-≤ (lt i a≤b) (sup mon f) = on-≤ a≤b (f i)
-
--- Zero
+-- Natural numbers and ω
 
 tzero : Tree
 tzero = sup ⊥ λ()
 
--- tzero : Tree
--- tzero = sup Zero λ()
-
--- iozero : IsON tzero
--- iozero = sup (λ{}) λ()
-
--- ozero : ON
--- ozero = on tzero iozero
-
--- Successor
-
 tsuc : Tree → Tree
 tsuc t = sup ⊤ (λ _ → t)
-
--- tsuc : Tree → Tree
--- tsuc t = sup One (λ _ → t)
-
--- iosuc : ∀{t : Tree} (α : IsON t) → IsON (tsuc t)
--- iosuc α = sup (λ _ → refl) (λ _ → α)
-
--- osuc : ON → ON
--- osuc (on t α) = on (tsuc t) (iosuc α)
-
--- ω
 
 embℕ : (n : ℕ) → Tree
 embℕ zero = tzero
@@ -298,6 +233,7 @@ tomega = sup ℕ embℕ
 -- embℕ-≤ ℕ.z≤n = ≤-tzero-embℕ
 -- embℕ-≤ (ℕ.s≤s n≤m) = {!!} -- needs cong-tsuc
 
+
 -- Category of sets and functions
 
 HMap : ∀ ℓ (F G : Set ℓ → Set ℓ) → Set (lsuc ℓ)
@@ -305,6 +241,7 @@ HMap ℓ F G = ∀{A B} (g : A → B) → F A → G B
 
 Map : ∀ ℓ (F : Set ℓ → Set ℓ) → Set (lsuc ℓ)
 Map ℓ F = HMap ℓ F F
+
 
 -- Inductive types
 
@@ -321,8 +258,6 @@ MuBody F {α} rec = Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α))
 
 Mu^ : ∀{ℓ} (F : Set ℓ → Set ℓ) → (α : Tree) → Set ℓ
 Mu^ F = fix (MuBody F)
-
--- Mu^ F = fix (\ {α} rec → Σ (Tree< α) \ <α → F (rec (the< <α) (theproof< <α)))
 
 -- if we erased types these would just be the identity function
 Mu^-fold : ∀{ℓ} {F : Set ℓ → Set ℓ} → (∀ {A B} → (A → B) → F A → F B)
@@ -385,6 +320,7 @@ monMuℕ map ℕ.z≤n (() , _)
 monMuℕ map (ℕ.s≤s n≤m) (_ , s) = _ , map (monMuℕ map n≤m) s
 
 -- Equality
+
 {-
    Given a functor "D : S → Set" we can build the colimit as the quotient
       Colim D = Σ S D / ~
@@ -462,34 +398,6 @@ monMu-coh m refl refl (lt i α≤γ) (i′ , f) = {!!}
 monMu-coh m refl (lt i β≤γ) α≤γ x = {!!}
 monMu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
 
--- Constructor
-
-inMu₁ : ∀{ℓ α F} (x : F (Mu α F)) → Mu {ℓ} (tsuc α) F
-inMu₁ x = _ , x
-
-inMu : ∀{ℓ F} (m : Map ℓ F) {α β} (α<β : α < β) (x : F (Mu α F)) → Mu β F
-inMu m (lt i α≤β) x = i , m (monMu m α≤β) x
-
--- Destructor
-
-outMu : ∀{ℓ F α} (x : Mu {ℓ} (tsuc α) F) → F (Mu α F)
-outMu (_ , x) = x
-
--- Wellfounded recursion
-
--- {-# TERMINATING #-}
--- fixMu : ∀{ℓ} {F : Set ℓ → Set ℓ} {C : Tree → Set ℓ}
---   → (t : ∀ {α} (r : ∀ β (β<α : β < α) (y : Mu β F) → C β) (x : Mu α F) → C α)
---   → ∀ α (x : Mu α F) → C α
--- fixMu t (sup I f) = t λ{ β (lt i β≤fi) → fixMu t β}
-
--- Fixed point
-
-Mu∞ : ∀{ℓ} (F : Set ℓ → Set ℓ) → Set (ℓ ⊔ lone)
-Mu∞ F = ∃ λ α → Mu α F
-
-inMu∞ : ∀ (F : ∀{ℓ} → Set ℓ → Set ℓ) {ℓ} (x : F (Mu∞ {ℓ} F)) → Mu∞ {ℓ} F
-inMu∞ F = {!!}
 
 -- Coinductive types
 
@@ -515,7 +423,7 @@ monNu-coh : ∀ {ℓ F} (m : Map ℓ F) {α β γ} (α≤β : α ≤ β)
 monNu-coh m refl β≤γ α≤γ x = {!refl!}
 monNu-coh m (lt i α≤β) β≤γ α≤γ x = {!!}
 
--- A chain it a functor from Tree to Set
+-- A chain is a functor from Tree to Set
 
 record IsChain {ℓ} (A : Tree → Set ℓ) : Set (ℓ ⊔ lone) where
   constructor isChain; field
@@ -544,148 +452,3 @@ open IsOpChain
 nuChain : ∀{ℓ F} (m : Map ℓ F) → IsOpChain (λ α → Nu α F)
 nuChain m .mapOpCh = monNu m
 nuChain m .cohOpCh = {!monMu-comp!}
-
-{-
--- Strictly positive types
-
-TyVar = Fin
-
-data _≥_ : (n m : ℕ) → Set where
-  id≥  : ∀{n} → n ≥ n
-  weak : ∀{n m} (n≤m : n ≥ m) → suc n ≥ m
-  lift : ∀{n m} (n≤m : n ≥ m) → suc n ≥ suc m
-
-wkTyVar : ∀ {n m} → TyVar m → n ≥ m → TyVar n
-wkTyVar X       id≥ = X
-wkTyVar X       (weak n≥m) = Fin.suc (wkTyVar X n≥m)
-wkTyVar zero    (lift n≥m) = zero
-wkTyVar (suc X) (lift n≥m) = suc (wkTyVar X n≥m)
-
-{-
-module Refinement where
-
-  data Ty (n : ℕ) : Set where
-    Var : (X : TyVar n) → Ty n
-    0̂ 1̂ : Ty n
-    _+̂_ _×̂_ : (a b : Ty n) → Ty n
-    _→̂_ : (a : Ty 0) (b : Ty n) → Ty n
-    μ̂ ν̂ : (a : Ty (suc n)) → Ty n
-
-  wkTy : ∀{n m} (a : Ty m) (n≥m : n ≥ m) → Ty n
-  wkTy = {!!}
-
-  -- Refined types with embedded ordinals
-
-  data RTy {n : ℕ} : (a : Ty n) → Set₂ where
-    Var : ∀{x} → RTy (Var x)
-    0̂ : RTy 0̂
-    1̂ : RTy 1̂
-    _+̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a +̂ b)
-    _×̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a ×̂ b)
-    _→̂_ : ∀{a b} (A : RTy a) (B : RTy b) → RTy (a →̂ b)
-    μ̂ : ∀{a} (A : RTy a) → RTy (μ̂ a)
-    ν̂ : ∀{a} (A : RTy a) → RTy (ν̂ a)
-    Inf  Sup : ∀{a} (F : ON → RTy a) → RTy a
-    Inf< Sup< : ∀{a} (α : ON) (F : ∀ β (β<α : β < tree α) → RTy a) → RTy a
-    -- Mu  : (α : ON) (F : Ty (suc n)) (∀ β (lt : β < α) → Ty n) → Ty n
-
-  -- Subtyping refined types
-
-  data _<:_ {n} : {a : Ty n} (A B : RTy a) → Set₂ where
-    μ̂ : ∀{a}{A B : RTy (μ̂ a)} (A<:B : A <: B) → μ̂ A <: μ̂ B
-    ν̂ : ∀{a}{A B : RTy (μ̂ a)} (A<:B : A <: B) → ν̂ A <: ν̂ B
-    InfL : ∀{a} {F : ON → RTy a} {B : RTy a} {α} (Fα<:B : F α <: B) → Inf F <: B
-    SupR : ∀{a} {F : ON → RTy a} {A : RTy a} {α} (A<:Fα : A <: F α) → A <: Sup F
-    InfR : ∀{a} {F : ON → RTy a} {A : RTy a} (F<:A : ∀ α → A <: F α) → A <: Inf F
-    SupL : ∀{a} {F : ON → RTy a} {B : RTy a} (F<:A : ∀ α → F α <: B) → Sup F <: B
-
-  ⊥̂ : ∀{n} {a : Ty n} → RTy a
-  ⊥̂ = Inf< ozero λ{ β (lt {i = ()} z) }
--}
-
-data Ty (n : ℕ) : Set₂ where
-  Var : (X : TyVar n) → Ty n
-  0̂ 1̂ : Ty n
-  _+̂_ _×̂_ : (a b : Ty n) → Ty n
-  _→̂_ : (a : Ty 0) (b : Ty n) → Ty n
-  μ̂ ν̂ : (α : Tree) (f : Ty (suc n)) → Ty n
-
-wkTy : ∀{n m} (a : Ty m) (n≥m : n ≥ m) → Ty n
-wkTy (Var X) n≥m = Var (wkTyVar X n≥m)
-wkTy 0̂       n≥m = 0̂
-wkTy 1̂       n≥m = 1̂
-wkTy (a +̂ b) n≥m = wkTy a n≥m +̂ wkTy b n≥m
-wkTy (a ×̂ b) n≥m = wkTy a n≥m ×̂ wkTy b n≥m
-wkTy (a →̂ b) n≥m = a →̂ wkTy b n≥m
-wkTy (μ̂ α a) n≥m = μ̂ α (wkTy a (lift n≥m))
-wkTy (ν̂ α a) n≥m = ν̂ α (wkTy a (lift n≥m))
-
--- Type interpretation
-
-⦅_⦆ : ∀{n} (a : Ty n) {ℓ} (ρ : Vec (Set ℓ) n) → Set ℓ
-⦅ Var X ⦆ ρ = lookup X ρ
-⦅ 0̂ ⦆ ρ = Lift ⊥
-⦅ 1̂ ⦆ ρ = Lift ⊤
-⦅ a +̂ b ⦆ ρ = ⦅ a ⦆ ρ ⊎ ⦅ b ⦆ ρ
-⦅ a ×̂ b ⦆ ρ = ⦅ a ⦆ ρ × ⦅ b ⦆ ρ
-⦅ a →̂ b ⦆ {ℓ} ρ = ⦅ a ⦆ {ℓ} [] → ⦅ b ⦆ ρ
-⦅ μ̂ α f ⦆ ρ = Mu α λ X → ⦅ f ⦆ (X ∷ ρ)
-⦅ ν̂ α f ⦆ ρ = Nu α λ X → ⦅ f ⦆ (X ∷ ρ)
-
--- Functoriality
-
-data Arr {ℓ} : ∀ {n} (ρ₁ ρ₂ : Vec (Set ℓ) n) → Set ℓ where
-  [] : Arr [] []
-  _∷_ : ∀{n} {A B : Set ℓ} {ρ₁ ρ₂ : Vec _ n} (f : A → B) (fs : Arr {ℓ} ρ₁ ρ₂) → Arr (A ∷ ρ₁) (B ∷ ρ₂)
-
-lookupArr : ∀ {n} {ρ ρ′ : Vec Set n} (X : Fin n) → Arr ρ ρ′ → lookup X ρ → lookup X ρ′
-lookupArr zero    (f ∷ fs) = f
-lookupArr (suc X) (f ∷ fs) = lookupArr X fs
-
-map : ∀{n} (a : Ty n) {ρ ρ′} (fs : Arr ρ ρ′) → ⦅ a ⦆ ρ → ⦅ a ⦆ ρ′
-map (Var X) fs = lookupArr X fs
-map 0̂       fs ()
-map 1̂       fs = _
-map (a +̂ b) fs = map a fs +̇ map b fs
-map (a ×̂ b) fs = map a fs ×̇′ map b fs
-map (a →̂ b) fs g = map b fs ∘′ g
-map (μ̂ α F) fs = mapMu (λ g → map F (g ∷ fs)) α
-map (ν̂ α F) fs = mapNu (λ g → map F (g ∷ fs)) α
-
-
-record IsBoundedChain (ω : Tree) (A : ∀{α}.(α<ω : α < ω) → Set) : Set₁ where
-  constructor isBoundedChain; field
-
-    mapCh : ∀{β}.(β<ω : β < ω){α}.(α≤β : α ≤ β) →
-      let .α<ω : _; α<ω = trans-≤-< α≤β β<ω in
-      (A α<ω → A β<ω)
-
-    cohCh : ∀{γ}.(γ<ω : γ < ω){α β} .(α≤β : α ≤ β) .(β≤γ : β ≤ γ) .(α≤γ : α ≤ γ) →
-      let .β<ω : _; β<ω = trans-≤-< β≤γ γ<ω in
-      mapCh γ<ω β≤γ ∘ mapCh β<ω α≤β ≡ mapCh γ<ω α≤γ
-
--- Size expressions
-
-mutual
-
-  data SizeCxt : Set where
-    ε : SizeCxt
-    _∙_ : (Ξ : SizeCxt) (s : SizeBound Ξ) → SizeCxt
-
-  data SizeExpr : (Ξ : SizeCxt) → Set where
-
-  data SizeBound : (Ξ : SizeCxt) → Set where
-    Size : ∀{Ξ} → SizeBound Ξ
-    <_   : ∀{Ξ} (s : SizeExpr Ξ) → SizeBound Ξ
-    wk   : ∀{Ξ} ({a} b : SizeBound Ξ) → SizeBound (Ξ ∙ a)
-
-  data SizeVar : (Ξ : SizeCxt) (s : SizeBound Ξ) → Set where
-    vz : ∀{Ξ} {s : SizeBound Ξ} → SizeVar (Ξ ∙ s) (wk s)
-
-
--- -}
--- -}
--- -}
--- -}
--- -}
--- -}
