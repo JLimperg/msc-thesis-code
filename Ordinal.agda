@@ -16,18 +16,13 @@ open import Relation.Binary using (Rel)
 open import Util.Relation.Binary.PropositionalEquality using
   ( _≡_; refl; cong; subst; sym ; trans ; module ≡-Reasoning ; cast ; subst-trans
   ; subst-cong ; sym-cancel-l )
+open import Util.Relation.Binary.Closure.SymmetricTransitive using
+  (SymTrans ; `base ; `sym ; `trans)
 
 import Data.Nat as ℕ
 
 
 -- Preliminaries
-
--- Symmetric-Transitive closure of a relation.
--- (There might be better choices of constructors).
-data SymTrans {ℓ ℓ'} {A : Set ℓ} (R : A → A → Set ℓ') : A → A → Set (ℓ ⊔ ℓ') where
-  `base : ∀ {x y} → R x y → SymTrans R x y
-  `sym : ∀ {x y} → SymTrans R y x → SymTrans R x y
-  `trans : ∀ {x y z} → SymTrans R x y → SymTrans R y z → SymTrans R x z
 
 lone = lsuc lzero
 
