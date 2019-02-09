@@ -11,7 +11,7 @@ open import Function using (_∘_ ; id)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; inspect ; [_])
 
 open import Ordinal using
-  (sup ; _≤_ ; refl ; lt ; predL; irrefl; trans-≤-<) renaming
+  (sup ; _≤_ ; refl ; lt ; predL; pred-not-≤) renaming
   (Tree to Ordinal ; embℕ to ℕ→Ordinal)
 open import Util.Container.Finite
 open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
@@ -69,21 +69,6 @@ monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`trans eq e
 --------------------------------------------------------------------------------
 -- Properties of monMu
 
-mutual
-  tmp₂ : ∀ {I f i} → sup I f ≤ f i → ⊥
-  tmp₂ h = irrefl (trans-≤-< h (lt _ refl))
-
-  tmp : ∀ {α} (x : α ≤ α) → x ≡ refl
-  tmp {sup I f} refl = refl
-  tmp {sup I f} (lt i x) with tmp₂ x
-  ... | ()
-
-
--- Also looks unprovable (without using refl).
-≤-refl′ : ∀ {α} → α ≤ α
-≤-refl′ {sup I f} = lt {!!} {!!}
-
-
 monMu-id : ∀ {ℂ α} {α≤α : α ≤ α} {x : Mu α ℂ}
   → monMu α≤α x ≈ x
 monMu-id {ℂ} {α} {refl} {x} = ≈-refl
@@ -102,6 +87,6 @@ monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`trans eq eq₁) = {!!}
 monMu-irr : ∀ {ℂ α β} {α≤β₁ α≤β₂ : α ≤ β} {x y : Mu α ℂ}
   → monMu α≤β₁ x ≈ monMu α≤β₂ x
 monMu-irr {ℂ} {α} {.α} {refl} {refl} {x} {y} = ≈-refl
-monMu-irr {ℂ} {.(sup _ _)} {.(sup _ _)} {refl} {lt i α≤β₂} {j , sh , pos} {j' , sh' , pos'} = ⊥-elim (tmp₂ α≤β₂)
+monMu-irr {ℂ} {.(sup _ _)} {.(sup _ _)} {refl} {lt i α≤β₂} {j , sh , pos} {j' , sh' , pos'} = ⊥-elim (pred-not-≤ α≤β₂)
 monMu-irr {ℂ} {sup .J .g} {sup J g} {lt i α≤β₁} {refl} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , refl , {!!})
 monMu-irr {ℂ} {sup I f} {sup J g} {lt i α≤β₁} {lt i₁ α≤β₂} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , {!!} , {!!})

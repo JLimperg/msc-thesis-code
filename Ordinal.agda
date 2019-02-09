@@ -97,6 +97,14 @@ trans-<-≤ : ∀{α β γ} (α<β : α < β) (β≤γ : β ≤ γ) → α < γ
 trans-<-≤ α<β refl = α<β
 trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
 
+pred-not-≤ : ∀ {I f i} → sup I f ≤ f i → ⊥
+pred-not-≤ h = irrefl (trans-≤-< h (lt _ refl))
+
+≤-refl-unique : ∀ {α} (x : α ≤ α) → x ≡ refl
+≤-refl-unique {sup I f} refl = refl
+≤-refl-unique {sup I f} (lt i x) with pred-not-≤ x
+... | ()
+
 -- WRONG:
 -- trans-≤-lt : ∀{I} {f : I → Tree} {i} {β γ} (fi≤β : f i ≤ β) (β≤γ : β ≤ γ) →
 --   trans-≤ (lt i fi≤β) β≤γ ≡ lt i (trans-≤ fi≤β β≤γ)
