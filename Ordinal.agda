@@ -93,10 +93,6 @@ trans-≤-refl : ∀{α β} (α≤β : α ≤ β) → trans-≤ refl α≤β ≡
 trans-≤-refl refl = refl
 trans-≤-refl (lt i α≤β) = cong (lt i) (trans-≤-refl α≤β)
 
-trans-<-≤ : ∀{α β γ} (α<β : α < β) (β≤γ : β ≤ γ) → α < γ
-trans-<-≤ α<β refl = α<β
-trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
-
 pred-not-≤ : ∀ {I f i} → sup I f ≤ f i → ⊥
 pred-not-≤ h = irrefl (trans-≤-< h (lt _ refl))
 
@@ -104,6 +100,17 @@ pred-not-≤ h = irrefl (trans-≤-< h (lt _ refl))
 ≤-refl-unique {sup I f} refl = refl
 ≤-refl-unique {sup I f} (lt i x) with pred-not-≤ x
 ... | ()
+
+trans-<-≤ : ∀{α β γ} (α<β : α < β) (β≤γ : β ≤ γ) → α < γ
+trans-<-≤ α<β refl = α<β
+trans-<-≤ α<β (lt i β≤γ) = lt i (≤-from-< (trans-<-≤ α<β β≤γ))
+
+-- Wrong:
+-- trans-<-≤-irr : ∀{α β γ} (α<β : α < β) (β≤γ₁ β≤γ₂ : β ≤ γ)
+--   → trans-<-≤ α<β β≤γ₁ ≡ trans-<-≤ α<β β≤γ₂
+-- trans-<-≤-irr α<β refl β≤γ₂ rewrite ≤-refl-unique β≤γ₂ = refl
+-- trans-<-≤-irr α<β (lt i β≤γ₁) refl = ⊥-elim (pred-not-≤ β≤γ₁)
+-- trans-<-≤-irr α<β (lt i β≤γ₁) (lt i₁ β≤γ₂) = {!!} -- i ≠ i₁
 
 -- WRONG:
 -- trans-≤-lt : ∀{I} {f : I → Tree} {i} {β γ} (fi≤β : f i ≤ β) (β≤γ : β ≤ γ) →
@@ -473,8 +480,12 @@ module _ {ℓ} (F : Set ℓ → Set ℓ) where
 
     module _ (Frel : ∀ {A} → Rel A ℓ → Rel (F A) ℓ) where
 
-      EqMu^ : ∀ α (t t′ : Mu^ α) → Set ℓ
-      EqMu^ = fix λ {α} rec → SymTrans λ t t′ →
-        let (β , t)   = Mu^-unfold α t
-            (β′ , t′) = Mu^-unfold α t′ in
-        Σ[ β≤β′ ∈ the< β ≤ the< β′ ] Frel (rec β′) (map (monMu^ β≤β′) t) t′
+      EqMu^Body : Rec λ α → Rel (Mu^ α) ℓ
+      EqMu^Body {α} rec = SymTrans λ t u →
+        let (β  , t′) = Mu^-unfold α t
+            (β′ , u′) = Mu^-unfold α u in
+        Σ[ β≤β′ ∈ the< β ≤ the< β′ ] Frel (rec β′) (map (monMu^ β≤β′) t′) u′
+
+
+      EqMu^ : ∀ {α} → Rel (Mu^ α) ℓ
+      EqMu^ {α} = fix EqMu^Body α
