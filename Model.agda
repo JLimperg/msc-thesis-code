@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 -- We give a model of sized least fixed points of finitely branching container
 -- functors (a subset of the inductive types). The plan is to eventually
 -- generalise this model to indexed, infinitely branching containers (full
@@ -18,7 +19,7 @@ open import Axioms using (funext)
 open import Ordinal using
   (sup ; _≤_ ; _<_ ; lt ; refl) renaming
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
-open import Ordinal.Container.Finite using
+open import Ordinal.Container.Finite.Structural using
   (Mu ; monMu ; monMuℕ ; _≈_)
 open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 open import Util.Container.Finite using (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; liftEq ; μ ; sup)

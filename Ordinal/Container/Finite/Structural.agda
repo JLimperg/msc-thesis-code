@@ -1,5 +1,5 @@
 {-# OPTIONS --allow-unsolved-metas #-}
-module Ordinal.Container.Finite where
+module Ordinal.Container.Finite.Structural where
 
 open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Fin using (Fin ; zero ; suc)
