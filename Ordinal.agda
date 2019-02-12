@@ -1,6 +1,6 @@
 {-# OPTIONS --postfix-projections #-}
 
-open import Data.Empty using (⊥)
+open import Data.Empty using (⊥ ; ⊥-elim)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Product using
@@ -15,7 +15,7 @@ open import Relation.Binary using (Rel)
 
 open import Util.Relation.Binary.PropositionalEquality using
   ( _≡_; refl; cong; subst; sym ; trans ; module ≡-Reasoning ; cast ; subst-trans
-  ; subst-cong ; sym-cancel-l )
+  ; subst-cong ; sym-cancel-l ; cast-trans ; cast-K ; Σ-≡⁺)
 open import Util.Relation.Binary.Closure.SymmetricTransitive using
   (SymTrans ; `base ; `sym ; `trans)
 
@@ -414,18 +414,53 @@ EqMu (sup I f) F Frel map = SymTrans λ where
 
 module _ {ℓ} (F : Set ℓ → Set ℓ) where
 
-  MuBody : ∀ {α} (rec : Tree< α → Set ℓ) → Set ℓ
+  MuBody : Rec (λ _ → Set ℓ)
   MuBody {α} rec = Σ[ <α ∈ Tree< α ] F (rec <α)
 
   Mu^ : (α : Tree) → Set ℓ
   Mu^ = fix MuBody
 
   monMu^ : ∀ {α β} → α ≤ β → Mu^ α → Mu^ β
-  monMu^ {α} {β} α≤β (<α , FMu<α) .proj₁ = castTree< α≤β <α
-  monMu^ {α} {β} α≤β (<α , FMu<α) .proj₂ =
-    subst F (sym (fix<-unfold MuBody (castTree< α≤β <α)))
-     (subst (λ z → F (Mu^ z)) (sym (the<-castTree< α≤β <α))
-      (subst F (fix<-unfold MuBody <α) FMu<α))
+  monMu^ {α} {β} α≤β (<α , FMu<α)
+    = castTree< α≤β <α
+    , cast (cong F eq) FMu<α
+    module monMu^ where
+      eq : fix< MuBody <α ≡ fix< MuBody (castTree< α≤β <α)
+      eq = let open ≡-Reasoning in
+        begin
+          fix< MuBody <α
+        ≡⟨ fix<-unfold MuBody <α ⟩
+          fix MuBody (the< <α)
+        ≡⟨ cong (fix MuBody) (sym (the<-castTree< α≤β <α)) ⟩
+          fix MuBody (the< (castTree< α≤β <α))
+        ≡⟨ sym (fix<-unfold MuBody (castTree< α≤β <α)) ⟩
+          fix< MuBody (castTree< α≤β <α)
+        ∎
+
+  monMu^-id : ∀ {α} {α≤α : α ≤ α} {x : Mu^ α}
+    → monMu^ α≤α x ≡ x
+  monMu^-id {α} {refl} {<α , FMu<α} = Σ-≡⁺ (isoTree<₁ <α) go
+    where
+      go
+        : cast
+           (cong (λ <α′ → F (fix< MuBody <α′)) (isoTree<₁ <α))
+           (proj₂ (monMu^ refl (<α , FMu<α)))
+        ≡ FMu<α
+      go
+        = trans
+            (cast-trans
+              (cong (λ <α′ → F (fix< MuBody <α′)) (isoTree<₁ <α))
+              (cong F (monMu^.eq refl <α FMu<α)))
+            (cast-K _)
+  monMu^-id {.(sup _ _)} {lt i α≤α} {<α , FMu<α} = ⊥-elim (pred-not-≤ α≤α)
+
+  -- Wrong:
+  -- monMu^-irr : ∀ {α β} {α≤β₁ α≤β₂ : α ≤ β} {x : Mu^ α}
+  --   → monMu^ α≤β₁ x ≡ monMu^ α≤β₂ x
+  -- monMu^-irr {α} {β} {α≤β₁} {α≤β₂} {<α , FMu<α} = {!!}
+  -- -- toTree< (the< <α , trans-<-≤ (theproof< <α) α≤β₁)
+  -- -- ≠
+  -- -- toTree< (the< <α , trans-<-≤ (theproof< <α) α≤β₂)
 
   module _ (map : Map ℓ F) where
 
