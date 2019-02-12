@@ -1,6 +1,7 @@
 module Everything where
 
 import Axioms
+import Examples
 import Model
 import Ordinal
 import Ordinal.Container.Finite.Structural
