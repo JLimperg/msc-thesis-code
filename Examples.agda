@@ -6,12 +6,12 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Product using (_×_ ; _,_)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
 
-open import Ordinal using
+open import Ordinal.Tree using
   (sup ; _<_ ; _≤_ ; refl ; lt) renaming
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
 
 import Util.Container.Finite as ContainerFin
-import Ordinal.Container.Finite.Structural as OrdinalFin
+import Ordinal.Tree.Container.Finite.Structural as OrdinalFin
 
 module Nat where
 

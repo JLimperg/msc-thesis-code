@@ -1,4 +1,5 @@
 {-# OPTIONS --postfix-projections #-}
+module Ordinal.Tree where
 
 open import Data.Empty using (⊥ ; ⊥-elim)
 open import Data.Fin using (Fin; zero; suc)

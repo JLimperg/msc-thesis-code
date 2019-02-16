@@ -16,10 +16,10 @@ open import Relation.Binary.PropositionalEquality using
 open import Size using (Size ; ↑_ ; ∞)
 
 open import Axioms using (funext)
-open import Ordinal using
+open import Ordinal.Tree using
   (sup ; _≤_ ; _<_ ; lt ; refl) renaming
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
-open import Ordinal.Container.Finite.Structural using
+open import Ordinal.Tree.Container.Finite.Structural using
   (Mu ; monMu ; monMuℕ ; _≈_)
 open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 open import Util.Container.Finite using (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; liftEq ; μ ; sup)
