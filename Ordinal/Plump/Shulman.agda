@@ -210,32 +210,6 @@ SubSingleton a b = a ⊂ sg b
 IsSg : ∀{ℓ} (a : Ord ℓ) → Set (lsuc ℓ)
 IsSg a = ∃ λ b → a ≅ sg b
 
--- Putting two elements into a set
--- Forms {a,b}; not to be confused with the tuple (a,b)
-
-data Two {ℓ} : Set ℓ where
-  true false : Two
-
-pair : ∀{ℓ} (a b : Ord ℓ) → Ord ℓ
-pair a b = sup Two λ where true → a; false → b
-
-pair-introˡ : ∀{ℓ} {a b : Ord ℓ} → a ∈ pair a b
-pair-introˡ = true , ≅-refl _
-
-pair-introʳ : ∀{ℓ} {a b : Ord ℓ} → b ∈ pair a b
-pair-introʳ = false , ≅-refl _
-
-pair-elim :  ∀{ℓ} {c a b : Ord ℓ} (p : c ∈ pair a b) → (c ≅ a) ⊎ (c ≅ b)
-pair-elim (true  , e) = inj₁ e
-pair-elim (false , e) = inj₂ e
-
-pair-cong : ∀{ℓ} {a a' b b' : Ord ℓ} (p : a ≅ a') (q : b ≅ b') → pair a b ≅ pair a' b'
-pair-cong p q = (λ{ true → true , p       ; false → false , q      })
-              , (λ{ true → true , ≅-sym p ; false → false , ≅-sym q})
-
-pair-inhabited : ∀{ℓ} {a b : Ord ℓ} → IsInhabited (pair a b)
-pair-inhabited {a = a} = a , true , ≅-refl a
-
 -- Union of two sets
 
 _∪_ : ∀{ℓ} (a b : Ord ℓ) → Ord ℓ
@@ -300,58 +274,3 @@ a ∪ b = sup (_ ⊎ _) λ where
 
 ⋃-elim : ∀{ℓ} {a c : Ord ℓ} (p : c ∈ ⋃ a) → ∃ λ b → (b ∈ a) × (c ∈ b)
 ⋃-elim {a = sup _ f} ((i , j) , e) = f i , (i , ≅-refl _) , ∈-intro (j , e)
-
-
--- Comprehension (restriction)
-
-_∣_ : ∀{ℓ} (a : Ord ℓ) (P : Ord ℓ → Set ℓ) → Ord ℓ
-a ∣ P = sup (∃ λ i → P (a ` i)) λ p → a ` proj₁ p
-
-compr-intro : ∀{ℓ} {a c : Ord ℓ} {P : Ord ℓ → Set ℓ} (resp : IsPred P)
-  (q : c ∈ a) (p : P c) → c ∈ (a ∣ P)
-compr-intro resp q p = let
-    i , e = ∈-elim q
-  in (i , resp e p) , e
-
-compr-elimˡ : ∀{ℓ} {a c : Ord ℓ} {P : Ord ℓ → Set ℓ} (q : c ∈ (a ∣ P)) → c ∈ a
-compr-elimˡ ((i , j) , e) = ∈-intro (i , e)
-
-compr-elimʳ : ∀{ℓ} {a c : Ord ℓ} {P : Ord ℓ → Set ℓ} (resp : IsPred P) (q : c ∈ (a ∣ P)) → P c
-compr-elimʳ resp ((i , j) , e) = resp (≅-sym e) j
-
--- Intersection of two sets
-
-_∩_ : ∀{ℓ} (a b : Ord ℓ) → Ord ℓ
-a ∩ b = a ∣ (_∈ b)
-
-∩-intro : ∀{ℓ} {a b c : Ord ℓ} (p : c ∈ a) (q : c ∈ b) → c ∈ (a ∩ b)
-∩-intro p q = let
-    i , d = ∈-elim p
-  in (i , ∈-congˡ (≅-sym d) q) , d
-
-∩-elimˡ : ∀{ℓ} {a b c : Ord ℓ} (p : c ∈ (a ∩ b)) → c ∈ a
-∩-elimˡ ((i , j) , e) = ∈-intro (i , e)
-
-∩-elimʳ : ∀{ℓ} {a b c : Ord ℓ} (p : c ∈ (a ∩ b)) → c ∈ b
-∩-elimʳ ((i , j) , e) = ∈-congˡ e j
-
--- Intersection of a non-empty family...
-
-⋂ᶠ : ∀{ℓ} {I : Set ℓ} (i : I) (f : I → Ord ℓ) → Ord ℓ
-⋂ᶠ i f = f i ∣ λ a → ∀ i′ → a ∈ f i′
-
-⋂ᶠ-intro : ∀{ℓ} {I : Set ℓ} {i : I} {f : I → Ord ℓ} {a} (r : ∀ j → a ∈ f j) → a ∈ ⋂ᶠ i f
-⋂ᶠ-intro {i = i} r = let
-    k , p = ∈-elim (r i)
-  in (k , λ j → ∈-congˡ (≅-sym p) (r j)) , p
-
--- Intersection of an inhabited set
-
-⋂ : ∀{ℓ} (a : Ord ℓ) (inh : IsInhabited a) → Ord ℓ
-⋂ (sup _ f) (b , i , b≅fi) = ⋂ᶠ i f
-
-_∈∀∈_ : ∀{ℓ} (a b : Ord ℓ) → Set (lsuc ℓ)
-c ∈∀∈ a = ∀ {b} → b ∈ a → c ∈ b
-
-⋂-intro : ∀{ℓ} {a : Ord ℓ} {inh : IsInhabited a} {c} (r : c ∈∀∈ a) → c ∈ ⋂ a inh
-⋂-intro {a = sup _ f} {b , i , b≅fi} r = ⋂ᶠ-intro λ j → r (j , ≅-refl _)
