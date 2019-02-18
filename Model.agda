@@ -5,14 +5,8 @@
 -- inductive types), and then perhaps to greatest fixed points (coinductive
 -- types).
 
-open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Product using
-  (Σ ; _×_ ; Σ-syntax ; ∃-syntax ; _,_ ; proj₁ ; proj₂)
-open import Data.Nat as ℕ using (ℕ ; zero ; suc)
-open import Function using (id ; _∘_)
-open import Level using () renaming (zero to lzero)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_ ; refl ; sym ; trans ; cong ; cong-app ; module ≡-Reasoning)
+  (cong-app ; module ≡-Reasoning)
 open import Size using (Size ; ↑_ ; ∞)
 
 open import Axioms using (funext)
@@ -21,10 +15,12 @@ open import Ordinal.Tree using
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
 open import Ordinal.Tree.Container.Finite.Structural using
   (Mu ; monMu ; monMuℕ ; _≈_)
-open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 open import Util.Container.Finite using (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; liftEq ; μ ; sup)
+open import Util.Prelude hiding (module Vec)
 open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
+open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 
+import Data.Nat as ℕ
 import Data.Vec.Membership.Propositional.Properties as Vec
 
 

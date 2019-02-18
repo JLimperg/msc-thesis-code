@@ -1,19 +1,13 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Ordinal.Tree.Container.Finite.Structural where
 
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Nat as ℕ using
-  (ℕ ; zero ; suc) renaming
-  (_≤_ to _≤ℕ_)
-open import Data.Product using (∃-syntax ; Σ-syntax ; _,_ ; proj₁ ; proj₂)
-open import Function using (_∘_ ; id)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; inspect ; [_])
+open import Data.Nat as ℕ using () renaming (_≤_ to _≤ℕ_)
 
 open import Ordinal.Tree using
   (sup ; _≤_ ; refl ; lt ; predL; pred-not-≤) renaming
   (Tree to Ordinal ; embℕ to ℕ→Ordinal)
 open import Util.Container.Finite
+open import Util.Prelude
 open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
 open import Util.Vec using (All₂-tabulate⁺ ; All₂-tabulate⁻)
 

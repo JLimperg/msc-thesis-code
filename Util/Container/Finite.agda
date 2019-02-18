@@ -1,12 +1,8 @@
 module Util.Container.Finite where
 
-open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Nat using (ℕ ; zero ; suc)
-open import Data.Product using (_×_ ; ∃-syntax ; _,_)
-open import Function using (id ; _∘_)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
 open import Size using (Size ; ↑_)
 
+open import Util.Prelude
 open import Util.Vec using (All₂ ; tabulate)
 
 

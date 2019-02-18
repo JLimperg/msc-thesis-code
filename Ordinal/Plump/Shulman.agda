@@ -4,19 +4,11 @@
 -- Implementation based on an implementation of Aczel sets by Andreas Abel.
 module Ordinal.Plump.Shulman where
 
-open import Data.Empty using (⊥)
-open import Data.Nat.Base using (ℕ)
-open import Data.Product using
-  (Σ ; ∃; ∃-syntax ; _×_; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]′)
-open import Data.Unit using (⊤)
-open import Function using (id; _$_)
+open import Data.Sum using ([_,_]′)
 open import Induction.WellFounded as WfRec using (Acc ; acc ; WellFounded)
-open import Level using
-  (Level; Lift; lower) renaming
-  (zero to lzero; suc to lsuc ; _⊔_ to _⊔ℓ_)
 open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
+
+open import Util.Prelude
 
 
 -- Definition of ordinals, equality, orders

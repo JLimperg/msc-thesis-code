@@ -1,19 +1,13 @@
 {-# OPTIONS --postfix-projections #-}
 module Ordinal.Tree where
 
-open import Data.Empty using (⊥ ; ⊥-elim)
-open import Data.Fin using (Fin; zero; suc)
-open import Data.Nat.Base using (ℕ; zero; suc)
-open import Data.Product using
-  (_×_; ∃; Σ; Σ-syntax ; ∃-syntax ; proj₁; proj₂ ; _,_; <_,_>)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
-open import Data.Unit using (⊤)
-open import Data.Vec using (Vec; []; _∷_; lookup)
-open import Function using (id; _∘_; _∘′_)
+open import Data.Product using (<_,_>)
+open import Data.Sum using ([_,_])
+open import Data.Vec using (lookup)
 open import Induction.WellFounded using (WellFounded; Acc; acc; module All)
-open import Level using (Level; _⊔_; Lift) renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary using (Rel)
 
+open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
   ( _≡_; refl; cong; subst; sym ; trans ; module ≡-Reasoning ; cast ; subst-trans
   ; subst-cong ; sym-cancel-l ; cast-trans ; cast-K ; Σ-≡⁺)
@@ -162,7 +156,7 @@ isoTree<₂ₐ (lt i α≤β) = isoTree≤₂ₐ α≤β
 
 -- Tree recursion
 
-Rec : ∀ {ℓ} (C : Tree → Set ℓ) → Set (lone ⊔ ℓ)
+Rec : ∀ {ℓ} (C : Tree → Set ℓ) → Set (lone ⊔ℓ ℓ)
 Rec C = ∀ {α} (r : (<α : Tree< α) → C (the< <α)) → C α
 
 module _ {ℓ} {C : Tree → Set ℓ} where

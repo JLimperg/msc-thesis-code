@@ -1,14 +1,10 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 module Examples where
 
-open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Nat using (ℕ ; zero ; suc)
-open import Data.Product using (_×_ ; _,_)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
-
 open import Ordinal.Tree using
   (sup ; _<_ ; _≤_ ; refl ; lt) renaming
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
+open import Util.Prelude
 
 import Util.Container.Finite as ContainerFin
 import Ordinal.Tree.Container.Finite.Structural as OrdinalFin

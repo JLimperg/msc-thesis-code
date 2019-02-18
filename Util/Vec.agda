@@ -5,14 +5,10 @@ open import Data.Vec.All as All public using (All ; [] ; _∷_)
 open import Data.Vec.Any as Any public using (Any ; here ; there)
 open import Data.Vec.Membership.Propositional public using (_∈_)
 
-open import Data.Empty using (⊥)
-open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Product using (_×_ ; _,_)
-open import Data.Unit using (⊤)
-open import Data.Nat as ℕ using (ℕ ; zero ; suc ; _≤_)
-open import Level using (Lift ; lift)
+open import Data.Nat as ℕ using (_≤_)
 open import Relation.Binary using (Rel)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
+
+open import Util.Prelude
 
 import Data.Nat.Properties as ℕ
 

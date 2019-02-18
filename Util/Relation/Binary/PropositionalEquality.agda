@@ -2,8 +2,7 @@ module Util.Relation.Binary.PropositionalEquality where
 
 open import Relation.Binary.PropositionalEquality public
 
-open import Data.Product using (Σ ; proj₁ ; proj₂)
-open import Function using (id)
+open import Util.Prelude
 
 
 cast : ∀ {α} {A B : Set α} → A ≡ B → A → B
