@@ -30,35 +30,35 @@ data Ord ℓ : Set (lsuc ℓ) where
 
 -- Branching type
 
-Br : ∀{ℓ} (a : Ord ℓ) → Set ℓ
+Br : ∀ {ℓ} (a : Ord ℓ) → Set ℓ
 Br (sup I _) = I
 
 -- Elements
 
-els : ∀{ℓ} (a : Ord ℓ) (i : Br a) → Ord ℓ
+els : ∀ {ℓ} (a : Ord ℓ) (i : Br a) → Ord ℓ
 els (sup _ f) = f
 
 syntax els a i = a ` i
 
-lift-Ord : ∀{a ℓ} → Ord ℓ → Ord (a ⊔ℓ ℓ)
+lift-Ord : ∀ {a ℓ} → Ord ℓ → Ord (a ⊔ℓ ℓ)
 lift-Ord {a} (sup I f) = sup (Lift a I) λ i → lift-Ord {a} (f (lower i))
 
 -- Equality and orders
 
 mutual
-  _<_ : ∀{ℓ} (a b : Ord ℓ) → Set ℓ
+  _<_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
   a < sup _ f = ∃[ i ] (a ≤ f i)
 
-  _≤_  : ∀{ℓ} (a b : Ord ℓ) → Set ℓ
+  _≤_  : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
   sup _ f ≤ b = ∀ i → f i < b
 
-_≅_ : ∀{ℓ} (a b : Ord ℓ) → Set ℓ
+_≅_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
 a ≅ b = (a ≤ b) × (b ≤ a)
 
-_≮_ : ∀{ℓ} (a b : Ord ℓ) → Set ℓ
+_≮_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
 a ≮ b = ¬ (a < b)
 
-_≇_ : ∀{ℓ} (a b : Ord ℓ) → Set ℓ
+_≇_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
 a ≇ b = ¬ (a ≅ b)
 
 -- Intro/Elim rules for </≤ (for nicer proofs below)
@@ -108,12 +108,12 @@ mutual
 <-trans {ℓ} {a} {b} {sup C fc} a<b (i , b≤fci) = i , <→≤ (<-trans-≤ a<b b≤fci)
 
 ≅-trans : ∀ {ℓ} {a b c : Ord ℓ} (d : a ≅ b) (e : b ≅ c) → a ≅ c
-≅-trans (p , p') (q , q') = ≤-trans p q , ≤-trans q' p'
+≅-trans (p , p′) (q , q′) = ≤-trans p q , ≤-trans q′ p′
 
 -- Symmetry
 
 ≅-sym : ∀ {ℓ} {a b : Ord ℓ} (p : a ≅ b) → b ≅ a
-≅-sym (p , p') = p' , p
+≅-sym (p , p′) = p′ , p
 
 -- Alternative interpretation of ≤ in terms of <
 
@@ -164,15 +164,12 @@ open Pred
 
 -- <-induction.
 
-<-acc-down : ∀ {ℓ} {a b : Ord ℓ} → a < b → Acc _<_ b → Acc _<_ a
-<-acc-down {ℓ} {sup A fa} {b} a<b (acc rs) = rs (sup A fa) a<b
-
-<-acc-down-≤ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → Acc _<_ b → Acc _<_ a
-<-acc-down-≤ {ℓ} {sup A fa} {b} fai<b b-acc = acc λ where
-  x (i , x≤fai) → <-acc-down (≤-trans-< x≤fai (fai<b i)) b-acc
+<-acc-≤ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → Acc _<_ b → Acc _<_ a
+<-acc-≤ {ℓ} {sup A fa} {b} fai<b (acc rs) = acc λ where
+  x (i , x≤fai) → rs x (≤-trans-< x≤fai (fai<b i))
 
 <-wf : ∀ {ℓ} → WellFounded (_<_ {ℓ})
-<-wf (sup I f) = acc λ { x (i , x≤fi) → <-acc-down-≤ x≤fi (<-wf (f i)) }
+<-wf (sup I f) = acc λ { x (i , x≤fi) → <-acc-≤ x≤fi (<-wf (f i)) }
 
 <-ind : ∀ {ℓ ℓ′} (P : Ord ℓ → Set ℓ′)
   → (∀ a → (∀ b → b < a → P b) → P a)
@@ -236,7 +233,7 @@ a ⊔ b = sup (_ ⊎ _) λ where
 -- Supremum of a family of ordinals
 
 ⨆ᶠ : ∀{ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
-⨆ᶠ {ℓ} {I} f = sup (∃[ i ] Br (f i)) λ p → f (proj₁ p) ` proj₂ p
+⨆ᶠ {ℓ} {I} f = sup (∃[ i ] Br (f i)) λ { (i , j) → f i ` j }
 
 ⨆ᶠ-intro : ∀{ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I} → c < f i → c < ⨆ᶠ f
 ⨆ᶠ-intro f {c} {i} c<fi
@@ -251,7 +248,7 @@ a ⊔ b = sup (_ ⊎ _) λ where
   let i , q = ⨆ᶠ-elim f c<⨆ᶠf in
   ⨆ᶠ-intro f′ (≤-elim′ (p i) q)
 
-⨆ᶠ-cong : ∀{ℓ} {I : Set ℓ} {f f' : I → Ord ℓ} → (∀ i → f i ≅ f' i) → ⨆ᶠ f ≅ ⨆ᶠ f'
+⨆ᶠ-cong : ∀{ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≅ f′ i) → ⨆ᶠ f ≅ ⨆ᶠ f′
 ⨆ᶠ-cong p = ⨆ᶠ-mon (λ i → proj₁ (p i))
           , ⨆ᶠ-mon (λ i → proj₂ (p i))
 
