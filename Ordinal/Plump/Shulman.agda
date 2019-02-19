@@ -83,18 +83,14 @@ a ≇ b = ¬ (a ≅ b)
 -- Transitivity
 
 mutual
+  <-trans-≤ : ∀ {ℓ} {a b c : Ord ℓ} → a < b → b ≤ c → a < c
+  <-trans-≤ {b = sup _ f} (i , p) h = ≤-trans-< p (h i)
+
   ≤-trans-< : ∀ {ℓ} {a b c : Ord ℓ} → a ≤ b → b < c → a < c
-  ≤-trans-< {ℓ} {a} {b} {sup C fc} a≤b (i , b≤fci) = i , ≤-trans a≤b b≤fci
+  ≤-trans-< {c = sup _ f} p (i , q) = i , ≤-trans p q
 
   ≤-trans : ∀ {ℓ} {a b c : Ord ℓ} → a ≤ b → b ≤ c → a ≤ c
-  ≤-trans {ℓ} {sup A fa} {sup B fb} {c} a≤b b≤c i
-    = let j , fai≤fbj = a≤b i in
-      ≤-trans-< fai≤fbj (b≤c j)
-
-<-trans-≤ : ∀ {ℓ} {a b c : Ord ℓ} → a < b → b ≤ c → a < c
-<-trans-≤ {ℓ} {a} {sup B fb} {sup C fc} (i , a≤fbi) b≤c
-  = let j , fbi≤fcj = b≤c i in
-    j , ≤-trans a≤fbi fbi≤fcj
+  ≤-trans {a = sup _ f} h q i = <-trans-≤ (h i) q
 
 <-trans : ∀ {ℓ} {a b c : Ord ℓ} → a < b → b < c → a < c
 <-trans {ℓ} {a} {b} {sup C fc} a<b (i , b≤fci) = i , <→≤ (<-trans-≤ a<b b≤fci)
