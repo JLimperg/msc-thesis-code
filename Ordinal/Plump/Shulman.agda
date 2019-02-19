@@ -18,31 +18,31 @@ open import Util.Prelude
 -- The branching type is given at each node.
 
 data Ord ℓ : Set (lsuc ℓ) where
-  sup : (I : Set ℓ) (els : I → Ord ℓ) → Ord ℓ
+  limSuc : (I : Set ℓ) (els : I → Ord ℓ) → Ord ℓ
 
 -- Branching type
 
 Br : ∀ {ℓ} (a : Ord ℓ) → Set ℓ
-Br (sup I _) = I
+Br (limSuc I _) = I
 
 -- Elements
 
 els : ∀ {ℓ} (a : Ord ℓ) (i : Br a) → Ord ℓ
-els (sup _ f) = f
+els (limSuc _ f) = f
 
 syntax els a i = a ` i
 
 lift-Ord : ∀ {a ℓ} → Ord ℓ → Ord (a ⊔ℓ ℓ)
-lift-Ord {a} (sup I f) = sup (Lift a I) λ i → lift-Ord {a} (f (lower i))
+lift-Ord {a} (limSuc I f) = limSuc (Lift a I) λ i → lift-Ord {a} (f (lower i))
 
 -- Equality and orders
 
 mutual
   _<_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
-  a < sup _ f = ∃[ i ] (a ≤ f i)
+  a < limSuc _ f = ∃[ i ] (a ≤ f i)
 
   _≤_  : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
-  sup _ f ≤ b = ∀ i → f i < b
+  limSuc _ f ≤ b = ∀ i → f i < b
 
 _≅_ : ∀ {ℓ} (a b : Ord ℓ) → Set ℓ
 a ≅ b = (a ≤ b) × (b ≤ a)
@@ -56,21 +56,21 @@ a ≇ b = ¬ (a ≅ b)
 -- Intro/Elim rules for </≤ (for nicer proofs below)
 
 <-intro : ∀ {ℓ} {a b : Ord ℓ} → ∃[ i ] (a ≤ (b ` i)) → a < b
-<-intro {b = sup I f} p = p
+<-intro {b = limSuc I f} p = p
 
 <-elim : ∀ {ℓ} {a b : Ord ℓ} → a < b → ∃[ i ] (a ≤ (b ` i))
-<-elim {b = sup I f} p = p
+<-elim {b = limSuc I f} p = p
 
 ≤-intro : ∀ {ℓ} {a b : Ord ℓ} → (∀ i → (a ` i) < b) → a ≤ b
-≤-intro {a = sup I f} p = p
+≤-intro {a = limSuc I f} p = p
 
 ≤-elim : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → (∀ i → (a ` i) < b)
-≤-elim {a = sup I f} p = p
+≤-elim {a = limSuc I f} p = p
 
 -- Reflexivity
 
 ≤-refl : ∀ {ℓ} {a : Ord ℓ} → a ≤ a
-≤-refl {a = sup _ f} i = i , ≤-refl
+≤-refl {a = limSuc _ f} i = i , ≤-refl
 
 ≅-refl : ∀ {ℓ} {a : Ord ℓ} → a ≅ a
 ≅-refl = ≤-refl , ≤-refl
@@ -78,22 +78,22 @@ a ≇ b = ¬ (a ≅ b)
 -- < implies ≤
 
 <→≤ : ∀ {ℓ} {a b : Ord ℓ} → a < b → a ≤ b
-<→≤ {ℓ} {sup A fa} {sup B fb} (i , fa<fb) j = i , <→≤ (fa<fb j)
+<→≤ {ℓ} {limSuc A fa} {limSuc B fb} (i , fa<fb) j = i , <→≤ (fa<fb j)
 
 -- Transitivity
 
 mutual
   <-trans-≤ : ∀ {ℓ} {a b c : Ord ℓ} → a < b → b ≤ c → a < c
-  <-trans-≤ {b = sup _ f} (i , p) h = ≤-trans-< p (h i)
+  <-trans-≤ {b = limSuc _ f} (i , p) h = ≤-trans-< p (h i)
 
   ≤-trans-< : ∀ {ℓ} {a b c : Ord ℓ} → a ≤ b → b < c → a < c
-  ≤-trans-< {c = sup _ f} p (i , q) = i , ≤-trans p q
+  ≤-trans-< {c = limSuc _ f} p (i , q) = i , ≤-trans p q
 
   ≤-trans : ∀ {ℓ} {a b c : Ord ℓ} → a ≤ b → b ≤ c → a ≤ c
-  ≤-trans {a = sup _ f} h q i = <-trans-≤ (h i) q
+  ≤-trans {a = limSuc _ f} h q i = <-trans-≤ (h i) q
 
 <-trans : ∀ {ℓ} {a b c : Ord ℓ} → a < b → b < c → a < c
-<-trans {ℓ} {a} {b} {sup C fc} a<b (i , b≤fci) = i , <→≤ (<-trans-≤ a<b b≤fci)
+<-trans {ℓ} {a} {b} {limSuc C fc} a<b (i , b≤fci) = i , <→≤ (<-trans-≤ a<b b≤fci)
 
 ≅-trans : ∀ {ℓ} {a b c : Ord ℓ} (d : a ≅ b) (e : b ≅ c) → a ≅ c
 ≅-trans (p , p′) (q , q′) = ≤-trans p q , ≤-trans q′ p′
@@ -106,7 +106,7 @@ mutual
 -- Alternative interpretation of ≤ in terms of <
 
 ≤-intro′ : ∀ {ℓ} {b c : Ord ℓ} → (∀ {a} → a < b → a < c) → b ≤ c
-≤-intro′ {b = sup _ f} cast i = cast (i , ≤-refl)
+≤-intro′ {b = limSuc _ f} cast i = cast (i , ≤-refl)
 
 ≤-elim′ : ∀ {ℓ} {b c : Ord ℓ} → b ≤ c → ∀ {a} → a < b → a < c
 ≤-elim′ b≤c a<b = <-trans-≤ a<b b≤c
@@ -130,7 +130,7 @@ mutual
 -- Foundation: a ≤ b implies b ≮ a
 
 ≤-found : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → b ≮ a
-≤-found {ℓ} {sup A fa} {b} a≤b (i , b≤fai) = ≤-found b≤fai (a≤b i)
+≤-found {ℓ} {limSuc A fa} {b} a≤b (i , b≤fai) = ≤-found b≤fai (a≤b i)
 
 -- Thus, a ≮ a.
 
@@ -153,11 +153,11 @@ open Pred
 -- <-induction.
 
 <-acc-≤ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → Acc _<_ b → Acc _<_ a
-<-acc-≤ {ℓ} {sup A fa} {b} fai<b (acc rs) = acc λ where
+<-acc-≤ {ℓ} {limSuc A fa} {b} fai<b (acc rs) = acc λ where
   x (i , x≤fai) → rs x (≤-trans-< x≤fai (fai<b i))
 
 <-wf : ∀ {ℓ} → WellFounded (_<_ {ℓ})
-<-wf (sup I f) = acc λ { x (i , x≤fi) → <-acc-≤ x≤fi (<-wf (f i)) }
+<-wf (limSuc I f) = acc λ { x (i , x≤fi) → <-acc-≤ x≤fi (<-wf (f i)) }
 
 <-ind : ∀ {ℓ ℓ′} (P : Ord ℓ → Set ℓ′)
   → (∀ a → (∀ b → b < a → P b) → P a)
@@ -171,12 +171,12 @@ open Pred
 -- Zero
 
 ozero : ∀ {ℓ} → Ord ℓ
-ozero {ℓ} = sup (Lift ℓ ⊥) λ()
+ozero {ℓ} = limSuc (Lift ℓ ⊥) λ()
 
 -- Successor?
 
 osuc : ∀ {ℓ} → Ord ℓ → Ord ℓ
-osuc {ℓ} a = sup (Lift ℓ ⊤) λ _ → a
+osuc {ℓ} a = limSuc (Lift ℓ ⊤) λ _ → a
 
 -- Lo and behold!
 osuc-mon-< : ∀ {ℓ} {a b : Ord ℓ} → a < b → osuc a < osuc b
@@ -191,15 +191,15 @@ osuc-cong (a≤b , b≤a) = osuc-mon-≤ a≤b , osuc-mon-≤ b≤a
 -- Maximum/Supremum
 
 _⊔_ : ∀ {ℓ} (a b : Ord ℓ) → Ord ℓ
-a ⊔ b = sup (_ ⊎ _) λ where
+a ⊔ b = limSuc (_ ⊎ _) λ where
   (inj₁ i) → a ` i
   (inj₂ j) → b ` j
 
 ⊔-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c < a → c < (a ⊔ b)
-⊔-introˡ {a = sup _ f} (i , e) = inj₁ i , e
+⊔-introˡ {a = limSuc _ f} (i , e) = inj₁ i , e
 
 ⊔-introʳ : ∀ {ℓ} {a b c : Ord ℓ} → c < b → c < (a ⊔ b)
-⊔-introʳ {b = sup _ g} (i , e) = inj₂ i , e
+⊔-introʳ {b = limSuc _ g} (i , e) = inj₂ i , e
 
 ⊔-≤-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ a → c ≤ (a ⊔ b)
 ⊔-≤-introˡ c≤a = ≤-intro λ i → ⊔-introˡ (≤-elim c≤a i)
@@ -214,8 +214,8 @@ a ⊔ b = sup (_ ⊎ _) λ where
 ⊔-≤-introʳ′ = ⊔-≤-introʳ ≤-refl
 
 ⊔-elim : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → (c < a) ⊎ (c < b)
-⊔-elim {a = sup _ f}               (inj₁ i , e) = inj₁ (i , e)
-⊔-elim {a = sup _ _} {b = sup _ g} (inj₂ i , e) = inj₂ (i , e)
+⊔-elim {a = limSuc _ f}               (inj₁ i , e) = inj₁ (i , e)
+⊔-elim {a = limSuc _ _} {b = limSuc _ g} (inj₂ i , e) = inj₂ (i , e)
 
 ⊔-case : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → ∀ {q} {Q : Set q} → (c < a → Q) → (c < b → Q) → Q
 ⊔-case p left right = [ left , right ]′ (⊔-elim p)
@@ -233,7 +233,7 @@ a ⊔ b = sup (_ ⊎ _) λ where
 -- Supremum of a family of ordinals
 
 ⨆ᶠ : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
-⨆ᶠ {ℓ} {I} f = sup (∃[ i ] Br (f i)) λ { (i , j) → f i ` j }
+⨆ᶠ {ℓ} {I} f = limSuc (∃[ i ] Br (f i)) λ { (i , j) → f i ` j }
 
 ⨆ᶠ-intro : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I} → c < f i → c < ⨆ᶠ f
 ⨆ᶠ-intro f {c} {i} c<fi
@@ -255,11 +255,11 @@ a ⊔ b = sup (_ ⊎ _) λ where
 -- Supremum of all ordinals smaller than some given ordinal
 
 ⨆ : ∀ {ℓ} (a : Ord ℓ) → Ord ℓ
-⨆ (sup _ f) = ⨆ᶠ f
+⨆ (limSuc _ f) = ⨆ᶠ f
 
 ⨆-intro : ∀ {ℓ} {a b : Ord ℓ} → b < a → b ≤ ⨆ a
-⨆-intro {a = sup A fa} {b = sup B fb} (i , b≤fi) = ≤-intro λ j →
+⨆-intro {a = limSuc A fa} {b = limSuc B fb} (i , b≤fi) = ≤-intro λ j →
   let k , p = <-elim (b≤fi j) in _ , p
 
 ⨆-elim : ∀ {ℓ} {a c : Ord ℓ} → c < ⨆ a → ∃[ b ] ((b < a) × (c < b))
-⨆-elim {a = sup _ f} ((i , j) , c≤) = f i , (i , ≤-refl) , <-intro (_ , c≤)
+⨆-elim {a = limSuc _ f} ((i , j) , c≤) = f i , (i , ≤-refl) , <-intro (_ , c≤)
