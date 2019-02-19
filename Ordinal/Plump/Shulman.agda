@@ -201,7 +201,19 @@ a ⊔ b = sup (_ ⊎ _) λ where
 ⊔-introʳ : ∀{ℓ} {a b c : Ord ℓ} → c < b → c < (a ⊔ b)
 ⊔-introʳ {b = sup _ g} (i , e) = inj₂ i , e
 
-⊔-elim : ∀{ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → (c < a) ⊎ (c < b)
+⊔-≤-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ a → c ≤ (a ⊔ b)
+⊔-≤-introˡ c≤a = ≤-intro λ i → ⊔-introˡ (≤-elim c≤a i)
+
+⊔-≤-introˡ′ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ (a ⊔ b)
+⊔-≤-introˡ′ = ⊔-≤-introˡ ≤-refl
+
+⊔-≤-introʳ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ b → c ≤ (a ⊔ b)
+⊔-≤-introʳ c≤b = ≤-intro λ i → ⊔-introʳ (≤-elim c≤b i)
+
+⊔-≤-introʳ′ : ∀ {ℓ} {a b : Ord ℓ} → b ≤ (a ⊔ b)
+⊔-≤-introʳ′ = ⊔-≤-introʳ ≤-refl
+
+⊔-elim : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → (c < a) ⊎ (c < b)
 ⊔-elim {a = sup _ f}               (inj₁ i , e) = inj₁ (i , e)
 ⊔-elim {a = sup _ _} {b = sup _ g} (inj₂ i , e) = inj₂ (i , e)
 
