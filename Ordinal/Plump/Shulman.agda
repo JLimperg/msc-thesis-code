@@ -105,8 +105,8 @@ mutual
 
 -- Alternative interpretation of ≤ in terms of <
 
-≤-intro′ : ∀ {ℓ} {a b : Ord ℓ} → (∀ {c} → c < a → c < b) → a ≤ b
-≤-intro′ {a = sup _ f} cast i = cast (i , ≤-refl)
+≤-intro′ : ∀ {ℓ} {b c : Ord ℓ} → (∀ {a} → a < b → a < c) → b ≤ c
+≤-intro′ {b = sup _ f} cast i = cast (i , ≤-refl)
 
 ≤-elim′ : ∀ {ℓ} {b c : Ord ℓ} → b ≤ c → ∀ {a} → a < b → a < c
 ≤-elim′ b≤c a<b = <-trans-≤ a<b b≤c
@@ -170,7 +170,7 @@ open Pred
 
 -- Zero
 
-ozero : ∀{ℓ} → Ord ℓ
+ozero : ∀ {ℓ} → Ord ℓ
 ozero {ℓ} = sup (Lift ℓ ⊥) λ()
 
 -- Successor?
@@ -190,15 +190,15 @@ osuc-cong (a≤b , b≤a) = osuc-mon-≤ a≤b , osuc-mon-≤ b≤a
 
 -- Maximum/Supremum
 
-_⊔_ : ∀{ℓ} (a b : Ord ℓ) → Ord ℓ
+_⊔_ : ∀ {ℓ} (a b : Ord ℓ) → Ord ℓ
 a ⊔ b = sup (_ ⊎ _) λ where
   (inj₁ i) → a ` i
   (inj₂ j) → b ` j
 
-⊔-introˡ : ∀{ℓ} {a b c : Ord ℓ} → c < a → c < (a ⊔ b)
+⊔-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c < a → c < (a ⊔ b)
 ⊔-introˡ {a = sup _ f} (i , e) = inj₁ i , e
 
-⊔-introʳ : ∀{ℓ} {a b c : Ord ℓ} → c < b → c < (a ⊔ b)
+⊔-introʳ : ∀ {ℓ} {a b c : Ord ℓ} → c < b → c < (a ⊔ b)
 ⊔-introʳ {b = sup _ g} (i , e) = inj₂ i , e
 
 ⊔-≤-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ a → c ≤ (a ⊔ b)
@@ -217,49 +217,49 @@ a ⊔ b = sup (_ ⊎ _) λ where
 ⊔-elim {a = sup _ f}               (inj₁ i , e) = inj₁ (i , e)
 ⊔-elim {a = sup _ _} {b = sup _ g} (inj₂ i , e) = inj₂ (i , e)
 
-⊔-case : ∀{ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → ∀ {q} {Q : Set q} → (c < a → Q) → (c < b → Q) → Q
+⊔-case : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → ∀ {q} {Q : Set q} → (c < a → Q) → (c < b → Q) → Q
 ⊔-case p left right = [ left , right ]′ (⊔-elim p)
 
-⊔-split : ∀{ℓ q} {Q : Set q} {a b c : Ord ℓ} → (c < a → Q) → (c < b → Q) → c < (a ⊔ b) → Q
+⊔-split : ∀ {ℓ q} {Q : Set q} {a b c : Ord ℓ} → (c < a → Q) → (c < b → Q) → c < (a ⊔ b) → Q
 ⊔-split left right p = ⊔-case p left right
 
-⊔-mon : ∀{ℓ} {a a′ b b′ : Ord ℓ} → a ≤ a′ → b ≤ b′ → (a ⊔ b) ≤ (a′ ⊔ b′)
+⊔-mon : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≤ a′ → b ≤ b′ → (a ⊔ b) ≤ (a′ ⊔ b′)
 ⊔-mon a≤a′ b≤b′ = ≤-intro′ (⊔-split (λ c<a → ⊔-introˡ (≤-elim′ a≤a′ c<a))
                                    (λ c<b → ⊔-introʳ (≤-elim′ b≤b′ c<b)))
 
-⊔-cong : ∀{ℓ} {a a′ b b′ : Ord ℓ} → a ≅ a′ → b ≅ b′ → (a ⊔ b) ≅ (a′ ⊔ b′)
+⊔-cong : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≅ a′ → b ≅ b′ → (a ⊔ b) ≅ (a′ ⊔ b′)
 ⊔-cong (a≤a′ , a′≤a) (b≤b′ , b′≤b) = ⊔-mon a≤a′ b≤b′ , ⊔-mon a′≤a b′≤b
 
 -- Supremum of a family of ordinals
 
-⨆ᶠ : ∀{ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
+⨆ᶠ : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
 ⨆ᶠ {ℓ} {I} f = sup (∃[ i ] Br (f i)) λ { (i , j) → f i ` j }
 
-⨆ᶠ-intro : ∀{ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I} → c < f i → c < ⨆ᶠ f
+⨆ᶠ-intro : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I} → c < f i → c < ⨆ᶠ f
 ⨆ᶠ-intro f {c} {i} c<fi
   = let j , c≤ = <-elim c<fi in
     (i , j) , c≤
 
-⨆ᶠ-elim : ∀{ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} → c < ⨆ᶠ f → ∃[ i ] (c < f i)
+⨆ᶠ-elim : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} → c < ⨆ᶠ f → ∃[ i ] (c < f i)
 ⨆ᶠ-elim _ ((i , j) , e) = i , <-intro (j , e)
 
-⨆ᶠ-mon : ∀{ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≤ f′ i) → ⨆ᶠ f ≤ ⨆ᶠ f′
+⨆ᶠ-mon : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≤ f′ i) → ⨆ᶠ f ≤ ⨆ᶠ f′
 ⨆ᶠ-mon {f = f} {f′} p = ≤-intro′ λ c<⨆ᶠf →
   let i , q = ⨆ᶠ-elim f c<⨆ᶠf in
   ⨆ᶠ-intro f′ (≤-elim′ (p i) q)
 
-⨆ᶠ-cong : ∀{ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≅ f′ i) → ⨆ᶠ f ≅ ⨆ᶠ f′
+⨆ᶠ-cong : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≅ f′ i) → ⨆ᶠ f ≅ ⨆ᶠ f′
 ⨆ᶠ-cong p = ⨆ᶠ-mon (λ i → proj₁ (p i))
           , ⨆ᶠ-mon (λ i → proj₂ (p i))
 
 -- Supremum of all ordinals smaller than some given ordinal
 
-⨆ : ∀{ℓ} (a : Ord ℓ) → Ord ℓ
+⨆ : ∀ {ℓ} (a : Ord ℓ) → Ord ℓ
 ⨆ (sup _ f) = ⨆ᶠ f
 
-⨆-intro : ∀{ℓ} {a b : Ord ℓ} → b < a → b ≤ ⨆ a
+⨆-intro : ∀ {ℓ} {a b : Ord ℓ} → b < a → b ≤ ⨆ a
 ⨆-intro {a = sup A fa} {b = sup B fb} (i , b≤fi) = ≤-intro λ j →
   let k , p = <-elim (b≤fi j) in _ , p
 
-⨆-elim : ∀{ℓ} {a c : Ord ℓ} → c < ⨆ a → ∃[ b ] ((b < a) × (c < b))
+⨆-elim : ∀ {ℓ} {a c : Ord ℓ} → c < ⨆ a → ∃[ b ] ((b < a) × (c < b))
 ⨆-elim {a = sup _ f} ((i , j) , c≤) = f i , (i , ≤-refl) , <-intro (_ , c≤)
