@@ -37,7 +37,7 @@ map-∘ f g = refl
 
 liftEq : ∀ {ℂ A} → (A → A → Set) → ⟦ ℂ ⟧ A → ⟦ ℂ ⟧ A → Set
 liftEq {S ▷ P} R (sh , pos) (sh′ , pos′)
-  = sh ≡ sh′ × All₂ R (tabulate pos) (tabulate pos′)
+  = Σ[ eqS ∈ sh ≡ sh′ ] (∀ i → R (pos i) (pos′ (subst (Fin ∘ P) eqS i)))
 -- Hardcoding propositional equality on shapes for now. May have to generalise
 -- to an arbitrary relation.
 

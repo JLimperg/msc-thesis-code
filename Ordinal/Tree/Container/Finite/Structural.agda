@@ -44,7 +44,7 @@ _≈_ {sup I f} = SymTrans λ where
 
 ≈-refl : ∀ {α ℂ} {t : Mu α ℂ} → t ≈ t
 ≈-refl {sup I f} {ℂ} {i , t}
-  = `base (refl , (refl , All₂-tabulate⁺ (λ _ → ≈-refl)))
+  = `base (refl , (refl , λ i → ≈-refl))
 
 
 --------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ monMuℕ-mono : ∀ {ℂ n m} {n≤m : n ≤ℕ m} {x y : Mu (ℕ→Ordinal n) �
   → monMuℕ n≤m x ≈ monMuℕ n≤m y
 monMuℕ-mono {ℂ} {.0} {m} {ℕ.z≤n} {() , _} {y} eq
 monMuℕ-mono {ℂ} {suc n} {suc m} {ℕ.s≤s n≤m} {_ , sh , pos} {_ , sh′ , pos′} (`base (n≤n , refl , eq))
-  = `base (refl , refl , All₂-tabulate⁺ (λ x → monMuℕ-mono {!!}))
+  = `base (refl , refl , {!!})
 monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`sym eq) = {!!}
 monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`trans eq eq₁) = {!!}
 
@@ -73,7 +73,7 @@ monMu-mono : ∀ {ℂ α β} {α≤β : α ≤ β} {x y : Mu α ℂ}
   → x ≈ y
   → monMu α≤β x ≈ monMu α≤β y
 monMu-mono {ℂ} {sup I f} {sup .I .f} {refl} {i , _ , pos} {j , _ , pos′} eq = eq
-monMu-mono {ℂ} {sup I f} {sup J g} {lt i α≤β} {j , _ , pos} {k , _ , pos′} (`base (fj≤fk , refl , eq)) = `base (refl , refl , (All₂-tabulate⁺ (λ x → {!All₂-tabulate⁻ eq x!})))
+monMu-mono {ℂ} {sup I f} {sup J g} {lt i α≤β} {j , _ , pos} {k , _ , pos′} (`base (fj≤fk , refl , eq)) = `base (refl , refl , {!!})
 monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`sym eq) = {!!}
 monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`trans eq eq₁) = {!!}
 

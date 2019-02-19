@@ -115,5 +115,5 @@ fwd∘bwd {ℂ@(S ▷ P)} {suc n} (_ , s , pos)
   = `base
   ( refl
   , refl
-  , Vec.All₂-tabulate⁺ λ x → {!!} -- monMu-mono liftEq (map ℂ) {!!} ? {t = fwd (bwd (pos x))} {t′ = pos x} {!!}
+  , ?
   )

@@ -36,8 +36,7 @@ _≈_ {α} {ℂ} = Ord.EqMu^ ⟦ ℂ ⟧ map liftEq
   where
     go : Ord.Rec (λ α → (t : Mu α ℂ) → t ≈ t)
     go rec t
-      = `base (refl , refl , All₂-tabulate⁺ λ x →
-        {!!})
+      = `base (refl , refl , ?)
 
 
 --------------------------------------------------------------------------------
