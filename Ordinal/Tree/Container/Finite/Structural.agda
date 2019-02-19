@@ -36,7 +36,7 @@ _≈_ {sup I f} = SymTrans λ where
   (i , t) (j , u) →
     let β = f i
         γ = f j in
-    Σ[ β≤γ ∈ β ≤ γ ] liftEq _≈_ (map (monMu β≤γ) t) u
+    Σ[ β≤γ ∈ β ≤ γ ] Eqℂ _≈_ (map (monMu β≤γ) t) u
 
 
 --------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ _≈_ {sup I f} = SymTrans λ where
 
 ≈-refl : ∀ {α ℂ} {t : Mu α ℂ} → t ≈ t
 ≈-refl {sup I f} {ℂ} {i , t}
-  = `base (refl , (refl , λ i → ≈-refl))
+  = `base (refl , Eqℂ-intro λ i → ≈-refl)
 
 
 --------------------------------------------------------------------------------
@@ -54,8 +54,8 @@ monMuℕ-mono : ∀ {ℂ n m} {n≤m : n ≤ℕ m} {x y : Mu (ℕ→Ordinal n) �
   → x ≈ y
   → monMuℕ n≤m x ≈ monMuℕ n≤m y
 monMuℕ-mono {ℂ} {.0} {m} {ℕ.z≤n} {() , _} {y} eq
-monMuℕ-mono {ℂ} {suc n} {suc m} {ℕ.s≤s n≤m} {_ , sh , pos} {_ , sh′ , pos′} (`base (n≤n , refl , eq))
-  = `base (refl , refl , {!!})
+monMuℕ-mono {ℂ} {suc n} {suc m} {ℕ.s≤s n≤m} {_ , sh , pos} {_ , sh′ , pos′} (`base (n≤n , Eqℂ-intro eq))
+  = `base (refl , Eqℂ-intro ?)
 monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`sym eq) = {!!}
 monMuℕ-mono {ℂ} {.(suc _)} {.(suc _)} {ℕ.s≤s n≤m} {x} {y} (`trans eq eq₁) = {!!}
 
@@ -73,7 +73,7 @@ monMu-mono : ∀ {ℂ α β} {α≤β : α ≤ β} {x y : Mu α ℂ}
   → x ≈ y
   → monMu α≤β x ≈ monMu α≤β y
 monMu-mono {ℂ} {sup I f} {sup .I .f} {refl} {i , _ , pos} {j , _ , pos′} eq = eq
-monMu-mono {ℂ} {sup I f} {sup J g} {lt i α≤β} {j , _ , pos} {k , _ , pos′} (`base (fj≤fk , refl , eq)) = `base (refl , refl , {!!})
+monMu-mono {ℂ} {sup I f} {sup J g} {lt i α≤β} {j , _ , pos} {k , _ , pos′} (`base (fj≤fk , Eqℂ-intro eq)) = `base (refl , Eqℂ-intro ?)
 monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`sym eq) = {!!}
 monMu-mono {ℂ} {sup I f} {β} {α≤β} {x} {y} (`trans eq eq₁) = {!!}
 
@@ -82,5 +82,5 @@ monMu-irr : ∀ {ℂ α β} {α≤β₁ α≤β₂ : α ≤ β} {x y : Mu α ℂ
   → monMu α≤β₁ x ≈ monMu α≤β₂ x
 monMu-irr {ℂ} {α} {.α} {refl} {refl} {x} {y} = ≈-refl
 monMu-irr {ℂ} {.(sup _ _)} {.(sup _ _)} {refl} {lt i α≤β₂} {j , sh , pos} {j' , sh' , pos'} = ⊥-elim (pred-not-≤ α≤β₂)
-monMu-irr {ℂ} {sup .J .g} {sup J g} {lt i α≤β₁} {refl} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , refl , {!!})
-monMu-irr {ℂ} {sup I f} {sup J g} {lt i α≤β₁} {lt i₁ α≤β₂} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , {!!} , {!!})
+monMu-irr {ℂ} {sup .J .g} {sup J g} {lt i α≤β₁} {refl} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , Eqℂ-intro ?)
+monMu-irr {ℂ} {sup I f} {sup J g} {lt i α≤β₁} {lt i₁ α≤β₂} {j , sh , pos} {k , sh′ , pos′} = `base ({!!} , Eqℂ-intro ?)

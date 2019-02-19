@@ -15,9 +15,12 @@ open import Ordinal.Tree using
   (Tree to Ordinal ; tomega to ω ; embℕ to ℕ→Ordinal)
 open import Ordinal.Tree.Container.Finite.Structural using
   (Mu ; monMu ; monMuℕ ; _≈_)
-open import Util.Container.Finite using (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; liftEq ; μ ; sup)
+open import Util.Container.Finite using
+  (Container ; _▷_ ; Pos ; Shape ; ⟦_⟧ ; map ; map-id ; map-∘ ; Eqℂ ; Eqℂ-intro
+  ; μ ; sup)
 open import Util.Prelude hiding (module Vec)
-open import Util.Relation.Binary.Closure.SymmetricTransitive using (SymTrans ; `base ; `sym ; `trans)
+open import Util.Relation.Binary.Closure.SymmetricTransitive using
+  (SymTrans ; `base ; `sym ; `trans)
 open import Util.Vec as Vec using (Vec ; [] ; _∷_ ; max ; All₂)
 
 import Data.Nat as ℕ
@@ -114,6 +117,5 @@ fwd∘bwd {S ▷ P} {zero} ((), _)
 fwd∘bwd {ℂ@(S ▷ P)} {suc n} (_ , s , pos)
   = `base
   ( refl
-  , refl
-  , ?
+  , Eqℂ-intro {!!}
   )
