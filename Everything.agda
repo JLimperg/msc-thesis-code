@@ -4,6 +4,7 @@ import Axioms
 import Examples
 import Model
 import Ordinal.Plump.Shulman
+import Ordinal.Plump.Shulman.Mu.Finite
 import Ordinal.Tree
 import Ordinal.Tree.Container.Finite.Structural
 import Ordinal.Tree.Container.Finite.Wellfounded
