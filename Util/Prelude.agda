@@ -1,5 +1,7 @@
 module Util.Prelude where
 
+open import Data.Bool public using
+  (Bool ; true ; false)
 open import Data.Empty public using
   (⊥ ; ⊥-elim)
 open import Data.Fin public using

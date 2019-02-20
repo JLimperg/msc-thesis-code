@@ -230,6 +230,24 @@ a ⊔ b = limSuc (_ ⊎ _) λ where
 ⊔-cong : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≅ a′ → b ≅ b′ → (a ⊔ b) ≅ (a′ ⊔ b′)
 ⊔-cong (a≤a′ , a′≤a) (b≤b′ , b′≤b) = ⊔-mon a≤a′ b≤b′ , ⊔-mon a′≤a b′≤b
 
+meh : ({α α′ β : Ord lzero} → α < β → α′ < β → (α ⊔ α′) < β)
+  → (A : Set) → A ⊎ ¬ A
+meh p A
+  = let α<β : α < β
+        α<β = true , ≤-refl
+        α′<β : α′ < β
+        α′<β = false , ≤-refl in
+    go (p α<β α′<β)
+  where
+    oone = osuc ozero
+    α = limSuc A λ _ → oone
+    α′ = oone
+    β = limSuc Bool λ { true → α ; false → α′ }
+
+    go : (α ⊔ α′) < β → A ⊎ ¬ A
+    go (true , α⊔α′≤α) = inj₁ (proj₁ (α⊔α′≤α (inj₂ _)))
+    go (false , α⊔α′≤α′) = inj₂ λ a → lower (proj₁ (proj₂ (α⊔α′≤α′ (inj₁ a)) _))
+
 -- Supremum of a family of ordinals
 
 ⨆ᶠ : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
