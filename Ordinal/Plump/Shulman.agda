@@ -195,23 +195,23 @@ a ⊔ b = limSuc (_ ⊎ _) λ where
   (inj₁ i) → a ` i
   (inj₂ j) → b ` j
 
-⊔-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c < a → c < (a ⊔ b)
-⊔-introˡ {a = limSuc _ f} (i , e) = inj₁ i , e
+⊔-introˡ : ∀ {ℓ} a {b c : Ord ℓ} → a < b → a < (b ⊔ c)
+⊔-introˡ a {limSuc _ f} (i , e) = inj₁ i , e
 
-⊔-introʳ : ∀ {ℓ} {a b c : Ord ℓ} → c < b → c < (a ⊔ b)
-⊔-introʳ {b = limSuc _ g} (i , e) = inj₂ i , e
+⊔-introʳ : ∀ {ℓ} a {b c : Ord ℓ} → a < c → a < (b ⊔ c)
+⊔-introʳ a {c = limSuc _ g} (i , e) = inj₂ i , e
 
-⊔-≤-introˡ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ a → c ≤ (a ⊔ b)
-⊔-≤-introˡ c≤a = ≤-intro λ i → ⊔-introˡ (≤-elim c≤a i)
+⊔-≤-introˡ : ∀ {ℓ} a {b c : Ord ℓ} → a ≤ b → a ≤ (b ⊔ c)
+⊔-≤-introˡ a a≤b = ≤-intro λ i → ⊔-introˡ _ (≤-elim a≤b i)
 
-⊔-≤-introˡ′ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ (a ⊔ b)
-⊔-≤-introˡ′ = ⊔-≤-introˡ ≤-refl
+⊔-≤-introˡ′ : ∀ {ℓ} {a : Ord ℓ} b → a ≤ (a ⊔ b)
+⊔-≤-introˡ′ b = ⊔-≤-introˡ _ ≤-refl
 
-⊔-≤-introʳ : ∀ {ℓ} {a b c : Ord ℓ} → c ≤ b → c ≤ (a ⊔ b)
-⊔-≤-introʳ c≤b = ≤-intro λ i → ⊔-introʳ (≤-elim c≤b i)
+⊔-≤-introʳ : ∀ {ℓ} a {b c : Ord ℓ} → a ≤ c → a ≤ (b ⊔ c)
+⊔-≤-introʳ a a≤c = ≤-intro λ i → ⊔-introʳ _ (≤-elim a≤c i)
 
-⊔-≤-introʳ′ : ∀ {ℓ} {a b : Ord ℓ} → b ≤ (a ⊔ b)
-⊔-≤-introʳ′ = ⊔-≤-introʳ ≤-refl
+⊔-≤-introʳ′ : ∀ {ℓ} a {b : Ord ℓ} → b ≤ (a ⊔ b)
+⊔-≤-introʳ′ a = ⊔-≤-introʳ _ ≤-refl
 
 ⊔-elim : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → (c < a) ⊎ (c < b)
 ⊔-elim {a = limSuc _ f}               (inj₁ i , e) = inj₁ (i , e)
@@ -224,8 +224,8 @@ a ⊔ b = limSuc (_ ⊎ _) λ where
 ⊔-split left right p = ⊔-case p left right
 
 ⊔-mon : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≤ a′ → b ≤ b′ → (a ⊔ b) ≤ (a′ ⊔ b′)
-⊔-mon a≤a′ b≤b′ = ≤-intro′ (⊔-split (λ c<a → ⊔-introˡ (≤-elim′ a≤a′ c<a))
-                                   (λ c<b → ⊔-introʳ (≤-elim′ b≤b′ c<b)))
+⊔-mon a≤a′ b≤b′ = ≤-intro′ (⊔-split (λ c<a → ⊔-introˡ _ (≤-elim′ a≤a′ c<a))
+                                   (λ c<b → ⊔-introʳ _ (≤-elim′ b≤b′ c<b)))
 
 ⊔-cong : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≅ a′ → b ≅ b′ → (a ⊔ b) ≅ (a′ ⊔ b′)
 ⊔-cong (a≤a′ , a′≤a) (b≤b′ , b′≤b) = ⊔-mon a≤a′ b≤b′ , ⊔-mon a′≤a b′≤b
