@@ -25,3 +25,5 @@ open import Level public using
   (zero to lzero ; suc to lsuc ; _⊔_ to _⊔ℓ_)
 open import Relation.Binary.PropositionalEquality public using
   (_≡_ ; refl ; sym ; trans ; cong ; subst)
+open import Size public using
+  (Size ; ∞ ; ↑_)

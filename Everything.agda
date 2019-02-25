@@ -3,7 +3,9 @@ module Everything where
 import Axioms
 import Examples
 import Model.Tree
+import Model.Bounded
 import Ordinal.Plump.Shulman
+import Ordinal.Plump.Shulman.Mu.Bounded
 import Ordinal.Plump.Shulman.Mu.Finite
 import Ordinal.Tree
 import Ordinal.Tree.Container.Finite.Structural
