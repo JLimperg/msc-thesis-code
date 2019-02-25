@@ -1,4 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
+module Model.Tree where
+
 -- We give a model of sized least fixed points of finitely branching container
 -- functors (a subset of the inductive types). The plan is to eventually
 -- generalise this model to indexed, infinitely branching containers (full

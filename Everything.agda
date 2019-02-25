@@ -2,7 +2,7 @@ module Everything where
 
 import Axioms
 import Examples
-import Model
+import Model.Tree
 import Ordinal.Plump.Shulman
 import Ordinal.Plump.Shulman.Mu.Finite
 import Ordinal.Tree
