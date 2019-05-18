@@ -40,6 +40,13 @@ renTy θ (T ⇒ U) = renTy θ T ⇒ renTy θ U
 renTy θ (Π n , T) = Π renSi∞ θ n , renTy (lift θ refl) T
 
 
+-- Weakening for types.
+wkTy : Ty Δ → Ty (Δ ∷ n)
+wkTy (ℕ i) = ℕ (wkSi i)
+wkTy (T ⇒ U) = wkTy T ⇒ wkTy U
+wkTy (Π m , T) = Π wkSi∞ m , renTy (lift (weak idR) (sym (wkSi∞≡renSi∞))) T
+
+
 -- Substitution for types.
 subTy : (σ : SS Δ Δ′) (T : Ty Δ′) → Ty Δ
 subTy σ (ℕ i) = ℕ (subSi σ i)
@@ -73,10 +80,17 @@ variable
   Γ Γ′ Γ″ : TC Δ
 
 
+-- Mapping for type contexts.
 mapTC : (Ty Δ → Ty Δ′) → TC Δ → TC Δ′
 mapTC f [] = []
 mapTC f (Γ ∷ T) = mapTC f Γ ∷ f T
 
 
+-- Weakening.
+wkTC : TC Δ → TC (Δ ∷ n)
+wkTC = mapTC wkTy
+
+
+-- Substitution.
 subTC : (σ : SS Δ Δ′) → TC Δ′ → TC Δ
 subTC σ Γ = mapTC (subTy σ) Γ
