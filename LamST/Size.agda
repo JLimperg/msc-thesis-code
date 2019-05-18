@@ -816,6 +816,11 @@ liftS σ p
     <∞-var′ (zero (≡.sym (≡.trans (subSi∞-weakS σ _) (≡.cong wkSi∞ p))))
 
 
+-- K ahoy!
+liftS-cong : {σ : SS Δ Δ′} {p q : subSi∞ σ m ≡ n} → liftS σ p ≡ liftS σ q
+liftS-cong {p = refl} {refl} = refl
+
+
 mutual
   ⊇→SS : Δ ⊇ Δ′ → SS Δ Δ′
   ⊇→SS [] = []
@@ -842,6 +847,27 @@ mutual
   subSV-⊇→SS (lift θ p) zero = refl
   subSV-⊇→SS (lift θ p) (suc α)
     = ≡.trans (subSV-weakS (⊇→SS θ) α) (≡.cong wkSi (subSV-⊇→SS θ α))
+
+
+subTy∞-⊇→SS-liftS : ∀ (θ : Δ ⊇ Δ′) {m m′} n
+  → (p : subSi∞ (⊇→SS θ) m ≡ m′) (q : renSi∞ θ m ≡ m′)
+  → subSi∞ (liftS (⊇→SS θ) p) n ≡ renSi∞ (lift θ q) n
+subTy∞-⊇→SS-liftS θ n p q
+  = ≡.trans (≡.cong (λ z → subSi∞ z n) liftS-cong) (subSi∞-⊇→SS (lift θ q) n)
+
+
+subTy-⊇→SS-liftS : ∀ (θ : Δ ⊇ Δ′) {m m′} i
+  → (p : subSi∞ (⊇→SS θ) m ≡ m′) (q : renSi∞ θ m ≡ m′)
+  → subSi (liftS (⊇→SS θ) p) i ≡ renSi (lift θ q) i
+subTy-⊇→SS-liftS θ i p q
+  = ≡.trans (≡.cong (λ z → subSi z i) liftS-cong) (subSi-⊇→SS (lift θ q) i)
+
+
+subSV-⊇→SS-liftS : ∀ (θ : Δ ⊇ Δ′) {m m′} α
+  → (p : subSi∞ (⊇→SS θ) m ≡ m′) (q : renSi∞ θ m ≡ m′)
+  → subSV (liftS (⊇→SS θ) p) α ≡ var (renSV (lift θ q) α)
+subSV-⊇→SS-liftS θ α p q
+  = ≡.trans (≡.cong (λ z → subSV z α) liftS-cong) (subSV-⊇→SS (lift θ q) α)
 
 
 mutual
