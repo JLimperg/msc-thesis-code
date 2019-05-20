@@ -16,7 +16,7 @@ infix  7 Π_,_
 
 -- Types.
 data Ty Δ : Set where
-  ℕ : (i : Si Δ) → Ty Δ
+  ℕ : (n : Si∞ Δ) → Ty Δ
   _⇒_ : (T U : Ty Δ) → Ty Δ
   Π_,_ : (n : Si∞ Δ) (T : Ty (Δ ∷ n)) → Ty Δ
 
@@ -35,28 +35,28 @@ variable
 
 -- Renaming for types.
 renTy : (θ : Δ ⊇ Δ′) (T : Ty Δ′) → Ty Δ
-renTy θ (ℕ i) = ℕ (renSi θ i)
+renTy θ (ℕ n) = ℕ (renSi∞ θ n)
 renTy θ (T ⇒ U) = renTy θ T ⇒ renTy θ U
 renTy θ (Π n , T) = Π renSi∞ θ n , renTy (lift θ refl) T
 
 
 -- Weakening for types.
 wkTy : Ty Δ → Ty (Δ ∷ n)
-wkTy (ℕ i) = ℕ (wkSi i)
+wkTy (ℕ n) = ℕ (wkSi∞ n)
 wkTy (T ⇒ U) = wkTy T ⇒ wkTy U
 wkTy (Π m , T) = Π wkSi∞ m , renTy (lift (weak idR) (sym (wkSi∞≡renSi∞))) T
 
 
 -- Substitution for types.
 subTy : (σ : SS Δ Δ′) (T : Ty Δ′) → Ty Δ
-subTy σ (ℕ i) = ℕ (subSi σ i)
+subTy σ (ℕ n) = ℕ (subSi∞ σ n)
 subTy σ (T ⇒ U) = subTy σ T ⇒ subTy σ U
 subTy σ (Π n , T) = Π subSi∞ σ n , subTy (liftS σ refl) T
 
 
 -- Substituting with a renaming is the same as renaming.
 subTy-⊇→SS : ∀ (θ : Δ ⊇ Δ′) T → subTy (⊇→SS θ) T ≡ renTy θ T
-subTy-⊇→SS θ (ℕ i) = cong ℕ (subSi-⊇→SS θ i)
+subTy-⊇→SS θ (ℕ n) = cong ℕ (subSi∞-⊇→SS θ n)
 subTy-⊇→SS θ (T ⇒ U) = cong₂ _⇒_ (subTy-⊇→SS θ T) (subTy-⊇→SS θ U)
 subTy-⊇→SS {Δ = Δ} θ (Π n , T)
   = Π-≡⁺ (subSi∞-⊇→SS θ n) (go (subSi∞-⊇→SS θ n) refl refl)
