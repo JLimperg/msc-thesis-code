@@ -430,12 +430,12 @@ data _≤∞_ {Δ} : (n m : Si∞ Δ) → Set where
 
 
 -- The extension of < to sizes with ∞.
-data _<∞_ {Δ} : (i : Si Δ) (n : Si∞ Δ) → Set where
+data _<∞_ {Δ} : (n m : Si∞ Δ) → Set where
   si
     : i < j
-    → i <∞ si j
+    → si i <∞ si j
   ∞
-    : i <∞ ∞
+    : si i <∞ ∞
 
 
 ≤-reflexive : i ≡ j → i ≤ j
@@ -524,7 +524,7 @@ mutual
   ≤→<→≤ x x₁ = <→≤ (≤→<→< x x₁)
 
 
-  <∞-var : Bound∞ α n → n ≤∞ m → var α <∞ m
+  <∞-var : Bound∞ α n → n ≤∞ m → var∞ α <∞ m
   <∞-var x (si x₁) = si (var (Bound∞→Bound x) x₁)
   <∞-var x ∞ = ∞
 
@@ -534,12 +534,8 @@ mutual
   ≤∞-refl {n = ∞} = ∞
 
 
-  <∞-var′ : Bound∞ α n → var α <∞ n
+  <∞-var′ : Bound∞ α n → var∞ α <∞ n
   <∞-var′ x = <∞-var x ≤∞-refl
-
-
-  <∞→≤∞→≤ : i <∞ n → n ≤∞ si j → i ≤ j
-  <∞→≤∞→≤ (si x) (si x₁) = <→≤→≤ x x₁
 
 
 wkSi≮varzero : wkSi {n = n} i < var zero → ⊥
@@ -612,7 +608,7 @@ mutual
   renSi-resp-≤∞ θ ∞ = ∞
 
 
-renSi-resp-<∞ : (θ : Δ′ ⊇ Δ) → i <∞ n → renSi θ i <∞ renSi∞ θ n
+renSi-resp-<∞ : (θ : Δ′ ⊇ Δ) → n <∞ m → renSi∞ θ n <∞ renSi∞ θ m
 renSi-resp-<∞ θ (si i<j) = si (renSi-resp-< θ i<j)
 renSi-resp-<∞ θ ∞ = ∞
 
@@ -629,10 +625,10 @@ wkSi-resp-≤ {i = i} {j} {n} i≤j
   = renSi-resp-≤ weak′ i≤j
 
 
-wkSi-resp-<∞ : i <∞ n → wkSi {n = m} i <∞ wkSi∞ n
-wkSi-resp-<∞ {i = i} {n} {m} i<n
-  rewrite wkSi≡renSi {n = m} {i} | wkSi∞≡renSi∞ {n = m} {n}
-  = renSi-resp-<∞ weak′ i<n
+wkSi-resp-<∞ : n <∞ m → wkSi∞ {n = o} n <∞ wkSi∞ m
+wkSi-resp-<∞ {n = n} {m} {o} n<m
+  rewrite wkSi∞≡renSi∞ {n = o} {n} | wkSi∞≡renSi∞ {n = o} {m}
+  = renSi-resp-<∞ weak′ n<m
 
 
 wkSi-resp-≤∞ : n ≤∞ m → wkSi∞ {n = o} n ≤∞ wkSi∞ m
@@ -653,7 +649,7 @@ mutual
     [] : SS Δ []
     _∷[_]_
       : (σ : SS Δ Δ′)
-      → (i : Si Δ) {n : Si∞ Δ′} (i<n : i <∞ subSi∞ σ n)
+      → (i : Si Δ) {n : Si∞ Δ′} (i<n : si i <∞ subSi∞ σ n)
       → SS Δ (Δ′ ∷ n)
 
 
@@ -685,7 +681,7 @@ mutual
   weakS [] = []
   weakS (_∷[_]_ σ i {j} i<j)
     = weakS σ ∷[ wkSi i ]
-      ≡.subst (λ z → wkSi i <∞ z) (≡.sym (subSi∞-weakS σ j)) (wkSi-resp-<∞ i<j)
+      ≡.subst (si (wkSi i) <∞_) (≡.sym (subSi∞-weakS σ j)) (wkSi-resp-<∞ i<j)
 
 
   subSi∞-weakS : ∀ (σ : SS Δ Δ′) m
@@ -739,7 +735,7 @@ weakS′ : SS (Δ ∷ n) Δ
 weakS′ = weakS idS
 
 
-subSi-∷-wk : (σ : SS Δ Δ′) {i : Si Δ}  {i<n : i <∞ subSi∞ σ n} (j : Si Δ′)
+subSi-∷-wk : (σ : SS Δ Δ′) {i : Si Δ}  {i<n : si i <∞ subSi∞ σ n} (j : Si Δ′)
   → subSi (σ ∷[ i ] i<n) (wkSi j) ≡ subSi σ j
 subSi-∷-wk σ (var α) = refl
 subSi-∷-wk σ (suc j) = ≡.cong suc (subSi-∷-wk σ j)
@@ -779,7 +775,7 @@ subSi∞-resp-≤ σ (si i≤j) = si (subSi-resp-≤ σ i≤j)
 subSi∞-resp-≤ σ ∞ = ≤∞-refl
 
 
-subSi∞-resp-< : (σ : SS Δ Δ′) → i <∞ n → subSi σ i <∞ subSi∞ σ n
+subSi∞-resp-< : (σ : SS Δ Δ′) → n <∞ m → subSi∞ σ n <∞ subSi∞ σ m
 subSi∞-resp-< σ (si i<j) = si (subSi-resp-< σ i<j)
 subSi∞-resp-< σ ∞ = ∞
 
@@ -789,7 +785,7 @@ mutual
   [] ∙ₛ τ = []
   (_∷[_]_ σ i {n} i<n) ∙ₛ τ
     = σ ∙ₛ τ ∷[ subSi τ i ]
-      ≡.subst (subSi τ i <∞_) (≡.sym (subSi∞-∙ₛ σ τ n)) (subSi∞-resp-< τ i<n)
+      ≡.subst (si (subSi τ i) <∞_) (≡.sym (subSi∞-∙ₛ σ τ n)) (subSi∞-resp-< τ i<n)
 
 
   subSi∞-∙ₛ : ∀ (σ : SS Δ′ Δ″) (θ : SS Δ Δ′) n
@@ -875,7 +871,7 @@ mutual
   [] ₛ∙ᵣ θ = []
   (_∷[_]_ σ i {j} i<j) ₛ∙ᵣ θ
     = (σ ₛ∙ᵣ θ) ∷[ renSi θ i ]
-      ≡.subst (renSi θ i <∞_) (≡.sym (subSi∞-ₛ∙ᵣ σ θ j)) (renSi-resp-<∞ θ i<j)
+      ≡.subst (si (renSi θ i) <∞_) (≡.sym (subSi∞-ₛ∙ᵣ σ θ j)) (renSi-resp-<∞ θ i<j)
 
 
   subSi∞-ₛ∙ᵣ : ∀ (σ : SS Δ′ Δ″) (θ : Δ ⊇ Δ′) n
