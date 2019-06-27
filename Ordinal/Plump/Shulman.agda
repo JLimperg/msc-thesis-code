@@ -6,8 +6,10 @@ module Ordinal.Plump.Shulman where
 
 open import Data.Sum using ([_,_]′)
 open import Induction.WellFounded as WfRec using (Acc ; acc ; WellFounded)
+open import Relation.Binary using (IsEquivalence)
 open import Relation.Nullary using (¬_)
 
+open import Ordinal.HoTT using (IsOrdinal ; IsExtensional ; _↔_ ; forth ; back)
 open import Util.Prelude
 
 
@@ -103,6 +105,24 @@ mutual
 ≅-sym : ∀ {ℓ} {a b : Ord ℓ} (p : a ≅ b) → b ≅ a
 ≅-sym (p , p′) = p′ , p
 
+
+-- ≅ is an equivalence relation.
+
+≅-equiv : ∀ {ℓ} → IsEquivalence (_≅_ {ℓ})
+≅-equiv = record
+  { refl = ≅-refl
+  ; sym = ≅-sym
+  ; trans = ≅-trans
+  }
+
+-- < is 'extensional'.
+
+<-ext-≤ : ∀ {ℓ} {a b : Ord ℓ} → (∀ c → c < a → c < b) → a ≤ b
+<-ext-≤ {a = limSuc I els} p i = p (els i) (i , ≤-refl)
+
+<-ext : ∀ {ℓ} → IsExtensional {ℓ} _≅_ _<_
+<-ext p = <-ext-≤ (λ c → forth (p c)) , <-ext-≤ (λ c → back (p c))
+
 -- Alternative interpretation of ≤ in terms of <
 
 ≤-intro′ : ∀ {ℓ} {b c : Ord ℓ} → (∀ {a} → a < b → a < c) → b ≤ c
@@ -164,6 +184,17 @@ open Pred
   → ∀ a → P a
 <-ind = WfRec.All.wfRec <-wf _
 
+-- Ordinals are ordinals (in the sense of the HoTT book).
+
+isOrdinal : ∀ {ℓ} → IsOrdinal (Ord ℓ) ℓ ℓ
+isOrdinal = record
+  { _≈_ = _≅_
+  ; ≈-equiv = ≅-equiv
+  ; _<_ = _<_
+  ; <-wf = <-wf
+  ; <-ext = <-ext
+  ; <-trans = <-trans
+  }
 
 -- Constructions on ordinals
 ------------------------------------------------------------------------
