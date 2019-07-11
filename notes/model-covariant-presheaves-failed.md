@@ -1,5 +1,11 @@
 # Model
 
+This modeling approach does *not* work because ⟦Δ ⊢ ∀ α<n. T⟧ is covariant in n.
+This means that in the model, we have a morphism from ⟦∀ α<n. T⟧ to
+⟦∀ α<n+1. T⟧, so the bound isn't doing its job. As a result, we can't define
+⟦fix⟧, since ⟦∀ α<n. T⟧ doesn't, in fact, guarantee that ⟦α⟧ < ⟦n⟧.
+
+
 ## Preliminaries
 
 ### Grothendieck
