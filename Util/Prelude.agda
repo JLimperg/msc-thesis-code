@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K #-}
 module Util.Prelude where
 
 open import Data.Bool public using

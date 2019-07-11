@@ -4,6 +4,9 @@ import Axioms
 import irreflexive-<
 import LamST.Size
 import LamST.Type
+import Model.Colist
+import Model.Nat
+import Model.Size
 import Ordinal.HoTT
 import Ordinal.Shulman
 import Util.Container.Finite
