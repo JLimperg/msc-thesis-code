@@ -8,6 +8,8 @@ open import Data.Fin public using
   (Fin ; zero ; suc)
 open import Data.List public using
   (List ; [] ; _∷_)
+open import Data.Maybe public using
+  (Maybe ; just ; nothing)
 open import Data.Nat public using
   (ℕ ; zero ; suc)
 open import Data.Product public using
@@ -21,9 +23,9 @@ open import Data.Vec public using
 open import Function public using
   (id ; _∘_ ; _∘′_ ; _$_)
 open import Level public using
-  (Level ; Lift ; lift ; lower) renaming
+  (Level ; 0ℓ; Lift ; lift ; lower) renaming
   (zero to lzero ; suc to lsuc ; _⊔_ to _⊔ℓ_)
 open import Relation.Binary.PropositionalEquality public using
-  (_≡_ ; refl ; sym ; trans ; cong ; subst)
+  (_≡_ ; refl ; sym ; trans ; cong ; subst ; module ≡-Reasoning)
 open import Size public using
-  (Size ; ∞ ; ↑_)
+  (Size ; Size<_ ; ∞ ; ↑_)
