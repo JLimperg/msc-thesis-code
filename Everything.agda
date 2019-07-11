@@ -1,15 +1,11 @@
 module Everything where
 
 import Axioms
-import Examples
-import Model.Tree
-import Model.Bounded
-import Ordinal.Plump.Shulman
-import Ordinal.Plump.Shulman.Mu.Bounded
-import Ordinal.Plump.Shulman.Mu.Finite
-import Ordinal.Tree
-import Ordinal.Tree.Container.Finite.Structural
-import Ordinal.Tree.Container.Finite.Wellfounded
+import irreflexive-<
+import LamST.Size
+import LamST.Type
+import Ordinal.HoTT
+import Ordinal.Shulman
 import Util.Container.Finite
 import Util.Prelude
 import Util.Relation.Binary.Closure.SymmetricTransitive

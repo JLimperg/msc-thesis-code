@@ -2,7 +2,7 @@
 -- https://homotopytypetheory.org/2014/02/22/surreals-plump-ordinals/
 --
 -- Implementation based on an implementation of Aczel sets by Andreas Abel.
-module Ordinal.Plump.Shulman where
+module Ordinal.Shulman where
 
 open import Data.Sum using ([_,_]′)
 open import Induction.WellFounded as WfRec using (Acc ; acc ; WellFounded)
