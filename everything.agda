@@ -1,4 +1,4 @@
-module Everything where
+module everything where
 
 import Axioms
 import irreflexive-<
