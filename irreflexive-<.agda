@@ -7,7 +7,7 @@
    that doesn't have this rule.
 -}
 
-{-# OPTIONS --postfix-projections #-}
+{-# OPTIONS --postfix-projections --allow-unsolved-metas #-}
 module irreflexive-< where
 
 open import Size
@@ -45,30 +45,25 @@ data ℕ (i : Size) : Set where
 -- suc₀ n = suc ∞ n
 
 
--- Workaround 1: superfluous pattern matching.
+-- Workaround: superfluous pattern matching.
 suc₁ : ℕ ∞ → ℕ ∞
 suc₁ zero = suc 𝟘 zero
 suc₁ (suc j x) = suc (↑ j) (suc j x)
 
 
--- Workaround 2: Go via the successor size.
-suc₂ : (i : Size) → ℕ i → ℕ (↑ i)
-suc₂ i x = suc i x
-
-
--- However, if we want to use suc₂ at ∞, we need ↑ ∞ = ∞ definitionally, which
--- is also dubious.
-suc₃ : ℕ ∞ → ℕ ∞
-suc₃ = suc₂ ∞
+-- Case analysis
+caseℕ : {T : Set} → (i : Size) → ℕ i → T → ((j : Size< i) → ℕ j → T) → T
+caseℕ i zero z s = z
+caseℕ i (suc j n) z s = s j n
 
 
 -- Dependent elimination (with size-based termination).
-elimℕ : (P : (i : Size) → ℕ i → Set)
+indℕ : (P : (i : Size) → ℕ i → Set)
   → ((i : Size) → P i zero)
   → ((i : Size) (j : Size< i) (n : ℕ j) → P j n → P i (suc j n))
   → (i : Size) (n : ℕ i) → P i n
-elimℕ P Z S i zero = Z i
-elimℕ P Z S i (suc j n) = S i j n (elimℕ P Z S j n)
+indℕ P Z S i zero = Z i
+indℕ P Z S i (suc j n) = S i j n (indℕ P Z S j n)
 
 
 --------------------------------------------------------------------------------
@@ -93,7 +88,7 @@ variable
 -- tail₀ xs = tail xs ∞
 
 
--- Workaround 1: The equivalent of the 'superfluous pattern matching' workaround
+-- Workaround: The equivalent of the 'superfluous pattern matching' workaround
 -- for suc.
 tail₁ : 𝕊 A ∞ → 𝕊 A ∞
 tail₁ xs .head = head {i = 𝟘} (tail xs 𝟘) -- [1]
@@ -101,16 +96,6 @@ tail₁ xs .tail j = tail (tail xs (↑ j)) j
 
 -- [1] Without the implicit argument, this doesn't typecheck. Apparently the
 -- size argument to head gets eagerly instantiated to ∞ or something.
-
-
--- Workaround 2: Via the successor size, as above.
-tail₂ : (i : Size) → 𝕊 A (↑ i) → 𝕊 A i
-tail₂ i xs = tail xs i
-
-
--- But again, we need ↑ ∞ = ∞.
-tail₃ : 𝕊 A ∞ → 𝕊 A ∞
-tail₃ = tail₂ ∞
 
 
 replicate : (i : Size) → A → 𝕊 A i
@@ -166,24 +151,106 @@ mutual
 open CoList′
 
 
-∞→∀i′ : CoList′ A ∞ → (i : Size) → CoList′ A i
+open import Data.Product using (∃-syntax)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; inspect ; [_])
+open import Relation.Binary.HeterogeneousEquality using (_≅_ ; refl)
+
+
+postulate
+  force-parametric : ∀ {A i} (xs : CoList′ A i) (j j′ : Size< i)
+    → xs .force j ≅ xs .force j′
+
+  size-parametric : ∀ {T : Size< ∞ → Set} (f : (i : Size< ∞) → T i)
+    → (j j′ : Size< ∞)
+    → f j ≅ f j′
+
+
+mutual
+  data _≈_ {A i j} : CoList A i → CoList A j → Set where
+    [] : [] ≈ []
+    _∷_ : ∀ {x y xs ys}
+      → x ≡ y
+      → xs ≈′ ys
+      → (x ∷ xs) ≈ (y ∷ ys)
+
+
+  record _≈′_ {A i j} (xs : CoList′ A i) (ys : CoList′ A j) : Set where
+    coinductive
+    field
+      force : (k : Size< i) (l : Size< j) → xs .force k ≈ ys .force l
+
+open _≈′_
+
+
+∞→∀i′ : CoList′ A ∞ → (i : Size< ∞) → CoList′ A i
 ∞→∀i′ xs i .force j = xs .force j
 
 
-∞→∀i : CoList A ∞ → (i : Size) → CoList A i
+∀i→∞′ : ((i : Size< ∞) → CoList′ A i) → CoList′ A ∞
+∀i→∞′ f .force j with f (↑ j) .force j
+... | [] = []
+... | x ∷ xs = x ∷ xs
+
+
+∞→∀i′-∀i→∞′ : (f : (i : Size< ∞) → CoList′ A i) (i : Size< ∞)
+  → _≈′_ {i = i} {i} (∞→∀i′ (∀i→∞′ f) i) (f i)
+∞→∀i′-∀i→∞′ f i .force k l with f (↑ k) .force k
+∞→∀i′-∀i→∞′ f i .force k l | [] = {!!}
+∞→∀i′-∀i→∞′ f i .force k l | x ∷ x₁ = {!!}
+
+
+∞→∀i : CoList A ∞ → (i : Size< ∞) → CoList A i
 ∞→∀i [] i = []
 ∞→∀i (x ∷ xs) i = x ∷ ∞→∀i′ xs i
 
 
-∀i→∞ : ((i : Size) → CoList A i) → CoList A ∞
-∀i→∞ f = f ∞
+∀i→∞
+  : (f : (i : Size< ∞) → CoList A i)
+  → CoList A ∞
+∀i→∞ {A} f with f 𝟘
+... | [] = []
+... | x ∷ xs = x ∷ xs′
+  where
+    xs′ : CoList′ A ∞
+    xs′ .force i with f (↑ i)
+    ... | [] = []
+    ... | y ∷ ys = ys .force i
 
 
--- ??? If (i : Size) means (i : Size≤ ∞), then we're using (∞ : Size< ∞) here
--- (since i could be ∞).
 force∞ : CoList′ A ∞ → CoList A ∞
-force∞ xs = ∀i→∞ λ i → xs .force i
+force∞ xs = ∀i→∞ (λ i → xs .force i)
+
+
+force∞′ : CoList′ A ∞ → CoList A ∞
+force∞′ {A} xs with xs .force 𝟘
+... | [] = []
+... | y ∷ ys = y ∷ ys′
+  where
+    ys′ : CoList′ A ∞
+    ys′ .force i with xs .force (↑ i)
+    ... | [] = []
+    ... | z ∷ zs = zs .force i
+
+
+force↑∞ : CoList′ A (↑ ∞) → CoList A ∞
+force↑∞ {A} xs with xs .force ∞
+... | [] = []
+... | y ∷ ys = y ∷ λ { .force i → ys .force i }
+
+
+lem₁ : CoList′ A ∞ → CoList′ A (↑ ∞)
+lem₁ xs .force i = xs .force i
 
 
 𝕊→CoList : (i : Size) → 𝕊 A i → CoList A i
 𝕊→CoList i xs = head xs ∷ λ { .force j → 𝕊→CoList j (tail xs j) }
+
+
+-- Radical thought: Just kill ∞ altogether and work with (∀ i → CoList A i) and
+-- (∃ i → List A i) directly. How much less useful does that make the system?
+--
+-- Perhaps we can auto-derive the iso (∃ i → List A i) ≅ List A.
+
+
+-- Radical thought: What if we only provide the Thunk type from the stdlib? Can
+-- we recover all other coinductive types from that?
