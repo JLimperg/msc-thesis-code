@@ -1,8 +1,7 @@
+{-# OPTIONS --without-K #-}
 module Axioms where
 
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import Axiom.Extensionality.Propositional using (Extensionality)
 
 postulate
-  funext : ∀ {a b} {A : Set a} {B : Set b} {f g : A → B}
-    → (∀ x → f x ≡ g x)
-    → f ≡ g
+  funext : ∀ {a b} → Extensionality a b
