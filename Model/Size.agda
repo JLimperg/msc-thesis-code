@@ -1,8 +1,12 @@
 module Model.Size where
 
+open import Cats.Category
+open import Cats.Category.Preorder using (preorderAsCategory)
 open import Data.Nat as ℕ using (s≤s ; z≤n)
+open import Relation.Binary using (Preorder ; IsPreorder)
 
 import Data.Nat.Properties as ℕ
+import Relation.Binary.PropositionalEquality as ≡
 
 open import Axioms using (funext)
 open import Util.Prelude hiding (Size ; ∞ ; ↑_)
@@ -42,6 +46,10 @@ data _≤_ : (n m : Size) → Set where
 ≤-refl {∞} = ∞
 
 
+≤-reflexive : ∀ {n m} → n ≡ m → n ≤ m
+≤-reflexive refl = ≤-refl
+
+
 _>_ : (n m : Size) → Set
 n > m = m < n
 
@@ -73,6 +81,27 @@ n ≥ m = m ≤ n
 ≤→<→< : ∀ {n m o} → n ≤ m → m < o → n < o
 ≤→<→< (nat n≤m) (nat m<o) = nat (ℕ.<-transʳ n≤m m<o)
 ≤→<→< (nat n<o) ∞ = ∞
+
+
+≤-preorder : IsPreorder _≡_ _≤_
+≤-preorder = record
+  { isEquivalence = ≡.isEquivalence
+  ; reflexive = ≤-reflexive
+  ; trans = ≤-trans
+  }
+
+
+SizePreorder : Preorder 0ℓ 0ℓ 0ℓ
+SizePreorder = record
+  { Carrier = Size
+  ; _≈_ = _≡_
+  ; _∼_ = _≤_
+  ; isPreorder = ≤-preorder
+  }
+
+
+Sizes : Category 0ℓ 0ℓ 0ℓ
+Sizes = preorderAsCategory SizePreorder
 
 
 szero : Size
