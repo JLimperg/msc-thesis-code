@@ -2,8 +2,6 @@ module everything where
 
 import Axioms
 import irreflexive-<
-import LamST.Size
-import LamST.Type
 import Model.Colist
 import Model.Nat
 import Model.Size
