@@ -9,7 +9,7 @@ import Data.Nat.Properties as ℕ
 import Relation.Binary.PropositionalEquality as ≡
 
 open import Axioms using (funext)
-open import Util.Prelude hiding (Size ; ∞ ; ↑_)
+open import Util.Prelude
 
 
 infixl 7 _⊓_

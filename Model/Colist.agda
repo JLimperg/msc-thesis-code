@@ -7,7 +7,7 @@ import Data.Nat.Properties as ℕ
 
 open import Axioms using (funext)
 open import Model.Size
-open import Util.Prelude hiding (Size ; Size<_ ; ∞ ; ↑_)
+open import Util.Prelude
 
 
 private
