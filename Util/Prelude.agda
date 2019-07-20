@@ -22,9 +22,11 @@ open import Data.Unit public using
 open import Data.Vec public using
   (Vec ; [] ; _∷_)
 open import Function public using
-  (id ; _∘_ ; _∘′_ ; _$_)
+  (id ; _∘_ ; _∘′_ ; _$_ ; _on_)
 open import Level public using
   (Level ; 0ℓ; Lift ; lift ; lower) renaming
   (zero to lzero ; suc to lsuc ; _⊔_ to _⊔ℓ_)
+open import Relation.Nullary public using
+  (¬_)
 open import Relation.Binary.PropositionalEquality public using
-  (_≡_ ; refl ; sym ; trans ; cong ; subst ; module ≡-Reasoning)
+  (_≡_ ; _≢_ ; refl ; sym ; trans ; cong ; cong₂ ; subst ; module ≡-Reasoning)
