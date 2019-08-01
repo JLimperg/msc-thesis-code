@@ -27,6 +27,17 @@ open import Level public using
   (Level ; 0ℓ; Lift ; lift ; lower) renaming
   (zero to lzero ; suc to lsuc ; _⊔_ to _⊔ℓ_)
 open import Relation.Nullary public using
-  (¬_)
+  (¬_ ; Dec ; yes ; no)
 open import Relation.Binary.PropositionalEquality public using
-  (_≡_ ; _≢_ ; refl ; sym ; trans ; cong ; cong₂ ; subst ; module ≡-Reasoning)
+  ( _≡_ ; _≢_ ; refl ; sym ; trans ; cong ; cong₂ ; subst ; subst₂
+  ; module ≡-Reasoning )
+
+
+infix 1 triangle⟨_⟩⟨_⟩⟨_⟩
+
+
+triangle⟨_⟩⟨_⟩⟨_⟩ : ∀ {a} {A : Set a} x {y z : A}
+  → y ≡ x
+  → z ≡ x
+  → y ≡ z
+triangle⟨ x ⟩⟨ y≡x ⟩⟨ z≡x ⟩ = trans y≡x (sym z≡x)

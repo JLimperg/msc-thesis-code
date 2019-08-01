@@ -7,6 +7,10 @@ import Model.Nat
 import Model.Size
 import Ordinal.HoTT
 import Ordinal.Shulman
+import Source.Reduction
+import Source.Size
+import Source.Term
+import Source.Type
 import Util.Container.Finite
 import Util.Prelude
 import Util.Relation.Binary.Closure.SymmetricTransitive
