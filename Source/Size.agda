@@ -105,12 +105,6 @@ wk-resp-≤ (<→≤ n<m) = <→≤ (wk-resp-< n<m)
 wk-resp-≤ ≤-refl = ≤-refl
 
 
-postulate
-  hedberg : ∀ {α} {A : Set α}
-    → Decidable {A = A} _≡_
-    → ∀ {x y : A} (p q : x ≡ y) → p ≡ q
-
-
 mutual
   ≤→<→< : n ≤ m → m < o → n < o
   ≤→<→< (<→≤ n<m) m<o = <-trans n<m m<o
@@ -241,89 +235,6 @@ mutual
 
 suc-≡-intro : n ≡ m → {n<∞ : n < ∞} {m<∞ : m < ∞} → Size.suc n n<∞ ≡ suc m m<∞
 suc-≡-intro refl = cong (suc _) (<-prop _ _)
-
-
-mutual
-  _≟Ctx_ : Decidable {A = Ctx} _≡_
-  [] ≟Ctx [] = yes refl
-  [] ≟Ctx (Ω ∙ n) = no λ()
-  (Δ ∙ n) ≟Ctx [] = no λ()
-  (Δ ∙ n) ≟Ctx (Ω ∙ m) with Δ ≟Ctx Ω
-  (Δ ∙ n) ≟Ctx (Ω ∙ m) | no Δ≠Ω = no λ { refl → Δ≠Ω refl }
-  (Δ ∙ n) ≟Ctx (Ω ∙ m) | yes refl with n ≟Size m
-  (Δ ∙ n) ≟Ctx (Ω ∙ m) | yes refl | yes n≡m = yes (cong (Δ ∙_) n≡m)
-  (Δ ∙ n) ≟Ctx (Ω ∙ m) | yes refl | no n≠m = no λ { refl → n≠m refl }
-
-
-  _≟Var_ : Decidable {A = Var Δ} _≡_
-  zero ≟Var zero = yes refl
-  zero ≟Var suc y = no λ()
-  suc x ≟Var zero = no λ()
-  suc x ≟Var suc y with x ≟Var y
-  ... | yes x≡y = yes (cong suc x≡y)
-  ... | no x≠y = no λ { refl → x≠y refl }
-
-
-  _≟Size_  : Decidable {A = Size Δ} _≡_
-  var x ≟Size var y with x ≟Var y
-  ... | yes x≡y = yes (cong var x≡y)
-  ... | no x≠y = no λ { refl → x≠y refl }
-  var x ≟Size ∞ = no λ()
-  var x ≟Size ⋆ = no λ()
-  var x ≟Size zero = no λ()
-  var x ≟Size suc y x₁ = no λ()
-  ∞ ≟Size var x = no λ()
-  ∞ ≟Size ∞ = yes refl
-  ∞ ≟Size ⋆ = no λ()
-  ∞ ≟Size zero = no λ()
-  ∞ ≟Size suc y x = no λ()
-  ⋆ ≟Size var x = no λ()
-  ⋆ ≟Size ∞ = no λ()
-  ⋆ ≟Size ⋆ = yes refl
-  ⋆ ≟Size zero = no λ()
-  ⋆ ≟Size suc y x = no λ()
-  zero ≟Size var x = no λ()
-  zero ≟Size ∞ = no λ()
-  zero ≟Size ⋆ = no λ()
-  zero ≟Size zero = yes refl
-  zero ≟Size suc y x = no λ()
-  suc n n<∞ ≟Size var x₂ = no λ()
-  suc n n<∞ ≟Size ∞ = no λ()
-  suc n n<∞ ≟Size ⋆ = no λ()
-  suc n n<∞ ≟Size zero = no λ()
-  suc n n<∞ ≟Size suc m m<∞ with n ≟Size m
-  ... | no n≠m = no λ { refl → n≠m refl }
-  ... | yes refl = yes (cong (suc n) (<-prop n<∞ m<∞))
-
-
--- This terminates because the context 'effectively decreases': When we call
--- ≤-dec (bound x) ..., (bound x) is one further to the left in the context than
--- x. However, Agda doesn't see that.
--- mutual
---   <-dec : Decidable (_<_ {Δ})
---   <-dec (var x) m with ≤-dec (bound x) m
---   ... | yes bx≤m = yes (var (bound x) refl bx≤m)
---   ... | no bx≰m = no λ { (var _ refl bx≤m) → bx≰m bx≤m }
---   <-dec ∞ (var x) = {!!}
---   <-dec ∞ ∞ = no λ()
---   <-dec ∞ ⋆ = yes ∞<⋆
---   <-dec ∞ zero = no λ()
---   <-dec ∞ (suc m x) = no λ()
---   <-dec ⋆ m = no λ()
---   <-dec zero (var x) = {!!}
---   <-dec zero ∞ = yes zero<∞
---   <-dec zero ⋆ = yes zero<⋆
---   <-dec zero zero = no λ()
---   <-dec zero (suc m x) = yes {!!}
---   <-dec (suc n x) m = {!!}
-
-
---   ≤-dec : Decidable (_≤_ {Δ})
---   ≤-dec n m with n ≟Size m
---   ... | yes n≡m = {!!}
---   ... | no n≠m with <-dec n m
---   ... | yes n<m = {!!}
---   ... | no n≮m = {!!}
 
 
 -- begin implicit mutual block
