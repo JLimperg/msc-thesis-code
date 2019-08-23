@@ -183,6 +183,9 @@ data _,_⊢_=β_∶_ : ∀ Δ (Γ : Ctx Δ) (t u : Term Δ) (T : Type Δ) → Se
     : t ≡ u
     → Δ , Γ ⊢ t ∶ T
     → Δ , Γ ⊢ t =β u ∶ T
+  symmetric
+    : Δ , Γ ⊢ t =β u ∶ T
+    → Δ , Γ ⊢ u =β t ∶ T
   transitive
     : Δ , Γ ⊢ t =β u ∶ T
     → Δ , Γ ⊢ u =β v ∶ T
