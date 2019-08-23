@@ -20,7 +20,7 @@ data Type (Δ : S.Ctx) : Set where
   Π_,_ : (n : Size Δ) (T : Type (Δ ∙ n)) → Type Δ
 
 
-variable T U V : Type Δ
+variable T U V W T′ U′ V′ W′ : Type Δ
 
 
 Π-≡⁺ : ∀ {n m} {T : Type (Δ ∙ n)} {U : Type (Δ ∙ m)}

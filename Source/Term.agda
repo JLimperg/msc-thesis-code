@@ -40,7 +40,7 @@ data Term Δ : Set where
   fix : (T : Type (Δ ∙ ⋆)) → Term Δ
 
 
-variable t u v i is z s t′ u′ v′ i′ is′ z′ s′ : Term Δ
+variable t u v w i is z s t′ u′ v′ w′ i′ is′ z′ s′ : Term Δ
 
 
 data _,_⊢ₓ_∶_ : ∀ Δ (Γ : Ctx Δ) (x : Var) (T : Type Δ) → Set where

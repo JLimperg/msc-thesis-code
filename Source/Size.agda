@@ -24,7 +24,7 @@ data _≤_ {Δ} : (n m : Size Δ) → Set
 variable
   Δ Ω Δ′ Ω′ Δ″ Ω″ : Ctx
   x y z : Var Δ
-  n m o p b : Size Δ
+  n m o p b n′ m′ o′ p′ b′ : Size Δ
 
 
 data Ctx where
