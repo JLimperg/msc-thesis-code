@@ -1,0 +1,3 @@
+[submodule "lib/cats"]
+	path = lib/cats
+	url = https://github.com/jlimperg/cats
