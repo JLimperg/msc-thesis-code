@@ -1,5 +1,5 @@
 {-# OPTIONS --without-K --safe #-}
-module Util.HLevel where
+module Util.HoTT.HLevel where
 
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality

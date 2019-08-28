@@ -3,7 +3,7 @@ module Source.Size where
 
 open import Relation.Binary using (Decidable)
 
-open import Util.HLevel
+open import Util.HoTT.HLevel
 open import Util.Prelude hiding (id ; _∘_)
 open import Util.Relation.Binary.PropositionalEquality using
   ( inspect ; [_] ; trans-injectiveˡ )
