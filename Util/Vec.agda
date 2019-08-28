@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K --safe #-}
 module Util.Vec where
 
 open import Data.Vec public
@@ -6,6 +7,7 @@ open import Data.Vec.Any as Any public using (Any ; here ; there)
 open import Data.Vec.Membership.Propositional public using (_∈_)
 
 open import Data.Nat as ℕ using (_≤_)
+open import Level using (_⊔_)
 open import Relation.Binary using (Rel)
 
 open import Util.Prelude
@@ -42,7 +44,7 @@ max-maximal-∈ = All→∈→P (max-maximal _)
 
 
 data All₂ {α} {A : Set α} {ρ} (R : Rel A ρ)
-  : ∀ {n m} → Vec A n → Vec A m → Set ρ where
+  : ∀ {n} → Vec A n → Vec A n → Set (α ⊔ ρ) where
   [] : All₂ R [] []
   _∷_ : ∀ {n x y} {xs ys : Vec A n}
     → R x y

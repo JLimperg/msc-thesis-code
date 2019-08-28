@@ -1,9 +1,12 @@
+{-# OPTIONS --without-K --safe #-}
 module Source.Size where
 
 open import Relation.Binary using (Decidable)
-open import Relation.Binary.PropositionalEquality using (inspect ; [_])
 
+open import Util.HLevel
 open import Util.Prelude hiding (id ; _∘_)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( inspect ; [_] ; trans-injectiveˡ )
 
 
 infix  4 _<_ _≤_
@@ -155,6 +158,47 @@ mutual
   wk≰varzero n≡wkm (reflexive refl) = wk≢varzero (sym n≡wkm)
 
 
+suc-inj-Var : Var.suc {n = n} x ≡ suc y → x ≡ y
+suc-inj-Var refl = refl
+
+
+suc≡-prop-Var : (p : Var.suc {n = n} x ≡ suc y) → p ≡ cong suc (suc-inj-Var p)
+suc≡-prop-Var refl = refl
+
+
+Var-set : (p q : x ≡ y) → p ≡ q
+Var-set {x = zero} {zero} refl refl = refl
+Var-set {x = suc x} {suc .x} p refl
+  = trans (suc≡-prop-Var p) (cong (cong suc) (Var-set _ _))
+
+
+var-inj-Size : Size.var x ≡ var y → x ≡ y
+var-inj-Size refl = refl
+
+
+var≡-prop-Size : (p : Size.var x ≡ var y) → p ≡ cong var (var-inj-Size p)
+var≡-prop-Size refl = refl
+
+
+suc-inj-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
+  → Σ[ p ∈ (n ≡ m) ] subst (_< ∞) p n<∞ ≡ m<∞
+suc-inj-Size refl = refl , refl
+
+
+cong₂-dep : ∀ {a} {A : Set a} {b} {B : A → Set b} {c} {C : Set c}
+  → (f : (a : A) → B a → C)
+  → {x y : A} (p : x ≡ y)
+  → {v : B x} {w : B y} (q : subst B p v ≡ w)
+  → f x v ≡ f y w
+cong₂-dep f refl refl = refl
+
+
+suc≡-prop-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
+  → let (q , r) = suc-inj-Size p
+    in p ≡ cong₂-dep suc q r
+suc≡-prop-Size refl = refl
+
+
 mutual
   wk-inj : wk {n = o} n ≡ wk m → n ≡ m
   wk-inj {n = var x} {var .x} refl = refl
@@ -215,7 +259,7 @@ mutual
   boundx≰x {x = suc x} wkbx≤x+1 = boundx≰x (wk-inj-≤ wkbx≤x+1)
 
 
-  <-prop : (p q : n < m) → p ≡ q
+  <-prop : IsProp (n < m)
   <-prop (var {x} .(bound x) refl b≤n) (var .(bound x) refl b≤n₁)
     = cong (var (bound x) refl) (≤-prop b≤n b≤n₁)
   <-prop (zero<suc n n<∞) (zero<suc .n .n<∞) = refl
@@ -226,11 +270,34 @@ mutual
   <-prop ∞<⋆ ∞<⋆ = refl
 
 
-  ≤-prop : (p q : n ≤ m) → p ≡ q
+  -- This is a consequence of <-prop, but applying the general lemma annoys the
+  -- termination checker, so we essentially inline the lemma.
+  <-set : IsSet (n < m)
+  <-set {n = n} {m} {n<m} {n<m′} p q = trans (sym (canon p)) (canon q)
+    where
+      go : (r : n<m ≡ n<m′) → trans r (<-prop n<m′ n<m′) ≡ <-prop n<m n<m′
+      go refl = refl
+
+      canon : (r : n<m ≡ n<m′) → <-prop n<m n<m′ ≡ r
+      canon refl = trans-injectiveˡ (<-prop n<m′ n<m′) (go (<-prop n<m n<m))
+
+
+  ≤-prop : IsProp (n ≤ m)
   ≤-prop (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-prop _ _)
   ≤-prop (<→≤ n<m) (reflexive n≡m) = ⊥-elim (<-irreflexive n≡m n<m)
   ≤-prop (reflexive n≡m) (<→≤ n<m) = ⊥-elim (<-irreflexive n≡m n<m)
-  ≤-prop ≤-refl ≤-refl = refl
+  ≤-prop (reflexive n≡m) (reflexive n≡m₁) = cong reflexive (Size-set _ _)
+
+
+  Size-set : (p q : n ≡ m) → p ≡ q
+  Size-set {n = var x} {var .x} p refl
+    = trans (var≡-prop-Size p) (cong (cong var) (Var-set _ _))
+  Size-set {n = ∞} {∞} refl refl = refl
+  Size-set {n = ⋆} {⋆} refl refl = refl
+  Size-set {n = zero} {zero} refl refl = refl
+  Size-set {n = suc n n<∞} {suc .n .n<∞} p refl
+    = trans (suc≡-prop-Size p)
+        (cong₂-dep (λ p q → cong₂-dep suc p q) (Size-set _ _) (<-set _ _))
 
 
 suc-≡-intro : n ≡ m → {n<∞ : n < ∞} {m<∞ : m < ∞} → Size.suc n n<∞ ≡ suc m m<∞

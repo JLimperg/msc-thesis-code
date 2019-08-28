@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K --safe #-}
 module Source.Term where
 
 open import Source.Size as S using

@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K --safe #-}
 module Util.Relation.Binary.PropositionalEquality where
 
 open import Relation.Binary.PropositionalEquality public
@@ -17,10 +18,6 @@ cast-trans : ∀ {α} {A B C : Set α}
   → (B≡C : B ≡ C) (A≡B : A ≡ B) {x : A}
   → cast B≡C (cast A≡B x) ≡ cast (trans A≡B B≡C) x
 cast-trans refl refl = refl
-
-
-cast-K : ∀ {α} {A : Set α} (A≡A : A ≡ A) {x : A} → cast A≡A x ≡ x
-cast-K refl = refl
 
 
 subst-trans : ∀ {α} {A : Set α} {ρ} {P : A → Set ρ} {x y z : A} {p : P x}

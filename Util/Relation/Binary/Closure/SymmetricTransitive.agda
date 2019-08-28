@@ -1,3 +1,4 @@
+{-# OPTIONS --without-K --safe #-}
 module Util.Relation.Binary.Closure.SymmetricTransitive where
 
 open import Relation.Binary using (Rel)
