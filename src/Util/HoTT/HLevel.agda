@@ -1,60 +1,118 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --without-K #-}
 module Util.HoTT.HLevel where
 
+open import Util.HoTT.HLevel.Core public
+
+open import Util.HoTT.Equiv
+open import Util.HoTT.Univalence
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality
+open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁺)
+open import Util.Relation.Binary.LogicalEquivalence
 
 
 private
   variable
-    a b c : Level
-    A B C : Set a
+    α β γ : Level
+    A B C : Set α
 
 
-IsContr : Set a → Set a
-IsContr A = Σ[ x ∈ A ] (∀ y → x ≡ y)
+infixr 0 _→-HProp_
+infixr 2 _×-HProp_
 
 
-IsProp : Set a → Set a
-IsProp A = (x y : A) → x ≡ y
+⊤-IsContr : IsContr ⊤
+⊤-IsContr = ⊤.tt , λ { ⊤.tt → refl }
 
 
-IsProp′ : Set a → Set a
-IsProp′ A = (x y : A) → IsContr (x ≡ y)
+⊤-IsProp : IsProp ⊤
+⊤-IsProp = IsOfHLevel-suc 0 ⊤-IsContr
 
 
-IsProp→IsProp′ : IsProp A → IsProp′ A
-IsProp→IsProp′ {A = A} A-prop x y = (A-prop x y) , canon
+⊥-IsProp : IsProp ⊥
+⊥-IsProp ()
+
+
+∀-IsProp : {B : A → Set β} → (∀ a → IsProp (B a)) → IsProp (∀ a → B a)
+∀-IsProp B-prop f g = funext λ a → B-prop _ _ _
+
+
+∀∙-IsProp : {B : A → Set β} → (∀ a → IsProp (B a)) → IsProp (∀ {a} → B a)
+∀∙-IsProp B-prop f g = funext∙ (B-prop _ _ _)
+
+
+→-IsProp : IsProp B → IsProp (A → B)
+→-IsProp B-prop = ∀-IsProp λ _ → B-prop
+
+
+×-IsProp : IsProp A → IsProp B → IsProp (A × B)
+×-IsProp A-prop B-prop (x , y) (x′ , y′) = cong₂ _,_ (A-prop _ _) (B-prop _ _)
+
+
+⊤-HProp : HProp 0ℓ
+⊤-HProp = HLevel⁺ ⊤ ⊤-IsProp
+
+
+⊥-HProp : HProp 0ℓ
+⊥-HProp = HLevel⁺ ⊥ ⊥-IsProp
+
+
+_×-HProp_ : HProp α → HProp β → HProp (α ⊔ℓ β)
+A ×-HProp B = HLevel⁺ (A .type × B .type) (×-IsProp (A .level) (B .level))
+
+
+∀-HProp : (A : Set α) → ((a : A) → HProp β) → HProp (α ⊔ℓ β)
+∀-HProp A B = HLevel⁺ (∀ a → B a .type) (∀-IsProp (λ a → B a .level))
+
+
+∀∙-HProp : {A : Set α} → ((a : A) → HProp β) → HProp (α ⊔ℓ β)
+∀∙-HProp B = HLevel⁺ (∀ {a} → B a .type) (∀∙-IsProp (λ a → B a .level))
+
+
+_→-HProp_ : Set α → HProp β → HProp (α ⊔ℓ β)
+A →-HProp B = HLevel⁺ (A → B .type) (→-IsProp (B .level))
+
+
+_→-HProp′_ : HProp α → HProp β → HProp (α ⊔ℓ β)
+A →-HProp′ B = A .type →-HProp B
+
+
+IsContr-IsProp : IsProp (IsContr A)
+IsContr-IsProp (x , x-unique) (y , y-unique)
+  = Σ-≡⁺ (x-unique y , eq-prop _ _)
   where
-    go : (p : x ≡ y) → trans p (A-prop y y) ≡ A-prop x y
-    go refl = refl
-
-    canon : (p : x ≡ y) → A-prop x y ≡ p
-    canon refl = trans-injectiveˡ (A-prop y y) (go (A-prop y y))
+  eq-prop : IsProp (∀ y′ → y ≡ y′)
+  eq-prop = ∀-IsProp λ γ′ → IsOfHLevel-suc 1 (IsOfHLevel-suc 0 (x , x-unique))
 
 
-IsProp′→IsProp : IsProp′ A → IsProp A
-IsProp′→IsProp A-prop x y = proj₁ (A-prop x y)
+IsProp-IsProp : IsProp (IsProp A)
+IsProp-IsProp A-prop A-prop′
+  = ∀-IsProp (λ x → ∀-IsProp λ y → IsOfHLevel-suc 1 A-prop) A-prop A-prop′
 
 
-IsSet : Set a → Set a
-IsSet A = {x y : A} → IsProp (x ≡ y)
+IsProp-ext : IsProp A → IsProp B → A ↔ B → A ≡ B
+IsProp-ext A-prop B-prop A↔B = ≅→≡ record
+  { forth = A↔B .forth
+  ; isIso = record
+    { back = A↔B .back
+    ; back∘forth = λ _ → A-prop _ _
+    ; forth∘back = λ _ → B-prop _ _
+    }
+  }
 
 
-IsOfHLevel : ℕ → Set a → Set a
-IsOfHLevel zero A = IsContr A
-IsOfHLevel (suc n) A = (x y : A) → IsOfHLevel n (x ≡ y)
+IsOfHLevel-IsProp : ∀ n → IsProp (IsOfHLevel n A)
+IsOfHLevel-IsProp {A = A} zero = IsContr-IsProp
+IsOfHLevel-IsProp (suc zero) = IsProp-IsProp
+IsOfHLevel-IsProp (suc (suc n))
+  = ∀∙-IsProp λ x → ∀∙-IsProp λ y → IsOfHLevel-IsProp (suc n)
 
 
-IsContr→IsProp : IsContr A → IsProp A
-IsContr→IsProp (c , c-canon) x y = trans (sym (c-canon x)) (c-canon y)
+HLevel-≡⁺ : ∀ {n} (A B : HLevel α n)
+  → A .type ≡ B .type
+  → A ≡ B
+HLevel-≡⁺ (HLevel⁺ A A-level) (HLevel⁺ B B-level) refl
+  = cong (HLevel⁺ A) (IsOfHLevel-IsProp _ _ _)
 
 
-IsOfHLevel-suc : ∀ {n} → IsOfHLevel n A → IsOfHLevel (suc n) A
-IsOfHLevel-suc {n = zero} A-contr = IsProp→IsProp′ (IsContr→IsProp A-contr)
-IsOfHLevel-suc {n = suc n} A-level-n x y = IsOfHLevel-suc (A-level-n x y)
-
-
-IsProp→IsSet : IsProp A → IsSet A
-IsProp→IsSet A-prop p q
-  = IsProp′→IsProp (IsOfHLevel-suc (IsProp→IsProp′ A-prop) _ _) _ _
+HProp-ext : (A B : HProp α) → A .type ↔ B .type → A ≡ B
+HProp-ext A B A↔B = HLevel-≡⁺ A B (IsProp-ext (A .level) (B .level) A↔B)

@@ -6,6 +6,12 @@ open import Relation.Binary.PropositionalEquality public
 open import Util.Prelude
 
 
+private
+  variable
+    α β γ : Level
+    A B C : Set α
+
+
 cast : ∀ {α} {A B : Set α} → A ≡ B → A → B
 cast refl x = x
 
@@ -42,8 +48,13 @@ sym-cancel-l : ∀ {α} {A : Set α} {x y : A} (x≡y : x ≡ y)
 sym-cancel-l refl = refl
 
 
-Σ-≡⁺ : ∀ {α β} {A : Set α} {B : A → Set β} {x y : Σ A B}
-  → (eq₁ : proj₁ x ≡ proj₁ y)
-  → cast (cong _ eq₁) (proj₂ x) ≡ proj₂ y
+Σ-≡⁻ : {B : A → Set β} {x y : Σ A B}
   → x ≡ y
-Σ-≡⁺ refl refl = refl
+  → Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y
+Σ-≡⁻ refl = refl , refl
+
+
+Σ-≡⁺ : {B : A → Set β} {x y : Σ A B}
+  → Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y
+  → x ≡ y
+Σ-≡⁺ (refl , refl) = refl
