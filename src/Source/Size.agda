@@ -6,7 +6,7 @@ open import Relation.Binary using (Decidable)
 open import Util.HoTT.HLevel.Core
 open import Util.Prelude hiding (id ; _∘_)
 open import Util.Relation.Binary.PropositionalEquality using
-  ( inspect ; [_] ; trans-injectiveˡ )
+  ( trans-injectiveˡ ; cong₂-dep )
 
 
 infix  4 _<_ _≤_
@@ -183,14 +183,6 @@ var≡-prop-Size refl = refl
 suc-inj-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
   → Σ[ p ∈ (n ≡ m) ] subst (_< ∞) p n<∞ ≡ m<∞
 suc-inj-Size refl = refl , refl
-
-
-cong₂-dep : ∀ {a} {A : Set a} {b} {B : A → Set b} {c} {C : Set c}
-  → (f : (a : A) → B a → C)
-  → {x y : A} (p : x ≡ y)
-  → {v : B x} {w : B y} (q : subst B p v ≡ w)
-  → f x v ≡ f y w
-cong₂-dep f refl refl = refl
 
 
 suc≡-prop-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
