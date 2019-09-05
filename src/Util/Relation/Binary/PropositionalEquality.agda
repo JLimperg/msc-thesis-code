@@ -14,16 +14,28 @@ private
     A B C A′ B′ C′ : Set α
 
 
-Σ-≡⁻ : {B : A → Set β} {x y : Σ A B}
+Σ-≡⁻ : {A : Set α} {B : A → Set β} {x y : Σ A B}
   → x ≡ y
   → Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y
 Σ-≡⁻ refl = refl , refl
 
 
-Σ-≡⁺ : {B : A → Set β} {x y : Σ A B}
+Σ-≡⁺ : {A : Set α} {B : A → Set β} {x y : Σ A B}
   → Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y
   → x ≡ y
 Σ-≡⁺ (refl , refl) = refl
+
+
+Σ-≡⁺∘Σ-≡⁻ : {A : Set α} {B : A → Set β} {x y : Σ A B}
+  → (p : x ≡ y)
+  → Σ-≡⁺ (Σ-≡⁻ p) ≡ p
+Σ-≡⁺∘Σ-≡⁻ refl = refl
+
+
+Σ-≡⁻∘Σ-≡⁺ : {A : Set α} {B : A → Set β} {x y : Σ A B}
+  → (p : Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y)
+  → Σ-≡⁻ (Σ-≡⁺ p) ≡ p
+Σ-≡⁻∘Σ-≡⁺ (refl , refl) = refl
 
 
 cast : A ≡ B → A → B
