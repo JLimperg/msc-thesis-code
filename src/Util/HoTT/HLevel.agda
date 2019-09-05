@@ -6,7 +6,8 @@ open import Util.HoTT.HLevel.Core public
 open import Util.HoTT.Equiv
 open import Util.HoTT.Univalence
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁺)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ )
 open import Util.Relation.Binary.LogicalEquivalence
 
 
@@ -116,3 +117,13 @@ HLevel-≡⁺ (HLevel⁺ A A-level) (HLevel⁺ B B-level) refl
 
 HProp-ext : (A B : HProp α) → A .type ↔ B .type → A ≡ B
 HProp-ext A B A↔B = HLevel-≡⁺ A B (IsProp-ext (A .level) (B .level) A↔B)
+
+
+Σ-IsSet : {A : Set α} {B : A → Set β}
+  → IsSet A
+  → (∀ a → IsSet (B a))
+  → IsSet (Σ A B)
+Σ-IsSet A-set B-set p q
+  = trans (sym (Σ-≡⁺∘Σ-≡⁻ p))
+      (sym (trans (sym (Σ-≡⁺∘Σ-≡⁻ q))
+        (cong Σ-≡⁺ (Σ-≡⁺ (A-set _ _ , B-set _ _ _)))))
