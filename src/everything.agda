@@ -12,6 +12,7 @@ import Util.HoTT.HLevel
 import Util.HoTT.HLevel.Core
 import Util.HoTT.Univalence
 import Util.HoTT.Univalence.Consequences
+import Util.Induction.WellFounded
 import Util.Prelude
 import Util.Relation.Binary.Closure.SymmetricTransitive
 import Util.Relation.Binary.LogicalEquivalence
