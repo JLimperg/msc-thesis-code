@@ -3,12 +3,16 @@ module Source.Reduction where
 
 open import Source.Size as S using
   ( Size ; _<_ ; _≤_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b
-  ; n′ ; m′ ; o′ ; b′ ; sub-syntax-Size ; v0 ; v1 )
+  ; n′ ; m′ ; o′ ; b′ ; v0 ; v1 )
+open import Source.Size.Substitution.Universe as SU using
+  ( sub-syntax-Size )
 open import Source.Type as T using
   ( Type ; Ctx ; T ; U ; V ; W ; Γ ; Γ′ ; Γ″ ; Ψ ; Ψ′ ; Ψ″ ; sub-syntax-Ctx
   ; sub-syntax-Type )
 open import Source.Term
 open import Util.Prelude hiding (id ; _∘_)
+
+import Source.Size.Substitution.Canonical as SC
 
 open Ctx
 open S.Ctx
@@ -28,19 +32,19 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
     → Δ , Γ ⊢ (Λ T , t) · u ⟶ t [ Fill u ⊢u ]t ∶ U
   appₛ-absₛ
     : ∀ n {T : Type (Δ ∙ n)} t m
-    → Δ ∙ n , Γ [ S.Wk ]Γ ⊢ t ∶ T
+    → Δ ∙ n , Γ [ SU.Wk ]Γ ⊢ t ∶ T
     → (m<n : m < n)
-    → Δ , Γ ⊢ (Λₛ n , t) ·ₛ m ⟶ t [ S.Fill m m<n ]tₛ ∶ T [ S.Fill m m<n ]T
+    → Δ , Γ ⊢ (Λₛ n , t) ·ₛ m ⟶ t [ SU.Fill m m<n ]tₛ ∶ T [ SU.Fill m m<n ]T
   caseNat-zero
     : ∀ T n z s
     → Δ , Γ ⊢ z ∶ T
-    → Δ , Γ ⊢ s ∶ Π n , Nat v0 ⇒ T [ S.Wk ]T
+    → Δ , Γ ⊢ s ∶ Π n , Nat v0 ⇒ T [ SU.Wk ]T
     → n < ⋆
     → Δ , Γ ⊢ caseNat T ·ₛ n · (zero ·ₛ n) · z · s ⟶ z ∶ T
   caseNat-suc
     : ∀ T n m i z s
     → Δ , Γ ⊢ z ∶ T
-    → Δ , Γ ⊢ s ∶ Π n , Nat v0 ⇒ T [ S.Wk ]T
+    → Δ , Γ ⊢ s ∶ Π n , Nat v0 ⇒ T [ SU.Wk ]T
     → Δ , Γ ⊢ i ∶ Nat m
     → n < ⋆
     → m < n
@@ -60,12 +64,12 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
     → Δ , Γ ⊢ tail ·ₛ n · (cons ·ₛ n · i · is) ⟶ is ∶ Π n , Stream v0
   fix
     : ∀ (T : Type (Δ ∙ ⋆)) t n
-    → Δ , Γ ⊢ t ∶ Π ⋆ , (Π v0 , T [ S.Skip ]T) ⇒ T
+    → Δ , Γ ⊢ t ∶ Π ⋆ , (Π v0 , T [ SU.Skip ]T) ⇒ T
     → (n<⋆ : n < ⋆)
     → Δ , Γ ⊢
         fix T · t ·ₛ n
-        ⟶ t ·ₛ n · (Λₛ n , fix (T [ S.Keep′ S.Wk ]T) · (t [ S.Wk ]tₛ) ·ₛ v0)
-        ∶ T [ S.Fill n n<⋆ ]T
+        ⟶ t ·ₛ n · (Λₛ n , fix (T [ SU.Keep′ SU.Wk ]T) · (t [ SU.Wk ]tₛ) ·ₛ v0)
+        ∶ T [ SU.Fill n n<⋆ ]T
   cong-abs
     : ∀ T t t′
     → Δ , Γ ∙ T ⊢ t ⟶ t′ ∶ U
@@ -82,12 +86,12 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
     → Δ , Γ ⊢ t · u ⟶ t · u′ ∶ U
   cong-absₛ
     : ∀ n {T : Type (Δ ∙ n)} t t′
-    → Δ ∙ n , Γ [ S.Wk ]Γ ⊢ t ⟶ t′ ∶ T
+    → Δ ∙ n , Γ [ SU.Wk ]Γ ⊢ t ⟶ t′ ∶ T
     → Δ , Γ ⊢ Λₛ n , t ⟶ Λₛ n , t′ ∶ Π n , T
   cong-appₛ
     : Δ , Γ ⊢ t ⟶ t′ ∶ Π n , T
     → (m<n : m < n)
-    → Δ , Γ ⊢ t ·ₛ m ⟶ t′ ·ₛ m ∶ T [ S.Fill m m<n ]T
+    → Δ , Γ ⊢ t ·ₛ m ⟶ t′ ·ₛ m ∶ T [ SU.Fill m m<n ]T
 
 
 ⟶→⊢ₗ : Δ , Γ ⊢ t ⟶ u ∶ T → Δ , Γ ⊢ t ∶ T
@@ -97,11 +101,11 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
   = app _ _ (app _ _ (app _ _
       (subst (λ U → Δ , Γ ⊢ caseNat T ·ₛ n ∶ Nat n ⇒ U)
         (cong₂ _⇒_
-          (trans (sym (T.sub->> T refl)) (T.sub-Id T (S.Fill>>Wk _ _ _)))
+          (trans (sym (T.sub->> T SU.≈-refl))
+            (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _))))
           (cong₂ (λ U V → (Π n , Nat v0 ⇒ U) ⇒ V)
-            (trans (sym (T.sub->> T refl))
-              (cong (λ σ → T.sub σ T) S.Keep′Fill>>Wk>>Wk))
-            (trans (sym (T.sub->> T refl)) (T.sub-Id T (S.Fill>>Wk _ _ _)))
+            (sym (T.sub->> T (SU.≈⁺ (sym SC.Keep′Fill>>Wk>>Wk))))
+            (trans (sym (T.sub->> T SU.≈-refl)) (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _))))
             ))
         (appₛ _ _ n<⋆ (caseNat T)))
       (appₛ _ _ n<⋆ zero)) ⊢z) ⊢s
@@ -111,25 +115,25 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
       (app _ _ (appₛ _ _ m<n (appₛ _ _ n<⋆ suc)) ⊢i))
       ⊢z) ⊢s
   where
-    go₁ : T [ S.Wk ]T [ S.Fill n n<⋆ ]T ≡ T
-    go₁ = trans (sym (T.sub->> T refl)) (T.sub-Id T (S.Fill>>Wk _ _ _))
+    go₁ : T [ SU.Wk ]T [ SU.Fill n n<⋆ ]T ≡ T
+    go₁ = trans (sym (T.sub->> T SU.≈-refl)) (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _)))
 
-    go₂ : T [ S.Wk S.>> S.Wk ]T [ S.Keep′ {n = v0} (S.Fill n n<⋆) ]T ≡ T [ S.Wk ]T
-    go₂ = trans (sym (T.sub->> T refl)) (cong (λ σ → T.sub σ T) S.Keep′Fill>>Wk>>Wk)
+    go₂ : T [ SU.Wk SU.>> SU.Wk ]T [ SU.Keep′ {n = v0} (SU.Fill n n<⋆) ]T ≡ T [ SU.Wk ]T
+    go₂ = trans (sym (T.sub->> T SU.≈-refl)) (T.sub-resp-≈ (SU.≈⁺ SC.Keep′Fill>>Wk>>Wk) T)
 
-    go₃ : S.wk n [ S.Fill m m<n ]n ≡ n
+    go₃ : S.wk n [ SU.Fill m m<n ]n ≡ n
     go₃
-      = trans (cong (S.sub (S.Fill m m<n)) (sym (S.sub-Wk n)))
-          (trans (sym (S.sub->> n refl)) (S.sub-Id n (S.Fill>>Wk _ _ _)))
+      = trans (cong (SU.sub (SU.Fill m m<n)) (sym (SC.sub-Wk n)))
+          (trans (sym (SC.sub->> n refl)) (SC.sub-Id n (SC.Fill>>Wk _ _ _)))
 
-    go₄ : T.sub (S.Fill n n<⋆)
+    go₄ : T.sub (SU.Fill n n<⋆)
            (Nat v0 ⇒
-            T [ S.Wk ]T ⇒
-            (Π v0 , Nat v0 ⇒ T [ S.Wk S.>> S.Wk ]T) ⇒
-            T [ S.Wk ]T)
+            T [ SU.Wk ]T ⇒
+            (Π v0 , Nat v0 ⇒ T [ SU.Wk SU.>> SU.Wk ]T) ⇒
+            T [ SU.Wk ]T)
            ≡
-           (T.sub (S.Fill m m<n) (T.sub (S.Keep′ {n = v0} (S.Fill n n<⋆)) (Nat v1))
-            ⇒ T ⇒ (Π n , Nat v0 ⇒ T [ S.Wk ]T) ⇒ T)
+           (T.sub (SU.Fill m m<n) (T.sub (SU.Keep′ {n = v0} (SU.Fill n n<⋆)) (Nat v1))
+            ⇒ T ⇒ (Π n , Nat v0 ⇒ T [ SU.Wk ]T) ⇒ T)
     go₄ rewrite go₁ | go₂ | go₃ = refl
 ⟶→⊢ₗ {Δ = Δ} {Γ} (head-cons n i is ⊢i ⊢is n<⋆)
   = app _ _ (appₛ _ _ n<⋆ head) (app _ _ (app _ _ (appₛ _ _ n<⋆ cons) ⊢i) ⊢is)
@@ -146,29 +150,28 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
 ⟶→⊢ᵣ : Δ , Γ ⊢ t ⟶ u ∶ T → Δ , Γ ⊢ u ∶ T
 ⟶→⊢ᵣ (app-abs t u ⊢t ⊢u) = sub-resp-⊢ (Fill _ ⊢u) ⊢t
 ⟶→⊢ᵣ {Δ} {Γ} {T = T} (appₛ-absₛ n t m ⊢t m<n)
-  = subst (λ Ψ → Δ , Ψ ⊢ t [ S.Fill m m<n ]tₛ ∶ _)
-      (trans (sym (T.subΓ->> Γ refl)) (T.subΓ-Id Γ (S.Fill>>Wk _ _ _)))
-      (subₛ-resp-⊢ (S.Fill m m<n) ⊢t)
+  = subst (λ Ψ → Δ , Ψ ⊢ t [ SU.Fill m m<n ]tₛ ∶ _)
+      (trans (sym (T.subΓ->> Γ SU.≈-refl)) (T.subΓ-Id Γ (SU.≈⁺ (SC.Fill>>Wk _ _ _))))
+      (subₛ-resp-⊢ (SU.Fill m m<n) ⊢t)
 ⟶→⊢ᵣ (caseNat-zero T n z s ⊢z ⊢s n<⋆) = ⊢z
 ⟶→⊢ᵣ {Δ} {Γ} (caseNat-suc T n m i z s ⊢z ⊢s ⊢i n<⋆ m<n)
   = app _ _
       (subst (λ U → Δ , Γ ⊢ s ·ₛ m ∶ Nat m ⇒ U)
-        (trans (sym (T.sub->> T refl)) (T.sub-Id T (S.Fill>>Wk _ _ _)))
+        (trans (sym (T.sub->> T SU.≈-refl)) (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _))))
         (appₛ _ _ m<n ⊢s))
       ⊢i
 ⟶→⊢ᵣ (head-cons n i is ⊢i ⊢is n<⋆) = ⊢i
 ⟶→⊢ᵣ (tail-cons n i is m ⊢i ⊢is n<⋆ m<n) = ⊢is
 ⟶→⊢ᵣ {Δ} {Γ} (fix T t n ⊢t n<⋆)
   = app _ _ (appₛ _ _ n<⋆ ⊢t)
-      (absₛ _ _ _ (subst (λ U → Δ ∙ n , Γ [ S.Wk ]Γ ⊢ fix (T [ S.Keep′ S.Wk ]T) · (t [ S.Wk ]tₛ) ·ₛ v0 ∶ U)
-      (T.sub->>′ (sym S.Keep′Fill>>Skip)
-        T)
-        (appₛ _ _ (S.var _ refl (S.<→≤ (S.wk-resp-< n<⋆)))
-          (app _ _ (fix _)
-            (subst (λ U → Δ ∙ n , Γ [ S.Wk ]Γ ⊢ t [ S.Wk ]tₛ
-              ∶ Π ⋆ , (Π v0 , U) ⇒ T [ S.Keep′ S.Wk ]T)
-              (T.sub->>′ (sym S.Skip>>Keep′) T)
-              (subₛ-resp-⊢ S.Wk ⊢t))))))
+      (absₛ _ _ _ (subst (λ U → Δ ∙ n , Γ [ SU.Wk ]Γ ⊢ fix (T [ SU.Keep′ SU.Wk ]T) · (t [ SU.Wk ]tₛ) ·ₛ v0 ∶ U)
+      (T.sub->>′ (SU.≈⁺ (sym SC.Keep′Fill>>Skip)) T)
+      (appₛ _ _ (S.var _ refl (S.<→≤ (S.wk-resp-< n<⋆)))
+        (app _ _ (fix _)
+          (subst (λ U → Δ ∙ n , Γ [ SU.Wk ]Γ ⊢ t [ SU.Wk ]tₛ
+            ∶ Π ⋆ , (Π v0 , U) ⇒ T [ SU.Keep′ SU.Wk ]T)
+            (T.sub->>′ (SU.≈⁺ (sym SC.Skip>>Keep′)) T)
+            (subₛ-resp-⊢ SU.Wk ⊢t))))))
 ⟶→⊢ᵣ (cong-abs T t t′ t→t′) = abs _ _ (⟶→⊢ᵣ t→t′)
 ⟶→⊢ᵣ (cong-appₗ t t′ u t→t′ ⊢u) = app _ _ (⟶→⊢ᵣ t→t′) ⊢u
 ⟶→⊢ᵣ (cong-appᵣ t u u′ ⊢t u→u′) = app _ _ ⊢t (⟶→⊢ᵣ u→u′)
@@ -220,8 +223,8 @@ data _/_⊢_≃Γ_ Δ Ω : (Γ : Ctx Δ) (Ψ : Ctx Ω) → Set where
 
 
 sub-inj-≃T
-  : (σ : S.Sub Δ Δ′)
-  → (τ : S.Sub Ω Ω′)
+  : (σ : SU.Sub Δ Δ′)
+  → (τ : SU.Sub Ω Ω′)
   → Δ / Ω ⊢ T [ σ ]T ≃ U [ τ ]T
   → Δ′ / Ω′ ⊢ T ≃ U
 sub-inj-≃T {T = Nat n} {Nat m} σ τ x = Nat
@@ -229,12 +232,12 @@ sub-inj-≃T {T = Stream n} {Stream m} σ τ x = Stream
 sub-inj-≃T {T = T ⇒ U} {V ⇒ W} σ τ (arrow x x₁)
   = arrow (sub-inj-≃T σ τ x) (sub-inj-≃T σ τ x₁)
 sub-inj-≃T {T = Π n , T} {Π m , U} σ τ (pi x)
-  = pi (sub-inj-≃T (S.Keep′ σ) (S.Keep′ τ) x)
+  = pi (sub-inj-≃T (SU.Keep′ σ) (SU.Keep′ τ) x)
 
 
 sub-inj-≃Γ
-  : (σ : S.Sub Δ Δ′)
-  → (τ : S.Sub Ω Ω′)
+  : (σ : SU.Sub Δ Δ′)
+  → (τ : SU.Sub Ω Ω′)
   → Δ / Ω ⊢ Γ [ σ ]Γ ≃Γ Ψ [ τ ]Γ
   → Δ′ / Ω′ ⊢ Γ ≃Γ Ψ
 sub-inj-≃Γ {Γ = []} {[]} σ τ x = []
@@ -243,19 +246,19 @@ sub-inj-≃Γ {Γ = Γ ∙ T} {Ψ ∙ U} σ τ (snoc x x₁)
 
 
 sub-resp-≃T
-  : (σ : S.Sub Δ Δ′)
-  → (τ : S.Sub Ω Ω′)
+  : (σ : SU.Sub Δ Δ′)
+  → (τ : SU.Sub Ω Ω′)
   → Δ′ / Ω′ ⊢ T ≃ U
   → Δ / Ω ⊢ T [ σ ]T ≃ U [ τ ]T
 sub-resp-≃T σ τ Nat = Nat
 sub-resp-≃T σ τ Stream = Stream
 sub-resp-≃T σ τ (arrow x x₁) = arrow (sub-resp-≃T σ τ x) (sub-resp-≃T σ τ x₁)
-sub-resp-≃T σ τ (pi x) = pi (sub-resp-≃T (S.Keep′ σ) (S.Keep′ τ) x)
+sub-resp-≃T σ τ (pi x) = pi (sub-resp-≃T (SU.Keep′ σ) (SU.Keep′ τ) x)
 
 
 sub-resp-≃Γ
-  : (σ : S.Sub Δ Δ′)
-  → (τ : S.Sub Ω Ω′)
+  : (σ : SU.Sub Δ Δ′)
+  → (τ : SU.Sub Ω Ω′)
   → Δ′ / Ω′ ⊢ Γ ≃Γ Ψ
   → Δ / Ω ⊢ Γ [ σ ]Γ ≃Γ Ψ [ τ ]Γ
 sub-resp-≃Γ σ τ [] = []
@@ -281,13 +284,13 @@ data _,_/_,_⊢_≃_∶_/_ Δ (Γ : Ctx Δ) Ω (Ψ : Ctx Ω)
     → Δ , Γ / Ω , Ψ ⊢ u ≃ w ∶ T / V
     → Δ , Γ / Ω , Ψ ⊢ t · u ≃ v · w ∶ U / W
   absₛ
-    : Δ ∙ n , Γ [ S.Wk ]Γ / Ω ∙ m , Ψ [ S.Wk ]Γ ⊢ t ≃ u ∶ T / U
+    : Δ ∙ n , Γ [ SU.Wk ]Γ / Ω ∙ m , Ψ [ SU.Wk ]Γ ⊢ t ≃ u ∶ T / U
     → Δ , Γ / Ω , Ψ ⊢ Λₛ n , t ≃ Λₛ m , u ∶ Π n , T / Π m , U
   appₛ
     : ∀ t u m m<n m′ m′<n′
     → Δ , Γ / Ω , Ψ ⊢ t ≃ u ∶ Π n , T / Π n′ , U
     → Δ , Γ / Ω , Ψ ⊢ t ·ₛ m ≃ u ·ₛ m′
-        ∶ T [ S.Fill m m<n ]T / U [ S.Fill m′ m′<n′ ]T
+        ∶ T [ SU.Fill m m<n ]T / U [ SU.Fill m′ m′<n′ ]T
   zero
     : Δ / Ω ⊢ Γ ≃Γ Ψ
     → Δ , Γ / Ω , Ψ ⊢ zero ≃ zero
@@ -320,21 +323,21 @@ data _,_/_,_⊢_≃_∶_/_ Δ (Γ : Ctx Δ) Ω (Ψ : Ctx Ω)
     → Δ , Γ / Ω , Ψ ⊢ caseNat T ≃ caseNat U
       ∶ Π ⋆ ,
         Nat v0 ⇒
-        T [ S.Wk ]T ⇒
-        (Π v0 , Nat v0 ⇒ T [ S.Wk S.>> S.Wk ]T) ⇒
-        T [ S.Wk ]T
+        T [ SU.Wk ]T ⇒
+        (Π v0 , Nat v0 ⇒ T [ SU.Wk SU.>> SU.Wk ]T) ⇒
+        T [ SU.Wk ]T
       / Π ⋆ ,
         Nat v0 ⇒
-        U [ S.Wk ]T ⇒
-        (Π v0 , Nat v0 ⇒ U [ S.Wk S.>> S.Wk ]T) ⇒
-        U [ S.Wk ]T
+        U [ SU.Wk ]T ⇒
+        (Π v0 , Nat v0 ⇒ U [ SU.Wk SU.>> SU.Wk ]T) ⇒
+        U [ SU.Wk ]T
   fix
     : ∀ T U
     → Δ / Ω ⊢ Γ ≃Γ Ψ
     → Δ ∙ ⋆ / Ω ∙ ⋆ ⊢ T ≃ U
     → Δ , Γ / Ω , Ψ ⊢ fix T ≃ fix U
-      ∶ (Π ⋆ , (Π v0 , T [ S.Skip ]T) ⇒ T) ⇒ (Π ⋆ , T)
-      / (Π ⋆ , (Π v0 , U [ S.Skip ]T) ⇒ U) ⇒ (Π ⋆ , U)
+      ∶ (Π ⋆ , (Π v0 , T [ SU.Skip ]T) ⇒ T) ⇒ (Π ⋆ , T)
+      / (Π ⋆ , (Π v0 , U [ SU.Skip ]T) ⇒ U) ⇒ (Π ⋆ , U)
 
 
 ≃t→≃Γ

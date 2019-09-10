@@ -2,8 +2,12 @@
 module Source.Type where
 
 open import Source.Size as S using
-  ( Size ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; p ; b ; σ ; τ ; ι)
+  ( Size ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; p ; b)
+open import Source.Size.Substitution.Universe as SU using
+  ( σ ; τ ; ι ; ⟨_⟩ )
 open import Util.Prelude
+
+import Source.Size.Substitution.Canonical as SC
 
 open S.Ctx
 
@@ -39,11 +43,11 @@ data Ctx (Δ : S.Ctx) : Set where
 variable Γ Γ′ Γ″ Ψ Ψ′ Ψ″ : Ctx Δ
 
 
-sub : S.Sub Δ Ω → Type Ω → Type Δ
-sub σ (Nat n) = Nat (S.sub σ n)
-sub σ (Stream n) = Stream (S.sub σ n)
+sub : SU.Sub Δ Ω → Type Ω → Type Δ
+sub σ (Nat n) = Nat (SU.sub σ n)
+sub σ (Stream n) = Stream (SU.sub σ n)
 sub σ (T ⇒ U) = sub σ T ⇒ sub σ U
-sub σ (Π n , T) = Π S.sub σ n , sub (S.Keep σ refl) T
+sub σ (Π n , T) = Π SU.sub σ n , sub (SU.Keep σ refl) T
 
 
 sub-syntax-Type = sub
@@ -54,55 +58,70 @@ syntax sub-syntax-Type σ T = T [ σ ]T
 
 subst-sub-Keep
   : (o≡p : o ≡ p)
-  → (o≡n[σ] : o ≡ S.sub σ n)
-  → subst (λ n → Type (Δ ∙ n)) o≡p (sub (S.Keep {n = n} σ o≡n[σ]) T)
-  ≡ sub (S.Keep σ (trans (sym o≡p) o≡n[σ])) T
+  → (o≡n[σ] : o ≡ SU.sub σ n)
+  → subst (λ n → Type (Δ ∙ n)) o≡p (sub (SU.Keep {n = n} σ o≡n[σ]) T)
+  ≡ sub (SU.Keep σ (trans (sym o≡p) o≡n[σ])) T
 subst-sub-Keep refl o≡n[σ] = refl
 
 
-sub->> : ∀ {ι : S.Sub Δ Δ″} {σ : S.Sub Δ Δ′} {τ : S.Sub Δ′ Δ″} T
-  → ι ≡ σ S.>> τ
+sub-resp-≈ : σ SU.≈ τ → ∀ T → sub σ T ≡ sub τ T
+sub-resp-≈ p (Nat n) = cong Nat (SU.sub-resp-≈ p n)
+sub-resp-≈ p (Stream n) = cong Stream (SU.sub-resp-≈ p n)
+sub-resp-≈ p (T ⇒ U) = cong₂ _⇒_ (sub-resp-≈ p T) (sub-resp-≈ p U)
+sub-resp-≈ p (Π n , T) = Π-≡⁺ (SU.sub-resp-≈ p n)
+  (trans (subst-sub-Keep (SU.sub-resp-≈ p n) refl)
+    (sub-resp-≈ (SU.Keep-resp-≈ _ _ p) T))
+
+
+sub->> : ∀ {ι : SU.Sub Δ Δ″} {σ : SU.Sub Δ Δ′} {τ : SU.Sub Δ′ Δ″} T
+  → ι SU.≈ σ SU.>> τ
   → sub ι T ≡ sub σ (sub τ T)
-sub->> (Nat n) p = cong Nat (S.sub->> n p)
-sub->> (Stream n) p = cong Stream (S.sub->> n p)
+sub->> (Nat n) p = cong Nat (SC.sub->> n (SU.≈⁻ p))
+sub->> (Stream n) p = cong Stream (SC.sub->> n (SU.≈⁻ p))
 sub->> (T ⇒ U) p = cong₂ _⇒_ (sub->> T p) (sub->> U p)
-sub->> {Δ = Δ} {ι = ι} {σ = σ} {τ = τ} (Π n , T) refl
-  = Π-≡⁺ (S.sub->> n refl) go
+sub->> {Δ = Δ} {ι = ι} {σ = σ} {τ = τ} (Π n , T) p = Π-≡⁺ (SC.sub->> n (SU.≈⁻ p)) go
   where
-    go : subst (λ k → Type (Δ ∙ k)) (S.sub->> n refl) (sub (S.Keep ι refl) T)
-           ≡ sub (S.Keep σ refl) (sub (S.Keep τ refl) T)
+    go
+      : subst (λ n → Type (Δ ∙ n)) (SC.sub->> n (SU.≈⁻ p))
+          (sub (SU.Keep ι refl) T)
+      ≡ sub (SU.Keep σ refl) (sub (SU.Keep τ refl) T)
     go = let open ≡-Reasoning in
       begin
-        subst (λ k → Type (Δ ∙ k)) (S.sub->> n refl)
-          (sub (S.Keep ι refl) T)
-      ≡⟨ subst-sub-Keep (S.sub->> n refl) refl ⟩
-        sub (S.Keep ι _) T
-      ≡⟨ cong (λ σ → sub σ T) (sym (S.Keep>>Keep {n≡o = refl})) ⟩
-        sub (S.Keep σ refl S.>> S.Keep τ refl) T
-      ≡⟨ sub->> T refl ⟩
-        sub (S.Keep σ refl) (sub (S.Keep τ refl) T)
+        subst (λ n → Type (Δ ∙ n)) (SC.sub->> n (SU.≈⁻ p))
+          (sub (SU.Keep ι refl) T)
+      ≡⟨ subst-sub-Keep (SC.sub->> n (SU.≈⁻ p)) refl ⟩
+        sub (SU.Keep ι (trans (sym (SC.sub->> n (SU.≈⁻ p))) refl)) T
+      ≡⟨ sub-resp-≈ (SU.Keep-resp-≈ _ (sym (SC.sub->> n refl)) p) T ⟩
+        sub (SU.Keep (σ SU.>> τ) (sym (SC.sub->> n refl))) T
+      ≡⟨ sub-resp-≈ (SU.≈-sym (SU.≈⁺ (SC.Keep>>Keep {n≡o = refl}))) T ⟩
+        sub (SU.Keep σ refl SU.>> SU.Keep τ refl) T
+      ≡⟨ sub->> T SU.≈-refl ⟩
+        sub (SU.Keep σ refl) (sub (SU.Keep τ refl) T)
       ∎
 
 
-sub->>′ : {σ : S.Sub Δ Δ′} {τ : S.Sub Δ′ Δ″} {σ′ : S.Sub Δ Ω} {τ′ : S.Sub Ω Δ″}
-  → σ S.>> τ ≡ σ′ S.>> τ′
+sub->>′ : {σ : SU.Sub Δ Δ′} {τ : SU.Sub Δ′ Δ″} {σ′ : SU.Sub Δ Ω} {τ′ : SU.Sub Ω Δ″}
+  → σ SU.>> τ SU.≈ σ′ SU.>> τ′
   → ∀ T
   → sub σ (sub τ T) ≡ sub σ′ (sub τ′ T)
 sub->>′ {σ = σ} {τ} {σ′} {τ′} eq T
-  = trans (sym (sub->> T refl)) (trans (cong (λ σ → sub σ T) eq) (sub->> T refl))
+  = trans (sym (sub->> T SU.≈-refl)) (trans (sub-resp-≈ eq T) (sub->> T SU.≈-refl))
 
 
-sub-Id : ∀ T → σ ≡ S.Id → sub σ T ≡ T
-sub-Id (Nat n) p = cong Nat (S.sub-Id n p)
-sub-Id (Stream n) p = cong Stream (S.sub-Id n p)
+sub-Id : ∀ T → σ SU.≈ SU.Id → sub σ T ≡ T
+sub-Id (Nat n) (SU.≈⁺ p) = cong Nat (SC.sub-Id n p)
+sub-Id (Stream n) (SU.≈⁺ p) = cong Stream (SC.sub-Id n p)
 sub-Id (T ⇒ U) p = cong₂ _⇒_ (sub-Id T p) (sub-Id U p)
-sub-Id (Π n , T) refl
-  = Π-≡⁺ (S.sub-Id n refl)
-      (trans (subst-sub-Keep (S.sub-Id n refl) refl)
-        (trans (cong (λ σ → sub σ T) S.Keep-Id) (sub-Id _ refl)))
+sub-Id (Π n , T) (SU.≈⁺ p)
+  = Π-≡⁺ (SC.sub-Id n p)
+      (trans (subst-sub-Keep (SC.sub-Id n p) refl)
+        (sub-Id T
+          (SU.≈-trans
+            (SU.Keep-resp-≈ {τ = SU.Id} _ (sym (SC.sub-Id n refl)) (SU.≈⁺ p))
+            (SU.≈⁺ SC.Keep-Id))))
 
 
-subΓ : S.Sub Δ Ω → Ctx Ω → Ctx Δ
+subΓ : SU.Sub Δ Ω → Ctx Ω → Ctx Δ
 subΓ σ [] = []
 subΓ σ (Γ ∙ T) = subΓ σ Γ ∙ sub σ T
 
@@ -113,20 +132,25 @@ sub-syntax-Ctx = subΓ
 syntax sub-syntax-Ctx σ Γ = Γ [ σ ]Γ
 
 
-subΓ->> : ∀ Γ → ι ≡ σ S.>> τ
+subΓ-resp-≈ : σ SU.≈ τ → ∀ Γ → subΓ σ Γ ≡ subΓ τ Γ
+subΓ-resp-≈ p [] = refl
+subΓ-resp-≈ p (Γ ∙ T) = cong₂ _∙_ (subΓ-resp-≈ p Γ) (sub-resp-≈ p T)
+
+
+subΓ->> : ∀ Γ → ι SU.≈ σ SU.>> τ
   → subΓ ι Γ ≡ subΓ σ (subΓ τ Γ)
 subΓ->> [] _ = refl
 subΓ->> (Γ ∙ T) p = cong₂ _∙_ (subΓ->> Γ p) (sub->> T p)
 
 
-subΓ->>′ : {σ : S.Sub Δ Δ′} {τ : S.Sub Δ′ Δ″} {σ′ : S.Sub Δ Ω} {τ′ : S.Sub Ω Δ″}
-  → σ S.>> τ ≡ σ′ S.>> τ′
+subΓ->>′ : {σ : SU.Sub Δ Δ′} {τ : SU.Sub Δ′ Δ″} {σ′ : SU.Sub Δ Ω} {τ′ : SU.Sub Ω Δ″}
+  → σ SU.>> τ SU.≈ σ′ SU.>> τ′
   → ∀ Γ
   → subΓ σ (subΓ τ Γ) ≡ subΓ σ′ (subΓ τ′ Γ)
 subΓ->>′ {σ = σ} {τ} {σ′} {τ′} eq Γ
-  = trans (sym (subΓ->> Γ refl)) (trans (cong (λ σ → subΓ σ Γ) eq) (subΓ->> Γ refl))
+  = trans (sym (subΓ->> Γ SU.≈-refl)) (trans (subΓ-resp-≈ eq Γ) (subΓ->> Γ SU.≈-refl))
 
 
-subΓ-Id : ∀ Γ → σ ≡ S.Id → subΓ σ Γ ≡ Γ
+subΓ-Id : ∀ Γ → σ SU.≈ SU.Id → subΓ σ Γ ≡ Γ
 subΓ-Id [] _ = refl
 subΓ-Id (Γ ∙ T) p = cong₂ _∙_ (subΓ-Id Γ p) (sub-Id T p)

@@ -3,11 +3,15 @@ module Source.Term where
 
 open import Source.Size as S using
   ( Size ; _<_ ; _≤_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b ; v0
-  ; v1 ; sub-syntax-Size)
+  ; v1 )
+open import Source.Size.Substitution.Universe as SU using
+  ( sub-syntax-Size ; ⟨_⟩ )
 open import Source.Type as T using
   ( Type ; Ctx ; T ; U ; V ; Γ ; Γ′ ; Γ″ ; Ψ ; Ψ′ ; Ψ″ ; sub-syntax-Type
   ; sub-syntax-Ctx )
 open import Util.Prelude hiding (id ; _∘_)
+
+import Source.Size.Substitution.Canonical as SC
 
 open Ctx
 open S.Ctx
@@ -68,12 +72,12 @@ data _,_⊢_∶_ : ∀ Δ (Γ : Ctx Δ) (t : Term Δ) (T : Type Δ) → Set wher
     → Δ , Γ ⊢ t · u ∶ U
   absₛ
     : ∀ n T t
-    → Δ ∙ n , Γ [ S.Wk ]Γ ⊢ t ∶ T
+    → Δ ∙ n , Γ [ SU.Wk ]Γ ⊢ t ∶ T
     → Δ , Γ ⊢ Λₛ n , t ∶ Π n , T
   appₛ
     : ∀ t m (m<n : m < n)
     → Δ , Γ ⊢ t ∶ (Π n , T)
-    → Δ , Γ ⊢ t ·ₛ m ∶ T [ S.Fill m m<n ]T
+    → Δ , Γ ⊢ t ·ₛ m ∶ T [ SU.Fill m m<n ]T
   zero
     : Δ , Γ ⊢ zero ∶ Π ⋆ , Nat v0
   suc
@@ -89,19 +93,19 @@ data _,_⊢_∶_ : ∀ Δ (Γ : Ctx Δ) (t : Term Δ) (T : Type Δ) → Set wher
     → Δ , Γ ⊢ caseNat T
       ∶ Π ⋆ ,
           Nat v0 ⇒
-          T [ S.Wk ]T ⇒
-          (Π v0 , Nat v0 ⇒ T [ S.Wk S.>> S.Wk ]T) ⇒
-          T [ S.Wk ]T
+          T [ SU.Wk ]T ⇒
+          (Π v0 , Nat v0 ⇒ T [ SU.Wk SU.>> SU.Wk ]T) ⇒
+          T [ SU.Wk ]T
   fix
     : (T : Type (Δ ∙ ⋆))
-    → Δ , Γ ⊢ fix T ∶ (Π ⋆ , (Π v0 , T [ S.Skip ]T) ⇒ T) ⇒ (Π ⋆ , T)
+    → Δ , Γ ⊢ fix T ∶ (Π ⋆ , (Π v0 , T [ SU.Skip ]T) ⇒ T) ⇒ (Π ⋆ , T)
 
 
-subₛ : (σ : S.Sub Δ Ω) → Term Ω → Term Δ
+subₛ : (σ : SU.Sub Δ Ω) → Term Ω → Term Δ
 subₛ σ (var x) = var x
 subₛ σ (Λ T , t) = Λ T [ σ ]T , subₛ σ t
 subₛ σ (t · u) = subₛ σ t · subₛ σ u
-subₛ σ (Λₛ n , t) = Λₛ n [ σ ]n , subₛ (S.Keep′ σ) t
+subₛ σ (Λₛ n , t) = Λₛ n [ σ ]n , subₛ (SU.Keep′ σ) t
 subₛ σ (t ·ₛ m) = subₛ σ t ·ₛ (m [ σ ]n)
 subₛ σ zero = zero
 subₛ σ suc = suc
@@ -109,7 +113,7 @@ subₛ σ cons = cons
 subₛ σ head = head
 subₛ σ tail = tail
 subₛ σ (caseNat T) = caseNat (T [ σ ]T)
-subₛ σ (fix T) = fix (T [ S.Keep′ σ ]T)
+subₛ σ (fix T) = fix (T [ SU.Keep′ σ ]T)
 
 
 sub-syntax-Termₛ = subₛ
@@ -118,28 +122,28 @@ sub-syntax-Termₛ = subₛ
 syntax sub-syntax-Termₛ σ t = t [ σ ]tₛ
 
 
-subₛ-resp-⊢ₓ : (σ : S.Sub Δ Ω)
+subₛ-resp-⊢ₓ : (σ : SU.Sub Δ Ω)
   → Ω , Γ ⊢ₓ x ∶ T
   → Δ , Γ [ σ ]Γ ⊢ₓ x ∶ T [ σ ]T
 subₛ-resp-⊢ₓ σ zero = zero
 subₛ-resp-⊢ₓ σ (suc p) = suc (subₛ-resp-⊢ₓ σ p)
 
 
-subₛ-resp-⊢ : (σ : S.Sub Δ Ω)
+subₛ-resp-⊢ : (σ : SU.Sub Δ Ω)
   → Ω , Γ ⊢ t ∶ T
   → Δ , Γ [ σ ]Γ ⊢ t [ σ ]tₛ ∶ T [ σ ]T
 subₛ-resp-⊢ σ (var x p) = var x (subₛ-resp-⊢ₓ σ p)
 subₛ-resp-⊢ σ (abs T t x) = abs _ _ (subₛ-resp-⊢ σ x)
 subₛ-resp-⊢ σ (app t u x y) = app _ _ (subₛ-resp-⊢ σ x) (subₛ-resp-⊢ σ y)
 subₛ-resp-⊢ {Δ} {Γ = Γ} σ (absₛ n T t x)
-  = absₛ (n [ σ ]n) (T [ S.Keep′ σ ]T) _
-      (subst (λ Γ → Δ ∙ n [ σ ]n , Γ ⊢ t [ S.Keep σ refl ]tₛ ∶ T [ S.Keep′ σ ]T)
-        (T.subΓ->>′ S.Keep>>Wk Γ)
-        (subₛ-resp-⊢ (S.Keep′ σ) x))
+  = absₛ (n [ σ ]n) (T [ SU.Keep′ σ ]T) _
+      (subst (λ Γ → Δ ∙ n [ σ ]n , Γ ⊢ t [ SU.Keep σ refl ]tₛ ∶ T [ SU.Keep′ σ ]T)
+        (T.subΓ->>′ (SU.≈⁺ SC.Keep>>Wk) Γ)
+        (subₛ-resp-⊢ (SU.Keep′ σ) x))
 subₛ-resp-⊢ {Δ} {Γ = Γ}σ (appₛ {T = T} t m m<n x)
   = subst (λ T → Δ , Γ [ σ ]Γ ⊢ (t [ σ ]tₛ) ·ₛ (m [ σ ]n) ∶ T)
-      (T.sub->>′ (S.Fill>>Keep′ m<n _) T)
-      (appₛ (t [ σ ]tₛ) (m [ σ ]n) (S.sub-resp-< σ m<n) (subₛ-resp-⊢ σ x))
+      (T.sub->>′ (SU.≈⁺ (SC.Fill>>Keep′ m<n _)) T)
+      (appₛ (t [ σ ]tₛ) (m [ σ ]n) (SU.sub-resp-< σ m<n) (subₛ-resp-⊢ σ x))
 subₛ-resp-⊢ σ zero = zero
 subₛ-resp-⊢ σ suc = suc
 subₛ-resp-⊢ σ cons = cons
@@ -148,34 +152,34 @@ subₛ-resp-⊢ σ tail = tail
 subₛ-resp-⊢ {Δ} {Γ = Γ} σ (caseNat T)
   = subst (λ U → Δ , Γ [ σ ]Γ ⊢ caseNat T [ σ ]tₛ ∶ Π ⋆ , Nat v0 ⇒ U)
       (cong₂ _⇒_
-        (T.sub->>′ (sym S.Keep>>Wk) T)
+        (T.sub->>′ (SU.≈⁺ (sym SC.Keep>>Wk)) T)
         (cong₂ (λ U V → (Π v0 , Nat v0 ⇒ U) ⇒ V)
-          (T.sub->>′ go T)
-          (T.sub->>′ (sym S.Keep>>Wk) T)))
+          (T.sub->>′ (SU.≈⁺ go) T)
+          (T.sub->>′ (SU.≈⁺ (sym SC.Keep>>Wk)) T)))
       (caseNat (T [ σ ]T))
   where
-    go : S.Wk S.>> S.Wk S.>> σ
-       ≡ S.Keep′ (S.Keep′ σ) S.>> (S.Wk S.>> S.Wk)
+    go : SC.Wk SC.>> SC.Wk SC.>> ⟨ σ ⟩
+       ≡ SC.Keep′ (SC.Keep′ ⟨ σ ⟩) SC.>> (SC.Wk SC.>> SC.Wk)
     go = let open ≡-Reasoning in sym (
       begin
-        S.Keep′ (S.Keep′ σ) S.>> (S.Wk S.>> S.Wk)
-      ≡⟨ S.>>-assoc ⟩
-        (S.Keep′ (S.Keep′ σ) S.>> S.Wk) S.>> S.Wk
-      ≡⟨ cong (S._>> S.Wk) S.Keep>>Wk ⟩
-        (S.Wk S.>> S.Keep′ σ) S.>> S.Wk
-      ≡⟨ sym S.>>-assoc ⟩
-        S.Wk S.>> (S.Keep′ σ S.>> S.Wk)
-      ≡⟨ cong (S.Wk S.>>_) S.Keep>>Wk ⟩
-        S.Wk S.>> (S.Wk S.>> σ)
-      ≡⟨ S.>>-assoc ⟩
-        S.Wk S.>> S.Wk S.>> σ
+        SC.Keep′ (SC.Keep′ ⟨ σ ⟩) SC.>> (SC.Wk SC.>> SC.Wk)
+      ≡⟨ SC.>>-assoc ⟩
+        (SC.Keep′ (SC.Keep′ ⟨ σ ⟩) SC.>> SC.Wk) SC.>> SC.Wk
+      ≡⟨ cong (SC._>> SC.Wk) SC.Keep>>Wk ⟩
+        (SC.Wk SC.>> SC.Keep′ ⟨ σ ⟩) SC.>> SC.Wk
+      ≡⟨ sym SC.>>-assoc ⟩
+        SC.Wk SC.>> (SC.Keep′ ⟨ σ ⟩ SC.>> SC.Wk)
+      ≡⟨ cong (SC.Wk SC.>>_) SC.Keep>>Wk ⟩
+        SC.Wk SC.>> (SC.Wk SC.>> ⟨ σ ⟩)
+      ≡⟨ SC.>>-assoc ⟩
+        SC.Wk SC.>> SC.Wk SC.>> ⟨ σ ⟩
       ∎)
 subₛ-resp-⊢ {Δ} {Γ = Γ} σ (fix T)
   = subst
-      (λ U → Δ , Γ [ σ ]Γ ⊢ fix (T [ S.Keep′ σ ]T)
-        ∶ (Π ⋆ , (Π v0 , U) ⇒ T [ S.Keep′ σ ]T) ⇒ (Π ⋆ , T [ S.Keep′ σ ]T))
-      (T.sub->>′ S.Skip>>Keep′ T)
-      (fix (T [ S.Keep′ σ ]T))
+      (λ U → Δ , Γ [ σ ]Γ ⊢ fix (T [ SU.Keep′ σ ]T)
+        ∶ (Π ⋆ , (Π v0 , U) ⇒ T [ SU.Keep′ σ ]T) ⇒ (Π ⋆ , T [ SU.Keep′ σ ]T))
+      (T.sub->>′ (SU.≈⁺ SC.Skip>>Keep′) T)
+      (fix (T [ SU.Keep′ σ ]T))
 
 
 data _⊇_ {Δ} : (Γ Ψ : Ctx Δ) → Set where
@@ -187,7 +191,7 @@ data _⊇_ {Δ} : (Γ Ψ : Ctx Δ) → Set where
 variable α β γ : Γ ⊇ Ψ
 
 
-sub⊇ₛ : (σ : S.Sub Δ Ω) → Γ ⊇ Ψ → Γ [ σ ]Γ ⊇ Ψ [ σ ]Γ
+sub⊇ₛ : (σ : SU.Sub Δ Ω) → Γ ⊇ Ψ → Γ [ σ ]Γ ⊇ Ψ [ σ ]Γ
 sub⊇ₛ σ [] = []
 sub⊇ₛ σ (keep α T) = keep (sub⊇ₛ σ α) (T.sub σ T)
 sub⊇ₛ σ (weak α T) = weak (sub⊇ₛ σ α) (T.sub σ T)
@@ -210,7 +214,7 @@ ren : {Γ Ψ : Ctx Δ} → Γ ⊇ Ψ → Term Δ → Term Δ
 ren α (var x) = var (renV α x)
 ren α (Λ T , t) = Λ T , ren (keep α T) t
 ren α (t · u) = ren α t · ren α u
-ren α (Λₛ n , t) = Λₛ n , ren (α [ S.Wk ]α) t
+ren α (Λₛ n , t) = Λₛ n , ren (α [ SU.Wk ]α) t
 ren α (t ·ₛ m) = ren α t ·ₛ m
 ren α zero = zero
 ren α suc = suc
@@ -237,7 +241,7 @@ ren-resp-⊢
 ren-resp-⊢ α (var x ⊢x) = var _ (renV-resp-⊢ₓ α ⊢x)
 ren-resp-⊢ α (abs T t ⊢t) = abs T _ (ren-resp-⊢ (keep α T) ⊢t)
 ren-resp-⊢ α (app t u ⊢t ⊢u) = app _ _ (ren-resp-⊢ α ⊢t) (ren-resp-⊢ α ⊢u)
-ren-resp-⊢ α (absₛ n T t ⊢t) = absₛ _ _ _ (ren-resp-⊢ (α [ S.Wk ]α) ⊢t)
+ren-resp-⊢ α (absₛ n T t ⊢t) = absₛ _ _ _ (ren-resp-⊢ (α [ SU.Wk ]α) ⊢t)
 ren-resp-⊢ α (appₛ t m m<n ⊢t) = appₛ _ _ _ (ren-resp-⊢ α ⊢t)
 ren-resp-⊢ α zero = zero
 ren-resp-⊢ α suc = suc
@@ -290,7 +294,7 @@ Fill : (t : Term Δ) → Δ , Γ ⊢ t ∶ T → Sub Γ (Γ ∙ T)
 Fill t p = snoc Id t p
 
 
-subₛS : (σ : S.Sub Δ Ω) → Sub Γ Ψ → Sub (Γ [ σ ]Γ) (Ψ [ σ ]Γ)
+subₛS : (σ : SU.Sub Δ Ω) → Sub Γ Ψ → Sub (Γ [ σ ]Γ) (Ψ [ σ ]Γ)
 subₛS σ [] = []
 subₛS σ (snoc ν t p) = snoc (subₛS σ ν) (subₛ σ t) (subₛ-resp-⊢ σ p)
 
@@ -311,7 +315,7 @@ sub : Sub {Δ} Γ Ψ → Term Δ → Term Δ
 sub ν (var x) = subV ν x
 sub ν (Λ T , t) = Λ T , sub (Keep ν T) t
 sub ν (t · u) = sub ν t · sub ν u
-sub ν (Λₛ n , t) = Λₛ n , sub (ν [ S.Wk ]νₛ) t
+sub ν (Λₛ n , t) = Λₛ n , sub (ν [ SU.Wk ]νₛ) t
 sub ν (t ·ₛ m) = sub ν t ·ₛ m
 sub ν zero = zero
 sub ν suc = suc
@@ -341,7 +345,7 @@ sub-resp-⊢ : (ν : Sub Γ Ψ)
 sub-resp-⊢ ν (var x ⊢x) = subV-resp-⊢ ν ⊢x
 sub-resp-⊢ ν (abs T t ⊢t) = abs _ _ (sub-resp-⊢ (Keep ν T) ⊢t)
 sub-resp-⊢ ν (app t u ⊢t ⊢u) = app _ _ (sub-resp-⊢ ν ⊢t) (sub-resp-⊢ ν ⊢u)
-sub-resp-⊢ ν (absₛ n T t ⊢t) = absₛ _ _ _ (sub-resp-⊢ (ν [ S.Wk ]νₛ) ⊢t)
+sub-resp-⊢ ν (absₛ n T t ⊢t) = absₛ _ _ _ (sub-resp-⊢ (ν [ SU.Wk ]νₛ) ⊢t)
 sub-resp-⊢ ν (appₛ t m m<n ⊢t) = appₛ _ _ _ (sub-resp-⊢ ν ⊢t)
 sub-resp-⊢ ν zero = zero
 sub-resp-⊢ ν suc = suc
