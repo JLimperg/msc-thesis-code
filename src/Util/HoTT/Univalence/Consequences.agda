@@ -75,3 +75,9 @@ module _ {A : Set α} {B : A → Set β} where
 
 funext∙ : ExtensionalityImplicit α β
 funext∙ = implicit-extensionality funext
+
+
+∀-≡-canon : {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
+  → (p : f ≡ g)
+  → p ≡ funext (happly p)
+∀-≡-canon p = sym (funext-unique (happly p) p refl)

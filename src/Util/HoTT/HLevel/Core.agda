@@ -111,3 +111,7 @@ HProp α = HLevel α 1
 
 HSet : ∀ α → Set (lsuc α)
 HSet α = HLevel α 2
+
+
+HLevel-suc : ∀ {α n} → HLevel α n → HLevel α (suc n)
+HLevel-suc (HLevel⁺ A A-level) = HLevel⁺ A (IsOfHLevel-suc _ A-level)
