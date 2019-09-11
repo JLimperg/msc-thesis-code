@@ -1,10 +1,10 @@
 {-# OPTIONS --without-K --safe #-}
 module Util.HoTT.HLevel.Core where
 
-open import Relation.Binary.PropositionalEquality using (trans-injectiveˡ)
-
 open import Util.Prelude
 open import Util.Relation.Binary.LogicalEquivalence using (_↔_ ; forth ; back)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( trans-injectiveˡ )
 
 
 private
@@ -115,3 +115,15 @@ HSet α = HLevel α 2
 
 HLevel-suc : ∀ {α n} → HLevel α n → HLevel α (suc n)
 HLevel-suc (HLevel⁺ A A-level) = HLevel⁺ A (IsOfHLevel-suc _ A-level)
+
+
+Singleton : {A : Set a} (x : A) → Set a
+Singleton x = ∃[ y ] (y ≡ x)
+
+
+IsContr-Singleton : {x : A} → IsContr (Singleton x)
+IsContr-Singleton {x = x} = (x , refl) , λ { (x′ , refl) → refl }
+
+
+Singleton-HContr : {A : Set a} (x : A) → HContr a
+Singleton-HContr x = HLevel⁺ (Singleton x) IsContr-Singleton

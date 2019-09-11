@@ -1,12 +1,14 @@
-{-# OPTIONS --without-K --postfix-projections #-}
+{-# OPTIONS --without-K --safe #-}
 module Util.HoTT.Equiv where
 
 open import Level using (Level ; _⊔_)
 open import Relation.Binary using (Setoid ; IsEquivalence)
 
-open import Util.HoTT.HLevel.Core using (IsContr)
+open import Util.HoTT.HLevel.Core using (IsContr ; IsContr-Singleton)
+open import Util.HoTT.Section
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁻ ; Σ-≡⁺)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( Σ-≡⁻ ; Σ-≡⁺ ; sym-cancel-r ; trans-unassoc )
 
 
 infix 4 _≅_ _≃_
@@ -24,6 +26,20 @@ record IsIso {A : Set α} {B : Set β} (forth : A → B) : Set (α ⊔ β)
     back : B → A
     back∘forth : ∀ x → back (forth x) ≡ x
     forth∘back : ∀ x → forth (back x) ≡ x
+
+
+IsIso→HasSection-forth : {f : A → B} → IsIso f → HasSection f
+IsIso→HasSection-forth i = record
+  { section = i .IsIso.back
+  ; isSection = i .IsIso.forth∘back
+  }
+
+
+IsIso→HasSection-back : {f : A → B} → (i : IsIso f) → HasSection (i .IsIso.back)
+IsIso→HasSection-back {f = f} i = record
+  { section = f
+  ; isSection = i .IsIso.back∘forth
+  }
 
 
 IsEquiv : {A : Set α} {B : Set β} (forth : A → B)
@@ -49,26 +65,45 @@ IsEquiv→IsIso {A = A} {B = B} {forth} equiv = record
   ... | (a , fortha≡b) , _ = fortha≡b
 
 
--- TODO
-postulate
-  IsIso→IsEquiv : {f : A → B} → IsIso f → IsEquiv f
--- IsIso→IsEquiv {A = A} {B} forth iso b = (back b , forth∘back b) , unique
---   where
---   open IsIso iso
+-- This proof follows Martin Escardó's lecture notes
+-- (https://www.cs.bham.ac.uk/~mhe/HoTT-UF-in-Agda-Lecture-Notes/HoTT-UF-Agda.html#fibersandequivalences).
+IsIso→IsEquiv : {f : A → B} → IsIso f → IsEquiv f
+IsIso→IsEquiv {A = A} {B = B} {forth} iso b
+  = ◁-pres-IsContr (◁-trans ii iii) IsContr-Singleton
+  where
+    open IsIso iso
 
---   unique : (y : Σ[ a ∈ A ] (forth a ≡ b)) → (back b , forth∘back b) ≡ y
---   unique (a , refl)
---     -- = Σ-≡⁺ (trans (cong back (sym p)) (back∘forth a) , {!trans (cong back (sym p)) (back∘forth a)!})
---     = Σ-≡⁺ (back∘forth a , trans (go forth (back∘forth a) (forth∘back (forth a))) go₂)
---     where
---       go : ∀ (f : A → B) {x y}
---         → (p : x ≡ y) (q : f x ≡ f y)
---         → subst (λ a → f a ≡ f y) p q ≡ trans (sym (cong f p)) q
---       go f refl q = refl
+    A◁B : A ◁ B
+    A◁B = record
+      { retraction = back
+      ; hasSection = IsIso→HasSection-back iso
+      }
 
---       go₂ : trans (sym (cong forth (back∘forth a))) (forth∘back (forth a)) ≡
---               refl
---       go₂ = {!!}
+
+    i : ∀ b′ → (forth (back b′) ≡ b) ◁ (b′ ≡ b)
+    i b′ = record
+      { retraction = λ b′≡b → trans (forth∘back b′) b′≡b
+      ; hasSection = record
+        { section = λ eq → trans (sym (forth∘back b′)) eq
+        ; isSection = λ x → let open ≡-Reasoning in
+          begin
+            trans (forth∘back b′) (trans (sym (forth∘back b′)) x)
+          ≡⟨ trans-unassoc (forth∘back b′) ⟩
+            trans (trans (forth∘back b′) (sym (forth∘back b′))) x
+          ≡⟨ cong (λ p → trans p x) (sym-cancel-r (forth∘back b′)) ⟩
+            x
+          ∎
+        }
+      }
+
+
+    ii : ∃[ a ] (forth a ≡ b) ◁ ∃[ b′ ] (forth (back b′) ≡ b)
+    ii = Σ-◁-reindexing A◁B
+
+
+    iii : ∃[ b′ ] (forth (back b′) ≡ b) ◁ ∃[ b′ ] (b′ ≡ b)
+    --                                   aka Singleton b
+    iii = Σ-◁ i
 
 
 record _≅_ (A : Set α) (B : Set β) : Set (α ⊔ β) where

@@ -14,6 +14,11 @@ private
     A B C A′ B′ C′ : Set α
 
 
+trans-unassoc : {a b c d : A} (p : a ≡ b) {q : b ≡ c} {r : c ≡ d}
+  → trans p (trans q r) ≡ trans (trans p q) r
+trans-unassoc p = sym (trans-assoc p)
+
+
 Σ-≡⁻ : {A : Set α} {B : A → Set β} {x y : Σ A B}
   → x ≡ y
   → Σ[ p ∈ (proj₁ x ≡ proj₁ y) ] subst B p (proj₂ x) ≡ proj₂ y
@@ -57,14 +62,16 @@ subst-trans : ∀ {P : A → Set β} {x y z : A} {p : P x}
 subst-trans refl refl = refl
 
 
+-- TODO remove
 sym-cancel-r : {x y : A} (x≡y : x ≡ y)
   → trans x≡y (sym x≡y) ≡ refl
-sym-cancel-r refl = refl
+sym-cancel-r = trans-symʳ
 
 
+-- TODO remove
 sym-cancel-l : {x y : A} (x≡y : x ≡ y)
   → trans (sym x≡y) x≡y ≡ refl
-sym-cancel-l refl = refl
+sym-cancel-l = trans-symˡ
 
 
 subst₂-trans : (C : A → B → Set γ)

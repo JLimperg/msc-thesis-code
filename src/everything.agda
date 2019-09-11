@@ -12,6 +12,7 @@ import Source.Type
 import Util.HoTT.Equiv
 import Util.HoTT.HLevel
 import Util.HoTT.HLevel.Core
+import Util.HoTT.Section
 import Util.HoTT.Univalence
 import Util.HoTT.Univalence.Consequences
 import Util.Induction.WellFounded
