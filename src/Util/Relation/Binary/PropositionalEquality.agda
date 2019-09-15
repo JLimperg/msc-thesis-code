@@ -14,6 +14,9 @@ private
     A B C A′ B′ C′ : Set α
 
 
+happly = cong-app
+
+
 trans-unassoc : {a b c d : A} (p : a ≡ b) {q : b ≡ c} {r : c ≡ d}
   → trans p (trans q r) ≡ trans (trans p q) r
 trans-unassoc p = sym (trans-assoc p)

@@ -7,7 +7,7 @@ open import Util.HoTT.Equiv
 open import Util.HoTT.Univalence
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
-  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ )
+  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ ; happly )
 open import Util.Relation.Binary.LogicalEquivalence
 
 

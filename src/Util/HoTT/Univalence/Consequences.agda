@@ -10,7 +10,7 @@ open import Axiom.Extensionality.Propositional using
   (ExtensionalityImplicit ; implicit-extensionality)
 
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁻)
+open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁻ ; happly)
 
 
 private
@@ -36,12 +36,6 @@ private
 
 ≅→≡ : A ≅ B → A ≡ B
 ≅→≡ = ≃→≡ ∘ ≅→≃
-
-
-happly : {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
-  → f ≡ g
-  → ∀ a → f a ≡ g a
-happly refl a = refl
 
 
 module _ {A : Set α} {B : A → Set β} where
