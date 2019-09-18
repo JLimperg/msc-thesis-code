@@ -20,6 +20,10 @@ private
     A B C : Set α
 
 
+Injective : (f : A → B) → Set _
+Injective f = ∀ {x y} → f x ≡ f y → x ≡ y
+
+
 record IsIso {A : Set α} {B : Set β} (forth : A → B) : Set (α ⊔ β)
   where
   field
@@ -40,6 +44,13 @@ IsIso→HasSection-back {f = f} i = record
   { section = f
   ; isSection = i .IsIso.back∘forth
   }
+
+
+IsIso→Injective : {f : A → B} → IsIso f → Injective f
+IsIso→Injective f-iso fx≡fy
+  = trans (sym (f-iso .IsIso.back∘forth _))
+      (trans (cong (f-iso .IsIso.back) fx≡fy)
+        (f-iso .IsIso.back∘forth _))
 
 
 IsEquiv : {A : Set α} {B : Set β} (forth : A → B)
@@ -149,6 +160,10 @@ open _≅_ public
 ≅-setoid α .Setoid.Carrier = Set α
 ≅-setoid α .Setoid._≈_ = _≅_
 ≅-setoid α .Setoid.isEquivalence = ≅-isEquivalence
+
+
+≅-Injective : (i : A ≅ B) → Injective (i .forth)
+≅-Injective i = IsIso→Injective (i .isIso)
 
 
 record _≃_ (A : Set α) (B : Set β) : Set (α ⊔ β) where
