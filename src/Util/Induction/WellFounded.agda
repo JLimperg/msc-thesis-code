@@ -31,7 +31,42 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
   wfInd-acc P f x (acc rs) = f x (λ y y<x → wfInd-acc P f y (rs y y<x))
 
 
+  mutual
+    wfIndΣ-acc : ∀ {γ} (P : A → Set γ)
+      → (Q : ∀ x y → P x → P y → Set)
+      → (f : ∀ x
+          → (g : ∀ y → y < x → P y)
+          → (∀ y y<x z z<x → Q y z (g y y<x) (g z z<x))
+          → P x)
+      → (∀ x g g-resp y h h-resp
+          → (∀ z z<x z′ z′<y → Q z z′ (g z z<x) (h z′ z′<y))
+          → Q x y (f x g g-resp) (f y h h-resp))
+      → ∀ x → Acc _<_ x → P x
+    wfIndΣ-acc P Q f f-resp x (acc rs)
+      = f x
+         (λ y y<x → wfIndΣ-acc P Q f f-resp y (rs y y<x))
+         (λ y y<x z z<x
+            → wfIndΣ-acc-resp P Q f f-resp y (rs y y<x) z (rs z z<x))
+
+
+    wfIndΣ-acc-resp : ∀ {γ} (P : A → Set γ)
+      → (Q : ∀ x y → P x → P y → Set)
+      → (f : ∀ x
+          → (g : ∀ y → y < x → P y)
+          → (∀ y y<x z z<x → Q y z (g y y<x) (g z z<x))
+          → P x)
+      → (f-resp : ∀ x g g-resp y h h-resp
+          → (∀ z z<x z′ z′<y → Q z z′ (g z z<x) (h z′ z′<y))
+          → Q x y (f x g g-resp) (f y h h-resp))
+      → ∀ x x-acc y y-acc
+      → Q x y (wfIndΣ-acc P Q f f-resp x x-acc) (wfIndΣ-acc P Q f f-resp y y-acc)
+    wfIndΣ-acc-resp P Q f f-resp x (acc rsx) y (acc rsy)
+      = f-resp _ _ _ _ _ _ λ z z<x z′ z′<y
+          → wfIndΣ-acc-resp P Q f f-resp z (rsx z z<x) z′ (rsy z′ z′<y)
+
+
   module Build (<-wf : WellFounded _<_) where
+
 
     wfInd : ∀ {γ} (P : A → Set γ)
       → (∀ x → (∀ y → y < x → P y) → P x)
@@ -76,6 +111,21 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
           (λ x rec → subst (Q x) (sym (wfInd-unfold P f x))
             (f-resp _ _ rec))
           _
+
+
+    wfIndΣ : ∀ {γ} (P : A → Set γ)
+      → (Q : ∀ x y → P x → P y → Set)
+      → (f : ∀ x
+          → (g : ∀ y → y < x → P y)
+          → (∀ y y<x z z<x → Q y z (g y y<x) (g z z<x))
+          → P x)
+      → (∀ x g g-resp y h h-resp
+          → (∀ z z<x z′ z′<y → Q z z′ (g z z<x) (h z′ z′<y))
+          → Q x y (f x g g-resp) (f y h h-resp))
+      → Σ[ f ∈ (∀ x → P x) ] (∀ x y → Q x y (f x) (f y))
+    wfIndΣ P Q f f-resp
+      = (λ x → wfIndΣ-acc P Q f f-resp x (<-wf x))
+      , λ x y → wfIndΣ-acc-resp P Q f f-resp x (<-wf x) y (<-wf y)
 
   open Build public
 
