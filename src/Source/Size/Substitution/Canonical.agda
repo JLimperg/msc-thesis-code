@@ -310,6 +310,12 @@ Keep′Fill>>Skip {n = n} {n<m = n<m} {v0<m} = Snoc-≡⁺ go refl
       ∎
 
 
+Keep′Keep′>>Skip : Keep′ (Keep′ {n = n} σ) >> Skip ≡ Skip >> Keep′ σ
+Keep′Keep′>>Skip = Snoc-≡⁺
+  (trans Keep>>Weaken (sym (trans Skip>>Weaken (cong Weaken (sym Snoc>>Wk)))))
+  refl
+
+
 sub->>′ : σ >> τ ≡ σ′ >> τ′ → sub σ (sub τ n) ≡ sub σ′ (sub τ′ n)
 sub->>′ {σ = σ} {τ = τ} {σ′ = σ′} {τ′} {n} eq
   = trans (sym (sub->> n refl))

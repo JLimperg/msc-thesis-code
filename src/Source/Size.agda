@@ -83,14 +83,8 @@ n ≥ m = m ≤ n
 
 
 pattern ≤-refl = reflexive refl
-
-
-v0 : Size (Δ ∙ n)
-v0 = var zero
-
-
-v1 : Size (Δ ∙ n ∙ m)
-v1 = var (suc zero)
+pattern v0 = var zero
+pattern v1 = var (suc zero)
 
 
 wk-resp-< (var {x} _ refl b≤m) = var (wk (bound x)) refl (wk-resp-≤ b≤m)
