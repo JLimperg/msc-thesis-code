@@ -46,6 +46,28 @@ trans-unassoc p = sym (trans-assoc p)
 Σ-≡⁻∘Σ-≡⁺ (refl , refl) = refl
 
 
+×-≡⁺ : {x y : A × B}
+  → (proj₁ x ≡ proj₁ y) × (proj₂ x ≡ proj₂ y)
+  → x ≡ y
+×-≡⁺ (refl , refl) = refl
+
+
+×-≡⁻ : {x y : A × B}
+  → x ≡ y
+  → (proj₁ x ≡ proj₁ y) × (proj₂ x ≡ proj₂ y)
+×-≡⁻ refl = refl , refl
+
+
+×-≡⁺∘×-≡⁻ : {x y : A × B} (p : x ≡ y)
+  → ×-≡⁺ (×-≡⁻ p) ≡ p
+×-≡⁺∘×-≡⁻ refl = refl
+
+
+×-≡⁻∘×-≡⁺ : {x y : A × B} (p : (proj₁ x ≡ proj₁ y) × (proj₂ x ≡ proj₂ y))
+  → ×-≡⁻ (×-≡⁺ p) ≡ p
+×-≡⁻∘×-≡⁺ (refl , refl) = refl
+
+
 cast : A ≡ B → A → B
 cast = subst (λ x → x)
 
