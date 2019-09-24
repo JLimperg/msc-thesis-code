@@ -90,23 +90,24 @@ Sub-setoid Δ Ω = record
 module ≈-Reasoning {Δ} {Ω} = SetoidReasoning (Sub-setoid Δ Ω)
 
 
-sub-resp-≈ : σ ≈ τ → ∀ n → sub σ n ≡ sub τ n
-sub-resp-≈ (≈⁺ p) n = cong (λ σ → Can.sub σ n) p
+abstract
+  sub-resp-≈ : σ ≈ τ → ∀ n → sub σ n ≡ sub τ n
+  sub-resp-≈ (≈⁺ p) n = cong (λ σ → Can.sub σ n) p
 
 
->>-resp-≈ : {σ σ′ : Sub Δ Δ′} {τ τ′ : Sub Δ′ Δ″}
-  → σ ≈ σ′ → τ ≈ τ′ → σ >> τ ≈ σ′ >> τ′
->>-resp-≈ (≈⁺ p) (≈⁺ q) = ≈⁺ (cong₂ Can._>>_ p q)
+  >>-resp-≈ : {σ σ′ : Sub Δ Δ′} {τ τ′ : Sub Δ′ Δ″}
+    → σ ≈ σ′ → τ ≈ τ′ → σ >> τ ≈ σ′ >> τ′
+  >>-resp-≈ (≈⁺ p) (≈⁺ q) = ≈⁺ (cong₂ Can._>>_ p q)
 
 
-Keep-resp-≈ : (m≡n[σ] : m ≡ sub σ n) (m≡n[τ] : m ≡ sub τ n)
-  → σ ≈ τ
-  → Keep {n = n} σ m≡n[σ] ≈ Keep τ m≡n[τ]
-Keep-resp-≈ m≡n[σ] m≡n[τ] (≈⁺ p) = ≈⁺ (Can.Snoc-≡⁺ (cong Can.Weaken p) refl)
+  Keep-resp-≈ : (m≡n[σ] : m ≡ sub σ n) (m≡n[τ] : m ≡ sub τ n)
+    → σ ≈ τ
+    → Keep {n = n} σ m≡n[σ] ≈ Keep τ m≡n[τ]
+  Keep-resp-≈ m≡n[σ] m≡n[τ] (≈⁺ p) = ≈⁺ (Can.Snoc-≡⁺ (cong Can.Weaken p) refl)
 
 
-sub-resp-< : (σ : Sub Δ Ω) → n < m → sub σ n < sub σ m
-sub-resp-< σ = Can.sub-resp-< ⟨ σ ⟩
+  sub-resp-< : (σ : Sub Δ Ω) → n < m → sub σ n < sub σ m
+  sub-resp-< σ = Can.sub-resp-< ⟨ σ ⟩
 
 
 sub-syntax-Size = sub
@@ -136,26 +137,27 @@ mutual
     = suc (sub′ σ n) (subst (_< ∞) (sym (sub′≡sub σ n)) (sub-resp-< σ n<∞))
 
 
-  subV′≡subV : ∀ (σ : Sub Δ Ω) x → subV′ σ x ≡ subV σ x
-  subV′≡subV Id x = sym (Can.subV-Id x)
-  subV′≡subV (σ >> τ) x
-    = trans (sub′≡sub σ (subV′ τ x))
-        (trans (cong (sub σ) (subV′≡subV τ x))
-          (sym (Can.subV->> ⟨ σ ⟩ ⟨ τ ⟩ x)))
-  subV′≡subV Wk x = sym (Can.sub-Wk (var x))
-  subV′≡subV (Keep σ eq) zero = refl
-  subV′≡subV (Keep σ eq) (suc x)
-    = trans (cong wk (subV′≡subV σ x)) (sym (Can.subV-Weaken ⟨ σ ⟩ x))
-  subV′≡subV (Fill m m<n) zero = refl
-  subV′≡subV (Fill m m<n) (suc x) = sym (Can.subV-Id x)
-  subV′≡subV Skip zero = refl
-  subV′≡subV Skip (suc x) = sym
-    (trans (Can.subV-Weaken (Can.Weaken Can.Id) x) (cong wk (Can.sub-Wk (var x))))
+  abstract
+    subV′≡subV : ∀ (σ : Sub Δ Ω) x → subV′ σ x ≡ subV σ x
+    subV′≡subV Id x = sym (Can.subV-Id x)
+    subV′≡subV (σ >> τ) x
+      = trans (sub′≡sub σ (subV′ τ x))
+          (trans (cong (sub σ) (subV′≡subV τ x))
+            (sym (Can.subV->> ⟨ σ ⟩ ⟨ τ ⟩ x)))
+    subV′≡subV Wk x = sym (Can.sub-Wk (var x))
+    subV′≡subV (Keep σ eq) zero = refl
+    subV′≡subV (Keep σ eq) (suc x)
+      = trans (cong wk (subV′≡subV σ x)) (sym (Can.subV-Weaken ⟨ σ ⟩ x))
+    subV′≡subV (Fill m m<n) zero = refl
+    subV′≡subV (Fill m m<n) (suc x) = sym (Can.subV-Id x)
+    subV′≡subV Skip zero = refl
+    subV′≡subV Skip (suc x) = sym
+      (trans (Can.subV-Weaken (Can.Weaken Can.Id) x) (cong wk (Can.sub-Wk (var x))))
 
 
-  sub′≡sub : ∀ (σ : Sub Δ Ω) n → sub′ σ n ≡ sub σ n
-  sub′≡sub σ (var x) = subV′≡subV σ x
-  sub′≡sub σ ∞ = refl
-  sub′≡sub σ ⋆ = refl
-  sub′≡sub σ zero = refl
-  sub′≡sub σ (suc n x) = suc-≡-intro (sub′≡sub σ n)
+    sub′≡sub : ∀ (σ : Sub Δ Ω) n → sub′ σ n ≡ sub σ n
+    sub′≡sub σ (var x) = subV′≡subV σ x
+    sub′≡sub σ ∞ = refl
+    sub′≡sub σ ⋆ = refl
+    sub′≡sub σ zero = refl
+    sub′≡sub σ (suc n x) = suc-≡⁺ (sub′≡sub σ n)

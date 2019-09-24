@@ -194,10 +194,11 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
 ⟶→⊢ᵣ {Δ} {Γ} (caseNat-suc T n m i z s ⊢z ⊢s ⊢i n<⋆ m<n)
   = app _ _ (appₛ _ _ m<n ⊢s eq) ⊢i
   module ⟶→⊢ᵣ-caseNat-suc where
-    eq : (Nat m ⇒ T) ≡ (Nat m ⇒ T.sub (SU.Fill m m<n) (T.sub SU.Wk T))
-    eq = cong (Nat m ⇒_)
-      (sym (trans (sym (T.sub->> T SU.≈-refl))
-        (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _)))))
+    abstract
+      eq : (Nat m ⇒ T) ≡ (Nat m ⇒ T.sub (SU.Fill m m<n) (T.sub SU.Wk T))
+      eq = cong (Nat m ⇒_)
+        (sym (trans (sym (T.sub->> T SU.≈-refl))
+          (T.sub-Id T (SU.≈⁺ (SC.Fill>>Wk _ _ _)))))
 ⟶→⊢ᵣ (head-cons n i is ⊢i ⊢is n<⋆) = ⊢i
 ⟶→⊢ᵣ (tail-cons n i is m ⊢i ⊢is n<⋆ m<n) = appₛ is m m<n ⊢is refl
 ⟶→⊢ᵣ {Δ} {Γ} (fix T t n ⊢t n<⋆)
