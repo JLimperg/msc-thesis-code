@@ -7,7 +7,7 @@
    that doesn't have this rule.
 -}
 
-{-# OPTIONS --postfix-projections --allow-unsolved-metas #-}
+{-# OPTIONS --postfix-projections #-}
 module irreflexive-< where
 
 open import Size
@@ -182,47 +182,8 @@ mutual
 open _≈′_
 
 
-∞→∀i′ : CoList′ A ∞ → (i : Size< ∞) → CoList′ A i
-∞→∀i′ xs i .force j = xs .force j
-
-
-∀i→∞′ : ((i : Size< ∞) → CoList′ A i) → CoList′ A ∞
-∀i→∞′ f .force j with f (↑ j) .force j
-... | [] = []
-... | x ∷ xs = x ∷ xs
-
-
-∞→∀i′-∀i→∞′ : (f : (i : Size< ∞) → CoList′ A i) (i : Size< ∞)
-  → _≈′_ {i = i} {i} (∞→∀i′ (∀i→∞′ f) i) (f i)
-∞→∀i′-∀i→∞′ f i .force k l with f (↑ k) .force k
-∞→∀i′-∀i→∞′ f i .force k l | [] = {!!}
-∞→∀i′-∀i→∞′ f i .force k l | x ∷ x₁ = {!!}
-
-
-∞→∀i : CoList A ∞ → (i : Size< ∞) → CoList A i
-∞→∀i [] i = []
-∞→∀i (x ∷ xs) i = x ∷ ∞→∀i′ xs i
-
-
-∀i→∞
-  : (f : (i : Size< ∞) → CoList A i)
-  → CoList A ∞
-∀i→∞ {A} f with f 𝟘
-... | [] = []
-... | x ∷ xs = x ∷ xs′
-  where
-    xs′ : CoList′ A ∞
-    xs′ .force i with f (↑ i)
-    ... | [] = []
-    ... | y ∷ ys = ys .force i
-
-
 force∞ : CoList′ A ∞ → CoList A ∞
-force∞ xs = ∀i→∞ (λ i → xs .force i)
-
-
-force∞′ : CoList′ A ∞ → CoList A ∞
-force∞′ {A} xs with xs .force 𝟘
+force∞ {A} xs with xs .force 𝟘
 ... | [] = []
 ... | y ∷ ys = y ∷ ys′
   where
@@ -230,16 +191,6 @@ force∞′ {A} xs with xs .force 𝟘
     ys′ .force i with xs .force (↑ i)
     ... | [] = []
     ... | z ∷ zs = zs .force i
-
-
-force↑∞ : CoList′ A (↑ ∞) → CoList A ∞
-force↑∞ {A} xs with xs .force ∞
-... | [] = []
-... | y ∷ ys = y ∷ λ { .force i → ys .force i }
-
-
-lem₁ : CoList′ A ∞ → CoList′ A (↑ ∞)
-lem₁ xs .force i = xs .force i
 
 
 𝕊→CoList : (i : Size) → 𝕊 A i → CoList A i
