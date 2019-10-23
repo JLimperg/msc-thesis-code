@@ -6,6 +6,7 @@ import Ordinal.Shulman
 import Source.Reduction
 import Source.Size
 import Source.Size.Substitution.Canonical
+import Source.Size.Substitution.Theory
 import Source.Size.Substitution.Universe
 import Source.Term
 import Source.Type

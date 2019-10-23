@@ -4,22 +4,31 @@ module Source.Size where
 open import Relation.Binary using (Decidable)
 
 open import Util.HoTT.HLevel.Core
-open import Util.Prelude hiding (id ; _∘_)
+open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
   ( trans-injectiveˡ ; cong₂-dep )
 
 
+infix  0 _⊢_ ⊢_
 infix  4 _<_ _≤_
 infixl 4 _∙_
 
 
--- begin implicit mutual block
+mutual
+  data Ctx : Set where
+    [] : Ctx
+    _∙_ : (Δ : Ctx) (n : Size Δ) → Ctx
 
-data Ctx : Set
-data Var : (Δ : Ctx) → Set
-data Size : (Δ : Ctx) → Set
-data _<_ {Δ} : (n m : Size Δ) → Set
-data _≤_ {Δ} : (n m : Size Δ) → Set
+
+  data Var : (Δ : Ctx) → Set where
+    zero : ∀ {Δ n} → Var (Δ ∙ n)
+    suc : ∀ {Δ n} (x : Var Δ) → Var (Δ ∙ n)
+
+
+  data Size : (Δ : Ctx) → Set where
+    var : ∀ {Δ} (x : Var Δ) → Size Δ
+    ∞ ⋆ zero : ∀ {Δ} → Size Δ
+    suc : ∀ {Δ} (n : Size Δ) → Size Δ
 
 
 variable
@@ -28,32 +37,12 @@ variable
   n m o p b n′ m′ o′ p′ b′ : Size Δ
 
 
-data Ctx where
-  [] : Ctx
-  _∙_ : (Δ : Ctx) (n : Size Δ) → Ctx
-
-
-data Var where
-  zero : Var (Δ ∙ n)
-  suc : (x : Var Δ) → Var (Δ ∙ n)
-
-
-data Size where
-  var : Var Δ → Size Δ
-  ∞ ⋆ zero : Size Δ
-  suc : (n : Size Δ) → n < ∞ → Size Δ
-
-
 wk : Size Δ → Size (Δ ∙ n)
-wk-resp-< : n < m → wk {n = o} n < wk m
-wk-resp-≤ : n ≤ m → wk {n = o} n ≤ wk m
-
-
 wk (var x) = var (suc x)
 wk ∞ = ∞
 wk ⋆ = ⋆
 wk zero = zero
-wk (suc m m<∞) = suc (wk m) (wk-resp-< m<∞)
+wk (suc m) = suc (wk m)
 
 
 bound : Var Δ → Size Δ
@@ -61,19 +50,21 @@ bound (zero {Δ} {n}) = wk n
 bound (suc x) = wk (bound x)
 
 
-data _<_ where
-  var : ∀ b (b≡bx : b ≡ bound x) (b≤n : b ≤ n) → var x < n
-  zero<suc : ∀ n (n<∞ : n < ∞) → zero < suc n n<∞
-  zero<∞ : zero < ∞
-  suc<∞ : ∀ n (n<∞ : n < ∞) → suc n n<∞ < ∞
-  zero<⋆ : zero < ⋆
-  suc<⋆ : ∀ n (n<∞ : n < ∞) → suc n n<∞ < ⋆
-  ∞<⋆ : ∞ < ⋆
+mutual
+  data _<_ {Δ} : (n m : Size Δ) → Set where
+    var : ∀ b (b≡bx : b ≡ bound x) (b≤n : b ≤ n) → var x < n
+    zero<suc : ∀ n (n<∞ : n < ∞) → zero < suc n
+    zero<∞ : zero < ∞
+    suc<∞ : ∀ n (n<∞ : n < ∞) → suc n < ∞
+    zero<⋆ : zero < ⋆
+    suc<⋆ : ∀ n (n<∞ : n < ∞) → suc n < ⋆
+    ∞<⋆ : ∞ < ⋆
 
 
-data _≤_ where
-  <→≤ : n < m → n ≤ m
-  reflexive : n ≡ m → n ≤ m
+  data _≤_ {Δ} : (n m : Size Δ) → Set where
+    <→≤ : n < m → n ≤ m
+    reflexive : n ≡ m → n ≤ m
+
 
 _≥_ : (n m : Size Δ) → Set
 n ≥ m = m ≤ n
@@ -85,29 +76,30 @@ pattern v1 = var (suc zero)
 
 
 abstract
-  wk-resp-< (var {x} _ refl b≤m) = var (wk (bound x)) refl (wk-resp-≤ b≤m)
-  wk-resp-< (zero<suc n n<∞) = zero<suc (wk n) (wk-resp-< n<∞)
-  wk-resp-< zero<∞ = zero<∞
-  wk-resp-< (suc<∞ n n<∞) = suc<∞ (wk n) (wk-resp-< n<∞)
-  wk-resp-< zero<⋆ = zero<⋆
-  wk-resp-< (suc<⋆ n n<∞) = suc<⋆ (wk n) (wk-resp-< n<∞)
-  wk-resp-< ∞<⋆ = ∞<⋆
+  suc-inj-Size : Size.suc n ≡ suc m → n ≡ m
+  suc-inj-Size refl = refl
 
 
-  wk-resp-≤ (<→≤ n<m) = <→≤ (wk-resp-< n<m)
-  wk-resp-≤ ≤-refl = ≤-refl
-
--- end implicit mutual block
+  suc≡-prop-Size : (p : Size.suc n ≡ suc m) → p ≡ cong suc (suc-inj-Size p)
+  suc≡-prop-Size refl = refl
 
 
-suc-≡⁻ : {n<∞ : n < ∞} {m<∞ : m < ∞}
-  → Size.suc n n<∞ ≡ suc m m<∞
-  → Σ[ n≡m ∈ n ≡ m ]
-    (n<∞ ≡ subst (_< ∞) (sym n≡m) m<∞)
-suc-≡⁻ refl = refl , refl
+  mutual
+    wk-resp-< : n < m → wk {n = o} n < wk m
+    wk-resp-< (var {x} _ refl b≤m) = var (wk (bound x)) refl (wk-resp-≤ b≤m)
+    wk-resp-< (zero<suc n n<∞) = zero<suc (wk n) (wk-resp-< n<∞)
+    wk-resp-< zero<∞ = zero<∞
+    wk-resp-< (suc<∞ n n<∞) = suc<∞ (wk n) (wk-resp-< n<∞)
+    wk-resp-< zero<⋆ = zero<⋆
+    wk-resp-< (suc<⋆ n n<∞) = suc<⋆ (wk n) (wk-resp-< n<∞)
+    wk-resp-< ∞<⋆ = ∞<⋆
 
 
-abstract
+    wk-resp-≤ : n ≤ m → wk {n = o} n ≤ wk m
+    wk-resp-≤ (<→≤ n<m) = <→≤ (wk-resp-< n<m)
+    wk-resp-≤ ≤-refl = ≤-refl
+
+
   mutual
     ≤→<→< : n ≤ m → m < o → n < o
     ≤→<→< (<→≤ n<m) m<o = <-trans n<m m<o
@@ -116,8 +108,8 @@ abstract
 
     <-trans : n < m → m < o → n < o
     <-trans (var b b≡bx b≤m) m<o = var b b≡bx (<→≤ (≤→<→< b≤m m<o))
-    <-trans (zero<suc n n<∞) (suc<∞ .n .n<∞) = zero<∞
-    <-trans (zero<suc n n<∞) (suc<⋆ .n .n<∞) = zero<⋆
+    <-trans (zero<suc n n<∞) (suc<∞ .n n<∞₀) = zero<∞
+    <-trans (zero<suc n n<∞) (suc<⋆ .n n<∞₀) = zero<⋆
     <-trans zero<∞ ∞<⋆ = zero<⋆
     <-trans (suc<∞ n n<∞) ∞<⋆ = suc<⋆ n n<∞
 
@@ -137,7 +129,7 @@ abstract
   wk≢varzero {n = ∞} ()
   wk≢varzero {n = ⋆} ()
   wk≢varzero {n = zero} ()
-  wk≢varzero {n = suc n x} ()
+  wk≢varzero {n = suc n} ()
 
 
   mutual
@@ -173,28 +165,16 @@ abstract
   var≡-prop-Size refl = refl
 
 
-  suc-inj-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
-    → Σ[ p ∈ (n ≡ m) ] subst (_< ∞) p n<∞ ≡ m<∞
-  suc-inj-Size refl = refl , refl
-
-
-  suc≡-prop-Size : ∀ {n<∞ m<∞} (p : Size.suc n n<∞ ≡ suc m m<∞)
-    → let (q , r) = suc-inj-Size p
-      in p ≡ cong₂-dep suc q r
-  suc≡-prop-Size refl = refl
+  wk-inj : wk {n = o} n ≡ wk m → n ≡ m
+  wk-inj {n = var x} {var .x} refl = refl
+  wk-inj {n = ∞} {∞} refl = refl
+  wk-inj {n = ⋆} {⋆} refl = refl
+  wk-inj {n = zero} {zero} refl = refl
+  wk-inj {n = suc n} {suc m} wkSn≡wkSm
+    = cong suc (wk-inj (suc-inj-Size wkSn≡wkSm))
 
 
   mutual
-    wk-inj : wk {n = o} n ≡ wk m → n ≡ m
-    wk-inj {n = var x} {var .x} refl = refl
-    wk-inj {n = ∞} {∞} refl = refl
-    wk-inj {n = ⋆} {⋆} refl = refl
-    wk-inj {n = zero} {zero} refl = refl
-    wk-inj {n = suc n n<∞} {suc m m<∞} wkSn≡wkSm with suc-≡⁻ wkSn≡wkSm
-    ... | wkn≡wkm , _ with wk-inj wkn≡wkm
-    ... | refl = cong (suc n) (<-IsProp _ _)
-
-
     wk-inj-≤ : wk {n = o} n ≤ wk m → n ≤ m
     wk-inj-≤ (<→≤ wkn<wkm) = <→≤ (wk-inj-< wkn<wkm)
     wk-inj-≤ (reflexive wkn≡wkm) = reflexive (wk-inj wkn≡wkm)
@@ -205,85 +185,85 @@ abstract
     wk-inj-< {n = ∞} {⋆} ∞<⋆ = ∞<⋆
     wk-inj-< {n = zero} {∞} zero<∞ = zero<∞
     wk-inj-< {n = zero} {⋆} zero<⋆ = zero<⋆
-    wk-inj-< {n = zero} {suc n n<∞} (zero<suc .(wk n) .(wk-resp-< n<∞)) = zero<suc n n<∞
-    wk-inj-< {n = suc n x} {∞} (suc<∞ .(wk n) .(wk-resp-< x)) = suc<∞ n x
-    wk-inj-< {n = suc n x} {⋆} (suc<⋆ .(wk n) .(wk-resp-< x)) = suc<⋆ n x
+    wk-inj-< {n = zero} {suc n} (zero<suc _ wkn<∞) = zero<suc n (wk-inj-< wkn<∞)
+    wk-inj-< {n = suc n} {∞} (suc<∞ .(wk n) wkn<∞) = suc<∞ n (wk-inj-< wkn<∞)
+    wk-inj-< {n = suc n} {⋆} (suc<⋆ .(wk n) wkn<∞) = suc<⋆ n (wk-inj-< wkn<∞)
 
 
-    <→¬≤ : n < m → ¬ (n ≥ m)
-    <→¬≤ (var _ refl (<→≤ bx<m)) m≤x = <→¬≤ bx<m (<→≤ (≤→<→< m≤x (var _ refl ≤-refl)))
-    <→¬≤ (var _ refl ≤-refl) m≤x = boundx≰x m≤x
-    <→¬≤ (zero<suc n n<∞) (<→≤ ())
-    <→¬≤ (zero<suc n n<∞) (reflexive ())
-    <→¬≤ zero<∞ (<→≤ ())
-    <→¬≤ zero<∞ (reflexive ())
-    <→¬≤ (suc<∞ n n<m) (<→≤ ())
-    <→¬≤ (suc<∞ n n<m) (reflexive ())
-    <→¬≤ zero<⋆ (<→≤ ())
-    <→¬≤ zero<⋆ (reflexive ())
-    <→¬≤ (suc<⋆ n n<m) (<→≤ ())
-    <→¬≤ (suc<⋆ n n<m) (reflexive ())
-    <→¬≤ ∞<⋆ (<→≤ ())
-    <→¬≤ ∞<⋆ (reflexive ())
+  boundx≰x : ¬ (bound x ≤ var x)
+  boundx≰x {x = zero} wkn≤v0 = wk≰varzero refl wkn≤v0
+  boundx≰x {x = suc x} wkbx≤x+1 = boundx≰x (wk-inj-≤ wkbx≤x+1)
 
 
-    <-antisym : n < m → ¬ (m < n)
-    <-antisym n<m m<n = <→¬≤ n<m (<→≤ m<n)
+  <→¬≤ : n < m → ¬ (n ≥ m)
+  <→¬≤ (var _ refl (<→≤ bx<m)) m≤x = <→¬≤ bx<m (<→≤ (≤→<→< m≤x (var _ refl ≤-refl)))
+  <→¬≤ (var _ refl ≤-refl) m≤x = boundx≰x m≤x
+  <→¬≤ (zero<suc n n<∞) (<→≤ ())
+  <→¬≤ (zero<suc n n<∞) (reflexive ())
+  <→¬≤ zero<∞ (<→≤ ())
+  <→¬≤ zero<∞ (reflexive ())
+  <→¬≤ (suc<∞ n n<m) (<→≤ ())
+  <→¬≤ (suc<∞ n n<m) (reflexive ())
+  <→¬≤ zero<⋆ (<→≤ ())
+  <→¬≤ zero<⋆ (reflexive ())
+  <→¬≤ (suc<⋆ n n<m) (<→≤ ())
+  <→¬≤ (suc<⋆ n n<m) (reflexive ())
+  <→¬≤ ∞<⋆ (<→≤ ())
+  <→¬≤ ∞<⋆ (reflexive ())
 
 
-    <-irrefl : ¬ (n < n)
-    <-irrefl n<n = <-antisym n<n n<n
+  <-antisym : n < m → ¬ (m < n)
+  <-antisym n<m m<n = <→¬≤ n<m (<→≤ m<n)
 
 
-    <-irreflexive : n ≡ m → ¬ (n < m)
-    <-irreflexive refl = <-irrefl
+  <-irrefl : ¬ (n < n)
+  <-irrefl n<n = <-antisym n<n n<n
 
 
-    boundx≰x : ¬ (bound x ≤ var x)
-    boundx≰x {x = zero} wkn≤v0 = wk≰varzero refl wkn≤v0
-    boundx≰x {x = suc x} wkbx≤x+1 = boundx≰x (wk-inj-≤ wkbx≤x+1)
+  <-irreflexive : n ≡ m → ¬ (n < m)
+  <-irreflexive refl = <-irrefl
 
 
-    <-IsProp : IsProp (n < m)
-    <-IsProp (var {x} .(bound x) refl b≤n) (var .(bound x) refl b≤n₁)
-      = cong (var (bound x) refl) (≤-prop b≤n b≤n₁)
-    <-IsProp (zero<suc n n<∞) (zero<suc .n .n<∞) = refl
-    <-IsProp zero<∞ zero<∞ = refl
-    <-IsProp (suc<∞ n p) (suc<∞ .n .p) = refl
-    <-IsProp zero<⋆ zero<⋆ = refl
-    <-IsProp (suc<⋆ n p) (suc<⋆ .n .p) = refl
-    <-IsProp ∞<⋆ ∞<⋆ = refl
+  Size-IsSet : (p q : n ≡ m) → p ≡ q
+  Size-IsSet {n = var x} {var .x} p refl
+    = trans (var≡-prop-Size p) (cong (cong var) (Var-IsSet _ _))
+  Size-IsSet {n = ∞} {∞} refl refl = refl
+  Size-IsSet {n = ⋆} {⋆} refl refl = refl
+  Size-IsSet {n = zero} {zero} refl refl = refl
+  Size-IsSet {n = suc n} {suc .n} p refl
+    = trans (suc≡-prop-Size p) (cong (cong suc) (Size-IsSet _ _))
 
 
-    -- This is a consequence of <-IsProp, but applying the general lemma annoys the
-    -- termination checker, so we essentially inline the lemma.
-    <-IsSet : IsSet (n < m)
-    <-IsSet {n = n} {m} {n<m} {n<m′} p q = trans (sym (canon p)) (canon q)
-      where
-        go : (r : n<m ≡ n<m′) → trans r (<-IsProp n<m′ n<m′) ≡ <-IsProp n<m n<m′
-        go refl = refl
-
-        canon : (r : n<m ≡ n<m′) → <-IsProp n<m n<m′ ≡ r
-        canon refl = trans-injectiveˡ (<-IsProp n<m′ n<m′) (go (<-IsProp n<m n<m))
+mutual
+  data _⊢_ (Δ : Ctx) : (x : Size Δ) → Set where
+    var : ∀ x (⊢Δ : ⊢ Δ) → Δ ⊢ var x
+    ∞ : (⊢Δ : ⊢ Δ) → Δ ⊢ ∞
+    ⋆ : (⊢Δ : ⊢ Δ) → Δ ⊢ ⋆
+    zero : (⊢Δ : ⊢ Δ) → Δ ⊢ zero
+    suc : (n<∞ : n < ∞) (⊢n : Δ ⊢ n) → Δ ⊢ suc n
 
 
-    ≤-prop : IsProp (n ≤ m)
-    ≤-prop (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-IsProp _ _)
-    ≤-prop (<→≤ n<m) (reflexive n≡m) = ⊥-elim (<-irreflexive n≡m n<m)
-    ≤-prop (reflexive n≡m) (<→≤ n<m) = ⊥-elim (<-irreflexive n≡m n<m)
-    ≤-prop (reflexive n≡m) (reflexive n≡m₁) = cong reflexive (Size-set _ _)
+  data ⊢_ : (Δ : Ctx) → Set where
+    [] : ⊢ []
+    Snoc : ⊢ Δ → Δ ⊢ n → ⊢ Δ ∙ n
 
 
-    Size-set : (p q : n ≡ m) → p ≡ q
-    Size-set {n = var x} {var .x} p refl
-      = trans (var≡-prop-Size p) (cong (cong var) (Var-IsSet _ _))
-    Size-set {n = ∞} {∞} refl refl = refl
-    Size-set {n = ⋆} {⋆} refl refl = refl
-    Size-set {n = zero} {zero} refl refl = refl
-    Size-set {n = suc n n<∞} {suc .n .n<∞} p refl
-      = trans (suc≡-prop-Size p)
-          (cong₂-dep (λ p q → cong₂-dep suc p q) (Size-set _ _) (<-IsSet _ _))
+abstract
+  Δ⊢n→⊢Δ : Δ ⊢ n → ⊢ Δ
+  Δ⊢n→⊢Δ (var x ⊢Δ) = ⊢Δ
+  Δ⊢n→⊢Δ (∞ ⊢Δ) = ⊢Δ
+  Δ⊢n→⊢Δ (⋆ ⊢Δ) = ⊢Δ
+  Δ⊢n→⊢Δ (zero ⊢Δ) = ⊢Δ
+  Δ⊢n→⊢Δ (suc n<∞ Δ⊢n) = Δ⊢n→⊢Δ Δ⊢n
 
 
-suc-≡⁺ : n ≡ m → {n<∞ : n < ∞} {m<∞ : m < ∞} → Size.suc n n<∞ ≡ suc m m<∞
-suc-≡⁺ refl = cong (suc _) (<-IsProp _ _)
+  Δ⊢n→⊢Δ∙n : Δ ⊢ n → ⊢ Δ ∙ n
+  Δ⊢n→⊢Δ∙n ⊢n = Snoc (Δ⊢n→⊢Δ ⊢n) ⊢n
+
+
+  wk-resp-⊢ : Δ ⊢ n → Δ ⊢ m → Δ ∙ m ⊢ wk n
+  wk-resp-⊢ {n = var x} ⊢n ⊢m = var (suc x) (Δ⊢n→⊢Δ∙n ⊢m)
+  wk-resp-⊢ {n = ∞} ⊢n ⊢m = ∞ (Δ⊢n→⊢Δ∙n ⊢m)
+  wk-resp-⊢ {n = ⋆} ⊢n ⊢m = ⋆ (Δ⊢n→⊢Δ∙n ⊢m)
+  wk-resp-⊢ {n = zero} ⊢n ⊢m = zero (Δ⊢n→⊢Δ∙n ⊢m)
+  wk-resp-⊢ {n = suc n} (suc n<∞ ⊢n) ⊢m = suc (wk-resp-< n<∞) (wk-resp-⊢ ⊢n ⊢m)

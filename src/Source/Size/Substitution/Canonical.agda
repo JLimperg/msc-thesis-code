@@ -5,142 +5,149 @@ open import Source.Size
 open import Util.Prelude
 
 
+infix  0 Sub⊢
 infixl 5 _>>_
 
 
--- begin implicit mutual block
-
-data Sub (Δ : Ctx) : (Ω : Ctx) → Set
-sub : (σ : Sub Δ Ω) (n : Size Ω) → Size Δ
-subV : (σ : Sub Δ Ω) (x : Var Ω) → Size Δ
-subV-resp-<∞ : (σ : Sub Δ Ω) → var x < ∞ → subV σ x < ∞
-sub-resp-<∞ : (σ : Sub Δ Ω) → n < ∞ → sub σ n < ∞
-sub-resp-≤∞ : (σ : Sub Δ Ω) → n ≤ ∞ → sub σ n ≤ ∞
-
-
-data Sub Δ where
+data Sub (Δ : Ctx) : (Ω : Ctx) → Set where
   [] : Sub Δ []
-  Snoc : (σ : Sub Δ Ω) (n : Size Δ) (n<m : n < sub σ m)
-    → Sub Δ (Ω ∙ m)
+  Snoc : (σ : Sub Δ Ω) (n : Size Δ) → Sub Δ (Ω ∙ m)
 
 
-variable σ τ σ′ τ′ ι ι′ : Sub Δ Ω
+variable
+  σ τ σ′ τ′ ι ι′ : Sub Δ Ω
 
 
-subV (Snoc σ n n<m) zero = n
-subV (Snoc σ n n<m) (suc x) = subV σ x
+subV : Sub Δ Ω → Var Ω → Size Δ
+subV (Snoc σ n) zero = n
+subV (Snoc σ n) (suc x) = subV σ x
 
 
+sub : Sub Δ Ω → Size Ω → Size Δ
 sub σ (var x) = subV σ x
 sub σ ∞ = ∞
 sub σ ⋆ = ⋆
 sub σ zero = zero
-sub σ (suc n n<∞) = suc (sub σ n) (sub-resp-<∞ σ n<∞)
+sub σ (suc n) = suc (sub σ n)
+
+
+data Sub⊢ Δ : ∀ Ω (σ : Sub Δ Ω) → Set where
+  [] : (⊢Δ : ⊢ Δ) → Sub⊢ Δ [] σ
+  Snoc : (⊢m : Ω ⊢ m) (⊢σ : Sub⊢ Δ Ω σ) (n<m : n < sub σ m) (⊢n : Δ ⊢ n)
+    → Sub⊢ Δ (Ω ∙ m) (Snoc σ n)
+
+
+syntax Sub⊢ Δ Ω σ = σ ∶ Δ ⇒ Ω
 
 
 abstract
-  -- This is a special case of subV-resp-< below. We don't prove the more general
-  -- statement right away because it doesn't termination-check here. It *does*
-  -- termination-check below because there, it isn't defined mutually with sub.
-  subV-resp-<∞ {x = zero {n = b}} (Snoc σ n n<b[σ]) (var _ refl b≤∞)
-    = <→≤→< n<b[σ] (sub-resp-≤∞ σ (wk-inj-≤ b≤∞))
-  subV-resp-<∞ {x = suc {n = b} x} (Snoc σ n n<b[σ]) (var _ refl b≤∞)
-    = subV-resp-<∞ σ (var (bound x) refl (wk-inj-≤ b≤∞))
+  σ∶Δ⇒Ω→⊢Δ : σ ∶ Δ ⇒ Ω → ⊢ Δ
+  σ∶Δ⇒Ω→⊢Δ ([] ⊢Δ) = ⊢Δ
+  σ∶Δ⇒Ω→⊢Δ (Snoc ⊢m ⊢σ n<m ⊢n) = Δ⊢n→⊢Δ ⊢n
 
 
-  sub-resp-<∞ σ (var b b≡bx b≤n) = subV-resp-<∞ σ (var b b≡bx b≤n)
-  sub-resp-<∞ σ zero<∞ = zero<∞
-  sub-resp-<∞ σ (suc<∞ n n<∞) = suc<∞ (sub σ n) (sub-resp-<∞ σ n<∞)
-
-  sub-resp-≤∞ σ (<→≤ n<∞) = <→≤ (sub-resp-<∞ σ n<∞)
-  sub-resp-≤∞ σ ≤-refl = ≤-refl
-
--- end implicit mutual block
+  σ∶Δ⇒Ω→⊢Ω : σ ∶ Δ ⇒ Ω → ⊢ Ω
+  σ∶Δ⇒Ω→⊢Ω ([] ⊢Δ) = []
+  σ∶Δ⇒Ω→⊢Ω (Snoc ⊢m ⊢σ n<m ⊢n) = Snoc (σ∶Δ⇒Ω→⊢Ω ⊢σ) ⊢m
 
 
-abstract
-  Snoc-≡⁺ : σ ≡ τ → n ≡ m → {n<o : n < sub σ o} {m<o : m < sub τ o}
-    → Snoc {m = o} σ n n<o ≡ Snoc τ m m<o
-  Snoc-≡⁺ {σ = σ} {n = n} refl refl = cong (Snoc σ n) (<-IsProp _ _)
-
-
-  sub-Snoc : ∀ (σ : Sub Δ Ω) n (n<m : n < sub σ m) o
-    → sub (Snoc {m = m} σ n n<m) (wk o) ≡ sub σ o
-  sub-Snoc σ n n<m (var x) = refl
-  sub-Snoc σ n n<m ∞ = refl
-  sub-Snoc σ n n<m ⋆ = refl
-  sub-Snoc σ n n<m zero = refl
-  sub-Snoc σ n n<m (suc o o<∞) = suc-≡⁺ (sub-Snoc σ n n<m o)
+  sub-Snoc : ∀ (σ : Sub Δ Ω) n o
+    → sub (Snoc {m = m} σ n) (wk o) ≡ sub σ o
+  sub-Snoc σ n (var x) = refl
+  sub-Snoc σ n ∞ = refl
+  sub-Snoc σ n ⋆ = refl
+  sub-Snoc σ n zero = refl
+  sub-Snoc σ n (suc o) = cong suc (sub-Snoc σ n o)
 
 
   mutual
-    subV-resp-< : (σ : Sub Δ Ω) → var x < n → subV σ x < sub σ n
-    subV-resp-< {x = zero {n = b}} {n} (Snoc σ k k<b[σ]) (var _ refl b≤n)
-      = <→≤→< k<b[σ]
-          (subst (_≤ sub (Snoc σ k k<b[σ]) n) (sub-Snoc σ k k<b[σ] b)
-            (sub-resp-≤ (Snoc σ k k<b[σ]) b≤n))
-    subV-resp-< {x = suc {n = b} x} {n} (Snoc σ k k<b[σ]) (var _ refl b≤n)
-      = <→≤→< (subV-resp-< σ (var _ refl ≤-refl))
-          (subst (_≤ sub (Snoc σ k k<b[σ]) n) (sub-Snoc σ k k<b[σ] (bound x))
-            (sub-resp-≤ (Snoc σ k k<b[σ]) b≤n))
+    subV-resp-< : σ ∶ Δ ⇒ Ω → var x < n → subV σ x < sub σ n
+    subV-resp-< {x = zero {n = m}} {k} (Snoc {σ = σ} {n} ⊢m ⊢σ n<m ⊢n)
+      (var _ refl m≤k)
+      = <→≤→< n<m
+          (subst (_≤ sub (Snoc _ _) k) (sub-Snoc σ n m)
+            (sub-resp-≤ (Snoc ⊢m ⊢σ n<m ⊢n) m≤k))
+    subV-resp-< {x = suc {n = m} x} {k} (Snoc {σ = σ} {n} ⊢m ⊢σ n<m ⊢n)
+      (var _ refl b≤n)
+      = <→≤→< (subV-resp-< ⊢σ (var _ refl ≤-refl))
+          (subst (_≤ sub (Snoc σ n) k) (sub-Snoc σ n (bound x))
+            (sub-resp-≤ (Snoc ⊢m ⊢σ n<m ⊢n) b≤n))
 
 
-    sub-resp-< : (σ : Sub Δ Ω) → n < m → sub σ n < sub σ m
-    sub-resp-< σ (var b b≡bx b≤n) = subV-resp-< σ (var b b≡bx b≤n)
-    sub-resp-< σ (zero<suc n n<∞) = zero<suc (sub σ n) (sub-resp-<∞ σ n<∞)
-    sub-resp-< σ zero<∞ = zero<∞
-    sub-resp-< σ (suc<∞ n n<m) = suc<∞ (sub σ n) (sub-resp-<∞ σ n<m)
-    sub-resp-< σ zero<⋆ = zero<⋆
-    sub-resp-< σ (suc<⋆ n n<m) = suc<⋆ (sub σ n) (sub-resp-<∞ σ n<m)
-    sub-resp-< σ ∞<⋆ = ∞<⋆
+    sub-resp-< : σ ∶ Δ ⇒ Ω → n < m → sub σ n < sub σ m
+    sub-resp-< ⊢σ (var b b≡bx b≤n) = subV-resp-< ⊢σ (var b b≡bx b≤n)
+    sub-resp-< {σ = σ} ⊢σ (zero<suc n n<∞)
+      = zero<suc (sub σ n) (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ zero<∞ = zero<∞
+    sub-resp-< {σ = σ} ⊢σ (suc<∞ n n<∞) = suc<∞ (sub σ n) (sub-resp-< ⊢σ n<∞)
+    sub-resp-< {σ = σ} ⊢σ zero<⋆ = zero<⋆
+    sub-resp-< {σ = σ} ⊢σ (suc<⋆ n n<∞) = suc<⋆ (sub σ n) (sub-resp-< ⊢σ n<∞)
+    sub-resp-< {σ = σ} ⊢σ ∞<⋆ = ∞<⋆
 
 
-    sub-resp-≤ : (σ : Sub Δ Ω) → n ≤ m → sub σ n ≤ sub σ m
-    sub-resp-≤ σ (<→≤ n<m) = <→≤ (sub-resp-< σ n<m)
-    sub-resp-≤ σ ≤-refl = ≤-refl
+    sub-resp-≤ : σ ∶ Δ ⇒ Ω → n ≤ m → sub σ n ≤ sub σ m
+    sub-resp-≤ ⊢σ (<→≤ n<m) = <→≤ (sub-resp-< ⊢σ n<m)
+    sub-resp-≤ ⊢σ ≤-refl = ≤-refl
+
+
+  subV-resp-⊢ : σ ∶ Δ ⇒ Ω → ∀ x → Δ ⊢ subV σ x
+  subV-resp-⊢ (Snoc ⊢m ⊢σ n<m ⊢n) zero = ⊢n
+  subV-resp-⊢ (Snoc ⊢m ⊢σ n<m ⊢n) (suc x) = subV-resp-⊢ ⊢σ x
+
+
+  sub-resp-⊢ : σ ∶ Δ ⇒ Ω → Ω ⊢ n → Δ ⊢ sub σ n
+  sub-resp-⊢ ⊢σ (var x ⊢Δ) = subV-resp-⊢ ⊢σ x
+  sub-resp-⊢ ⊢σ (∞ ⊢Ω) = ∞ (σ∶Δ⇒Ω→⊢Δ ⊢σ)
+  sub-resp-⊢ ⊢σ (⋆ ⊢Ω) = ⋆ (σ∶Δ⇒Ω→⊢Δ ⊢σ)
+  sub-resp-⊢ ⊢σ (zero ⊢Ω) = zero (σ∶Δ⇒Ω→⊢Δ ⊢σ)
+  sub-resp-⊢ ⊢σ (suc n<∞ ⊢n) = suc (sub-resp-< ⊢σ n<∞) (sub-resp-⊢ ⊢σ ⊢n)
+
+
+Weaken : Sub Δ Ω → Sub (Δ ∙ n) Ω
+Weaken [] = []
+Weaken (Snoc σ m) = Snoc (Weaken σ) (wk m)
+
+
+abstract
+  subV-Weaken : ∀ (σ : Sub Δ Ω) x → subV (Weaken {n = o} σ) x ≡ wk (subV σ x)
+  subV-Weaken (Snoc σ n) zero = refl
+  subV-Weaken (Snoc σ n) (suc x) = subV-Weaken σ x
+
+
+  sub-Weaken : ∀ (σ : Sub Δ Ω) n → sub (Weaken {n = o} σ) n ≡ wk (sub σ n)
+  sub-Weaken σ (var x) = subV-Weaken σ x
+  sub-Weaken σ ∞ = refl
+  sub-Weaken σ ⋆ = refl
+  sub-Weaken σ zero = refl
+  sub-Weaken σ (suc n) = cong suc (sub-Weaken σ n)
+
+
+  Weaken⊢ : Δ ⊢ n → σ ∶ Δ ⇒ Ω → Weaken σ ∶ Δ ∙ n ⇒ Ω
+  Weaken⊢ ⊢n ([] ⊢Δ) = [] (Snoc ⊢Δ ⊢n)
+  Weaken⊢ ⊢n (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n₀)
+    = Snoc ⊢m (Weaken⊢ ⊢n ⊢σ)
+        (subst (wk n <_) (sym (sub-Weaken σ m)) (wk-resp-< n<m))
+        (wk-resp-⊢ ⊢n₀ ⊢n)
+
+
+Keep : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
+Keep σ = Snoc (Weaken σ) (var zero)
+
+
+abstract
+  Keep⊢ : σ ∶ Δ ⇒ Ω → Ω ⊢ n → m ≡ sub σ n → Keep σ ∶ Δ ∙ m ⇒ Ω ∙ n
+  Keep⊢ {Δ} {σ = σ} {n} ⊢σ ⊢n refl
+    = Snoc ⊢n (Weaken⊢ ⊢m ⊢σ)
+        (var _ refl (reflexive (sym (sub-Weaken σ n))))
+        (var zero (Δ⊢n→⊢Δ∙n ⊢m))
+    where
+      ⊢m = sub-resp-⊢ ⊢σ ⊢n
 
 
 mutual
-  Weaken : Sub Δ Ω → Sub (Δ ∙ n) Ω
-  Weaken [] = []
-  Weaken (Snoc {m = b} σ m m<n)
-    = Snoc (Weaken σ) (wk m)
-        (subst (wk m <_) (sym (sub-Weaken σ b)) (wk-resp-< m<n))
-
-
-  abstract
-    subV-Weaken : ∀ (σ : Sub Δ Ω) x → subV (Weaken {n = o} σ) x ≡ wk (subV σ x)
-    subV-Weaken (Snoc σ n n<m) zero = refl
-    subV-Weaken (Snoc σ n n<m) (suc x) = subV-Weaken σ x
-
-
-    sub-Weaken : ∀ (σ : Sub Δ Ω) n → sub (Weaken {n = o} σ) n ≡ wk (sub σ n)
-    sub-Weaken σ (var x) = subV-Weaken σ x
-    sub-Weaken σ ∞ = refl
-    sub-Weaken σ ⋆ = refl
-    sub-Weaken σ zero = refl
-    sub-Weaken σ (suc n x) = suc-≡⁺ (sub-Weaken σ n)
-
-
-Keep : (σ : Sub Δ Ω) → m ≡ sub σ n → Sub (Δ ∙ m) (Ω ∙ n)
-Keep {n = n} σ m≡n
-  = Snoc (Weaken σ) (var zero)
-      (var (wk (sub σ n)) (cong wk (sym m≡n)) (reflexive (sym (sub-Weaken σ n))))
-
-
-Keep′ : (σ : Sub Δ Ω) → Sub (Δ ∙ sub σ n) (Ω ∙ n)
-Keep′ σ = Keep σ refl
-
-
-mutual
-  -- The recursive case can be defined in terms of Keep, but that's more
-  -- trouble than it's worth.
   Id : Sub Δ Δ
   Id {[]} = []
-  Id {Δ ∙ n}
-    = Snoc (Weaken Id) (var zero)
-        (var (wk n) refl
-          (reflexive (sym (trans (sub-Weaken Id n) (cong wk (sub-Id _ refl))))))
+  Id {Δ ∙ n} = Keep Id
 
 
   abstract
@@ -154,7 +161,17 @@ mutual
     sub-Id ∞ _ = refl
     sub-Id ⋆ _ = refl
     sub-Id zero _ = refl
-    sub-Id (suc n x) p = suc-≡⁺ (sub-Id n p)
+    sub-Id (suc n) p = cong suc (sub-Id n p)
+
+
+abstract
+  Id⊢ : ⊢ Δ → Id ∶ Δ ⇒ Δ
+  Id⊢ [] = [] []
+  Id⊢ (Snoc {n = n} ⊢Δ ⊢n)
+    = Snoc ⊢n (Weaken⊢ ⊢n (Id⊢ ⊢Δ))
+        (var _ refl
+          (reflexive (sym (trans (sub-Weaken Id n) (cong wk (sub-Id n refl))))))
+        (var zero (Δ⊢n→⊢Δ∙n ⊢n))
 
 
 Wk : Sub (Δ ∙ n) Δ
@@ -166,164 +183,176 @@ abstract
   sub-Wk n = trans (sub-Weaken Id n) (cong wk (sub-Id _ refl))
 
 
-Fill : ∀ n {m} → n < m → Sub Δ (Δ ∙ m)
-Fill n {m} n<m = Snoc Id n (subst (n <_) (sym (sub-Id _ refl)) n<m)
+  Wk⊢ : Δ ⊢ n → Wk ∶ Δ ∙ n ⇒ Δ
+  Wk⊢ ⊢n = Weaken⊢ ⊢n (Id⊢ (Δ⊢n→⊢Δ ⊢n))
 
 
-mutual
-  _>>_ : Sub Δ Δ′ → Sub Δ′ Δ″ → Sub Δ Δ″
-  σ >> [] = []
-  σ >> Snoc {m = m} τ n n<m
-    = Snoc (σ >> τ) (sub σ n)
-        (subst (sub σ n <_) (sym (sub->> m refl)) (sub-resp-< σ n<m))
-
-
-  abstract
-    subV->> : ∀ (σ : Sub Δ Δ′) (τ : Sub Δ′ Δ″) x
-      → subV (σ >> τ) x ≡ sub σ (subV τ x)
-    subV->> σ (Snoc τ n n<m) zero = refl
-    subV->> σ (Snoc τ n n<m) (suc x) = subV->> σ τ x
-
-
-    sub->> : ∀ n → ι ≡ σ >> τ
-      → sub ι n ≡ sub σ (sub τ n)
-    sub->> {σ = σ} {τ} (var x) refl = subV->> σ τ x
-    sub->> ∞ _ = refl
-    sub->> ⋆ _ = refl
-    sub->> zero _ = refl
-    sub->> {σ = σ} {τ} (suc n x) p = suc-≡⁺ (sub->> n p)
-
-
-Skip : Sub (Δ ∙ n ∙ var zero) (Δ ∙ n)
-Skip {Δ} {n} = Snoc (Weaken Wk) (var zero)
-  (var (bound zero) refl
-    (<→≤ (var (bound (suc zero)) refl
-      (reflexive (sym (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))))
-
-
-Weaken>> : Weaken σ >> τ ≡ Weaken {n = n} (σ >> τ)
-Weaken>> {τ = []} = refl
-Weaken>> {σ = σ} {τ = Snoc τ n n<m} = Snoc-≡⁺ Weaken>> (sub-Weaken σ n)
+Fill : Size Δ → Sub Δ (Δ ∙ m)
+Fill n = Snoc Id n
 
 
 abstract
-  Snoc>>Weaken : {n<m : n < sub σ m}
-    → Snoc {m = m} σ n n<m >> Weaken τ ≡ σ >> τ
-  Snoc>>Weaken {τ = []} = refl
-  Snoc>>Weaken {n = n} {σ = σ} {τ = Snoc τ k k<m} {n<m}
-    = Snoc-≡⁺ Snoc>>Weaken (sub-Snoc σ n n<m k)
+  Fill⊢ : Δ ⊢ n → Δ ⊢ m → n < m → Fill n ∶ Δ ⇒ Δ ∙ m
+  Fill⊢ {n = n} ⊢n ⊢m n<m
+    = Snoc ⊢m (Id⊢ (Δ⊢n→⊢Δ ⊢m)) (subst (n <_) (sym (sub-Id _ refl)) n<m) ⊢n
 
 
-  id-l : Id >> σ ≡ σ
-  id-l {σ = []} = refl
-  id-l {σ = Snoc σ n n<m} = Snoc-≡⁺ id-l (sub-Id _ refl)
+_>>_ : Sub Δ Δ′ → Sub Δ′ Δ″ → Sub Δ Δ″
+σ >> [] = []
+σ >> Snoc τ n = Snoc (σ >> τ) (sub σ n)
 
 
-  id-r : {σ : Sub Δ Ω} → σ >> Id ≡ σ
-  id-r {σ = []} = refl
-  id-r {σ = Snoc σ n n<m} = Snoc-≡⁺ (trans Snoc>>Weaken id-r) refl
+abstract
+  subV->> : ∀ (σ : Sub Δ Δ′) (τ : Sub Δ′ Δ″) x
+    → subV (σ >> τ) x ≡ sub σ (subV τ x)
+  subV->> σ (Snoc τ n) zero = refl
+  subV->> σ (Snoc τ n) (suc x) = subV->> σ τ x
 
 
-  >>-assoc : σ >> (τ >> ι) ≡ σ >> τ >> ι
-  >>-assoc {ι = []} = refl
-  >>-assoc {σ = σ} {τ = τ} {ι = Snoc ι n n<m}
-    = Snoc-≡⁺ >>-assoc (sym (sub->> n refl))
-
-
-  Wk>> : Wk >> σ ≡ Weaken {n = n} σ
-  Wk>> = trans Weaken>> (cong Weaken id-l)
-
-
-  Snoc>>Wk : {n<m : n < sub σ m}
-    → Snoc {m = m} σ n n<m >> Wk ≡ σ
-  Snoc>>Wk = trans Snoc>>Weaken id-r
-
-
-  Keep>>Weaken : {m≡n : m ≡ sub σ n}
-    → Keep {n = n} σ m≡n >> Weaken τ ≡ Weaken (σ >> τ)
-  Keep>>Weaken = trans Snoc>>Weaken Weaken>>
-
-
-  Keep>>Wk : {m≡n : m ≡ sub σ n} → Keep {n = n} σ m≡n >> Wk ≡ Wk >> σ
-  Keep>>Wk = trans Keep>>Weaken (trans (sym Wk>>) (cong (Wk >>_) id-r))
-
-
-  Fill>>Weaken : ∀ n m (n<m : n < m)
-    → Fill n n<m >> Weaken σ ≡ σ
-  Fill>>Weaken _ _ _ = trans Snoc>>Weaken id-l
-
-
-  Fill>>Wk : (n m : Size Δ) (n<m : n < m)
-    → Fill n n<m >> Wk ≡ Id
-  Fill>>Wk _ _ _ = trans Snoc>>Weaken id-r
-
-
-  Fill>>Keep′ : {σ : Sub Δ Ω} {n m : Size Ω}
-    → (n<m : n < m) (n[σ]<m[σ] : sub σ n < sub σ m)
-    → Fill (sub σ n) n[σ]<m[σ] >> Keep′ σ ≡ σ >> Fill n n<m
-  Fill>>Keep′ {σ = σ} {n} {m} n<m n[σ]<m[σ]
-    = Snoc-≡⁺ (trans (Fill>>Weaken _ _ n[σ]<m[σ]) (sym id-r)) refl
-
-
-  Keep>>Keep : {m≡n : m ≡ sub σ n} {n≡o : n ≡ sub τ o} {m≡o : m ≡ sub (σ >> τ) o}
-    → Keep {n = n} σ m≡n >> Keep {n = o} τ n≡o
-    ≡ Keep (σ >> τ) m≡o
-  Keep>>Keep = Snoc-≡⁺ Keep>>Weaken refl
-
-
-  Skip>>Weaken : Skip {n = n} >> Weaken σ ≡ Weaken (Weaken σ)
-  Skip>>Weaken = trans Snoc>>Weaken (trans Weaken>> (cong Weaken Wk>>))
-
-
-  Skip>>Keep′ : Skip >> Keep′ {n = n} σ ≡ Keep′ (Keep′ σ) >> Skip
-  Skip>>Keep′
-    = Snoc-≡⁺
-        (trans Skip>>Weaken (sym (trans Keep>>Weaken
-          (cong Weaken (trans Snoc>>Weaken id-r)))))
-        refl
-
-
-  Keep-Id : {m≡m : m ≡ sub Id m} → Keep Id m≡m ≡ Id
-  Keep-Id = Snoc-≡⁺ refl refl
-
-
-  Keep′Fill>>Wk>>Wk : {n<m : n < m} → Keep′ {n = o} (Fill n n<m) >> (Wk >> Wk) ≡ Wk
-  Keep′Fill>>Wk>>Wk {n = n} {m} {n<m = n<m} = let open ≡-Reasoning in
-    begin
-      Keep′ (Fill n n<m) >> (Wk >> Wk)
-    ≡⟨ cong (Keep′ (Fill n n<m) >>_) Wk>>  ⟩
-      Keep′ (Fill n n<m) >> (Weaken Wk)
-    ≡⟨ Keep>>Weaken  ⟩
-      Weaken (Fill n n<m >> Weaken Id)
-    ≡⟨ cong Weaken (Fill>>Weaken n m n<m) ⟩
-      Wk
-    ∎
-
-
-  Keep′Fill>>Skip : {n<m : n < m} {v0<m : var zero < sub Wk m}
-    → Keep′ (Fill n n<m) >> Skip ≡ Fill (var zero) v0<m >> Keep′ Wk
-  Keep′Fill>>Skip {n = n} {n<m = n<m} {v0<m} = Snoc-≡⁺ go refl
-    where
-      go : Keep′ (Fill n n<m) >> Weaken Wk ≡ Fill (var zero) v0<m >> Weaken Wk
-      go = let open ≡-Reasoning in
-        begin
-          Keep′ (Fill n n<m) >> Weaken Wk
-        ≡⟨ Keep>>Weaken ⟩
-          Weaken (Fill n n<m >> Weaken Id)
-        ≡⟨ cong Weaken (Fill>>Wk _ _ _) ⟩
-          Wk
-        ≡⟨ sym (Fill>>Weaken _ _ _) ⟩
-          Fill (var zero) v0<m >> Weaken Wk
-        ∎
-
-
-  Keep′Keep′>>Skip : Keep′ (Keep′ {n = n} σ) >> Skip ≡ Skip >> Keep′ σ
-  Keep′Keep′>>Skip = Snoc-≡⁺
-    (trans Keep>>Weaken (sym (trans Skip>>Weaken (cong Weaken (sym Snoc>>Wk)))))
-    refl
+  sub->> : ∀ n → ι ≡ σ >> τ
+    → sub ι n ≡ sub σ (sub τ n)
+  sub->> {σ = σ} {τ} (var x) refl = subV->> σ τ x
+  sub->> ∞ _ = refl
+  sub->> ⋆ _ = refl
+  sub->> zero _ = refl
+  sub->> {σ = σ} {τ} (suc n) p = cong suc (sub->> n p)
 
 
   sub->>′ : σ >> τ ≡ σ′ >> τ′ → sub σ (sub τ n) ≡ sub σ′ (sub τ′ n)
   sub->>′ {σ = σ} {τ = τ} {σ′ = σ′} {τ′} {n} eq
     = trans (sym (sub->> n refl))
         (trans (cong (λ σ → sub σ n) eq) (sub->> n refl))
+
+
+  >>⊢ : σ ∶ Δ ⇒ Δ′ → τ ∶ Δ′ ⇒ Δ″ → σ >> τ ∶ Δ ⇒ Δ″
+  >>⊢ ⊢σ ([] ⊢Δ) = [] (σ∶Δ⇒Ω→⊢Δ ⊢σ)
+  >>⊢ {σ = σ} ⊢σ (Snoc {m = m} {τ} {n} ⊢m ⊢τ n<m ⊢n)
+    = Snoc ⊢m (>>⊢ ⊢σ ⊢τ)
+        (subst (sub σ n <_) (sym (sub->> m refl)) (sub-resp-< ⊢σ n<m))
+        (sub-resp-⊢ ⊢σ ⊢n)
+
+
+Skip : Sub (Δ ∙ n ∙ v0) (Δ ∙ n)
+Skip = Snoc (Weaken Wk) (var zero)
+
+
+abstract
+  Skip⊢ : Δ ⊢ n → Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
+  Skip⊢ {n = n} ⊢n
+    = Snoc ⊢n (Weaken⊢ (var zero ⊢Δ∙n) (Wk⊢ ⊢n))
+        (var _ refl (<→≤ (var _ refl
+          (reflexive (sym (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))))
+        (var zero (Snoc ⊢Δ∙n (var zero ⊢Δ∙n)))
+    where
+      ⊢Δ∙n = Δ⊢n→⊢Δ∙n ⊢n
+
+
+  Weaken>> : Weaken σ >> τ ≡ Weaken {n = n} (σ >> τ)
+  Weaken>> {τ = []} = refl
+  Weaken>> {σ = σ} {τ = Snoc τ n} = cong₂ Snoc Weaken>>  (sub-Weaken σ n)
+
+
+  Snoc>>Weaken : Snoc {m = m} σ n >> Weaken τ ≡ σ >> τ
+  Snoc>>Weaken {τ = []} = refl
+  Snoc>>Weaken {σ = σ} {n = n} {τ = Snoc τ k}
+    = cong₂ Snoc Snoc>>Weaken (sub-Snoc σ n k)
+
+
+  id-l : Id >> σ ≡ σ
+  id-l {σ = []} = refl
+  id-l {σ = Snoc σ n} = cong₂ Snoc id-l (sub-Id n refl)
+
+
+  id-r : {σ : Sub Δ Ω} → σ >> Id ≡ σ
+  id-r {σ = []} = refl
+  id-r {σ = Snoc σ n} = cong₂ Snoc (trans Snoc>>Weaken id-r) refl
+
+
+  >>-assoc : σ >> (τ >> ι) ≡ σ >> τ >> ι
+  >>-assoc {ι = []} = refl
+  >>-assoc {σ = σ} {τ = τ} {ι = Snoc ι n}
+    = cong₂ Snoc >>-assoc (sym (sub->> n refl))
+
+
+  Wk>> : Wk >> σ ≡ Weaken {n = n} σ
+  Wk>> = trans Weaken>> (cong Weaken id-l)
+
+
+  Snoc>>Wk : Snoc {m = m} σ n >> Wk ≡ σ
+  Snoc>>Wk = trans Snoc>>Weaken id-r
+
+
+  Keep>>Weaken : Keep {m = m} {n} σ >> Weaken τ ≡ Weaken (σ >> τ)
+  Keep>>Weaken = trans Snoc>>Weaken Weaken>>
+
+
+  Keep>>Wk : Keep {m = m} {n} σ >> Wk ≡ Wk >> σ
+  Keep>>Wk = trans Keep>>Weaken (trans (sym Wk>>) (cong (Wk >>_) id-r))
+
+
+  Fill>>Weaken : Fill {m = m} n >> Weaken σ ≡ σ
+  Fill>>Weaken = trans Snoc>>Weaken id-l
+
+
+  Fill>>Wk : Fill {m = m} n >> Wk ≡ Id
+  Fill>>Wk = trans Snoc>>Weaken id-r
+
+
+  Fill>>Keep : ∀ n → Fill (sub σ n) >> Keep {m = m} {o} σ ≡ σ >> Fill n
+  Fill>>Keep n = cong₂ Snoc (trans Fill>>Weaken (sym id-r)) refl
+
+
+  Keep>>Keep : Keep {m = m} {n} σ >> Keep {n = o} τ ≡ Keep (σ >> τ)
+  Keep>>Keep = cong₂ Snoc Keep>>Weaken refl
+
+
+  Skip>>Weaken : Skip {n = n} >> Weaken σ ≡ Weaken (Weaken σ)
+  Skip>>Weaken = trans Snoc>>Weaken (trans Weaken>> (cong Weaken Wk>>))
+
+
+  Skip>>Keep : Skip >> Keep {m = m} {n} σ ≡ Keep (Keep σ) >> Skip
+  Skip>>Keep
+    = cong₂ Snoc
+        (trans Skip>>Weaken
+          (sym (trans Keep>>Weaken (cong Weaken (trans Snoc>>Weaken id-r)))))
+      refl
+
+
+  Keep-Id : Keep {m = m} Id ≡ Id
+  Keep-Id = refl
+
+
+  KeepFill>>Wk>>Wk : Keep {m = o} {m} (Fill n) >> (Wk >> Wk) ≡ Wk
+  KeepFill>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
+    begin
+      Keep (Fill n) >> (Wk >> Wk)
+    ≡⟨ cong (Keep (Fill n) >>_) Wk>> ⟩
+      Keep (Fill n) >> (Weaken Wk)
+    ≡⟨ Keep>>Weaken ⟩
+      Weaken (Fill n >> Weaken Id)
+    ≡⟨ cong Weaken Fill>>Weaken ⟩
+      Wk
+    ∎
+
+
+  KeepFill>>Skip
+    : Keep {m = m} (Fill {m = m} n) >> Skip ≡ Fill {m = o} (var zero) >> Keep Wk
+  KeepFill>>Skip {n = n} = cong₂ Snoc go refl
+    where
+      go : Keep (Fill n) >> Weaken Wk ≡ Fill (var zero) >> Weaken Wk
+      go = let open ≡-Reasoning in
+        begin
+          Keep (Fill n) >> Weaken Wk
+        ≡⟨ Keep>>Weaken ⟩
+          Weaken (Fill n >> Weaken Id)
+        ≡⟨ cong Weaken Fill>>Wk ⟩
+          Wk
+        ≡⟨ sym Fill>>Weaken ⟩
+          Fill (var zero) >> Weaken Wk
+        ∎
+
+
+  KeepKeep>>Skip : Keep (Keep {m = m} {n} σ) >> Skip ≡ Skip >> Keep σ
+  KeepKeep>>Skip
+    = cong₂ Snoc (trans Keep>>Weaken
+        (sym (trans Skip>>Weaken (cong Weaken (sym Snoc>>Wk))))) refl
