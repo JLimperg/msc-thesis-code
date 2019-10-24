@@ -1,6 +1,17 @@
 module everything where
 
 import irreflexive-<
+import Model.Exponential
+import Model.Nat
+import Model.Product
+import Model.Quantification
+import Model.RGraph
+import Model.Size
+import Model.Stream
+import Model.Term
+import Model.Terminal
+import Model.Type
+import Model.Type.Core
 import Ordinal.HoTT
 import Ordinal.Shulman
 import Source.Reduction
