@@ -35,7 +35,7 @@ open S.Size
 open S.Sub
 open S.Sub⊢ᵤ
 open S.Var
-open S._<_
+open S._<_ hiding (<-trans)
 open S._≤_
 
 
@@ -325,6 +325,10 @@ abstract
   szero<ssuc nat<∞ = nat (ℕ.s≤s ℕ.z≤n)
 
 
+  n<ssucn : n < ∞ → n < ssuc n
+  n<ssucn nat<∞ = nat (ℕ.s≤s ℕ.≤-refl)
+
+
 ssucF : Functor Sizes Sizes
 ssucF = record
   { fobj = ssuc
@@ -531,13 +535,12 @@ abstract
 
   mutual
     ⟦<⟧ : {n m : S.Size Δ} → n S.< m → ⟦ n ⟧n <F ⟦ m ⟧n
-    ⟦<⟧ (var {x = x} b refl b≤n) = <→≤→< (⟦<⟧ₓ x) (⟦≤⟧ b≤n)
-    ⟦<⟧ (zero<suc n n<∞) = szero<ssuc (⟦<⟧ n<∞)
+    ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
+    ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
     ⟦<⟧ zero<∞ = nat<∞
     ⟦<⟧ (suc<∞ n n<∞) = ssuc-resp-< (⟦<⟧ n<∞)
-    ⟦<⟧ zero<⋆ = nat<⋆
-    ⟦<⟧ (suc<⋆ n n<∞) = ssuc-resp-< (<-trans (⟦<⟧ n<∞) ∞<⋆)
     ⟦<⟧ ∞<⋆ = ∞<⋆
+    ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
 
 
     ⟦≤⟧ : {n m : S.Size Δ} → n S.≤ m → ⟦ n ⟧n ≤F ⟦ m ⟧n

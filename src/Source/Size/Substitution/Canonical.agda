@@ -62,32 +62,29 @@ abstract
 
   mutual
     subV-resp-< : σ ∶ Δ ⇒ Ω → var x < n → subV σ x < sub σ n
-    subV-resp-< {x = zero {n = m}} {k} (Snoc {σ = σ} {n} ⊢m ⊢σ n<m ⊢n)
-      (var _ refl m≤k)
-      = <→≤→< n<m
-          (subst (_≤ sub (Snoc _ _) k) (sub-Snoc σ n m)
-            (sub-resp-≤ (Snoc ⊢m ⊢σ n<m ⊢n) m≤k))
-    subV-resp-< {x = suc {n = m} x} {k} (Snoc {σ = σ} {n} ⊢m ⊢σ n<m ⊢n)
-      (var _ refl b≤n)
-      = <→≤→< (subV-resp-< ⊢σ (var _ refl ≤-refl))
-          (subst (_≤ sub (Snoc σ n) k) (sub-Snoc σ n (bound x))
-            (sub-resp-≤ (Snoc ⊢m ⊢σ n<m ⊢n) b≤n))
+    subV-resp-< {x = zero} (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n) (var _ refl)
+      = subst (n <_) (sym (sub-Snoc σ n m)) n<m
+    subV-resp-< {x = suc x} (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n) (var _ refl)
+      = subst (subV σ x <_) (sym (sub-Snoc σ n (bound x)))
+          (subV-resp-< ⊢σ (var _ refl))
+    subV-resp-< ⊢σ (<suc .(var _) x<n) = <suc _ (sub-resp-< ⊢σ x<n)
+    subV-resp-< ⊢σ (<-trans x<m m<n)
+      = <-trans (subV-resp-< ⊢σ x<m) (sub-resp-< ⊢σ m<n)
 
 
     sub-resp-< : σ ∶ Δ ⇒ Ω → n < m → sub σ n < sub σ m
-    sub-resp-< ⊢σ (var b b≡bx b≤n) = subV-resp-< ⊢σ (var b b≡bx b≤n)
-    sub-resp-< {σ = σ} ⊢σ (zero<suc n n<∞)
-      = zero<suc (sub σ n) (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ (var b b≡bx) = subV-resp-< ⊢σ (var b b≡bx)
+    sub-resp-< ⊢σ (<suc n n<∞) = <suc _ (sub-resp-< ⊢σ n<∞)
     sub-resp-< ⊢σ zero<∞ = zero<∞
-    sub-resp-< {σ = σ} ⊢σ (suc<∞ n n<∞) = suc<∞ (sub σ n) (sub-resp-< ⊢σ n<∞)
-    sub-resp-< {σ = σ} ⊢σ zero<⋆ = zero<⋆
-    sub-resp-< {σ = σ} ⊢σ (suc<⋆ n n<∞) = suc<⋆ (sub σ n) (sub-resp-< ⊢σ n<∞)
-    sub-resp-< {σ = σ} ⊢σ ∞<⋆ = ∞<⋆
+    sub-resp-< ⊢σ (suc<∞ n n<∞) = suc<∞ _ (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ ∞<⋆ = ∞<⋆
+    sub-resp-< ⊢σ (<-trans n<m m<o)
+      = <-trans (sub-resp-< ⊢σ n<m) (sub-resp-< ⊢σ m<o)
 
 
-    sub-resp-≤ : σ ∶ Δ ⇒ Ω → n ≤ m → sub σ n ≤ sub σ m
-    sub-resp-≤ ⊢σ (<→≤ n<m) = <→≤ (sub-resp-< ⊢σ n<m)
-    sub-resp-≤ ⊢σ ≤-refl = ≤-refl
+  sub-resp-≤ : σ ∶ Δ ⇒ Ω → n ≤ m → sub σ n ≤ sub σ m
+  sub-resp-≤ ⊢σ (<→≤ n<m) = <→≤ (sub-resp-< ⊢σ n<m)
+  sub-resp-≤ ⊢σ ≤-refl = ≤-refl
 
 
   subV-resp-⊢ : σ ∶ Δ ⇒ Ω → ∀ x → Δ ⊢ subV σ x
@@ -138,7 +135,7 @@ abstract
   Keep⊢ : σ ∶ Δ ⇒ Ω → Ω ⊢ n → m ≡ sub σ n → Keep σ ∶ Δ ∙ m ⇒ Ω ∙ n
   Keep⊢ {Δ} {σ = σ} {n} ⊢σ ⊢n refl
     = Snoc ⊢n (Weaken⊢ ⊢m ⊢σ)
-        (var _ refl (reflexive (sym (sub-Weaken σ n))))
+        (var (sub (Weaken σ) n) (sub-Weaken σ n))
         (var zero (Δ⊢n→⊢Δ∙n ⊢m))
     where
       ⊢m = sub-resp-⊢ ⊢σ ⊢n
@@ -167,11 +164,7 @@ mutual
 abstract
   Id⊢ : ⊢ Δ → Id ∶ Δ ⇒ Δ
   Id⊢ [] = [] []
-  Id⊢ (Snoc {n = n} ⊢Δ ⊢n)
-    = Snoc ⊢n (Weaken⊢ ⊢n (Id⊢ ⊢Δ))
-        (var _ refl
-          (reflexive (sym (trans (sub-Weaken Id n) (cong wk (sub-Id n refl))))))
-        (var zero (Δ⊢n→⊢Δ∙n ⊢n))
+  Id⊢ (Snoc {n = n} ⊢Δ ⊢n) = Keep⊢ (Id⊢ ⊢Δ) ⊢n (sym (sub-Id n refl))
 
 
 Wk : Sub (Δ ∙ n) Δ
@@ -240,8 +233,8 @@ abstract
   Skip⊢ : Δ ⊢ n → Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
   Skip⊢ {n = n} ⊢n
     = Snoc ⊢n (Weaken⊢ (var zero ⊢Δ∙n) (Wk⊢ ⊢n))
-        (var _ refl (<→≤ (var _ refl
-          (reflexive (sym (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))))
+        (<→≤→< (var v1 refl) (<→≤
+          (var (sub (Weaken Wk) n) (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))
         (var zero (Snoc ⊢Δ∙n (var zero ⊢Δ∙n)))
     where
       ⊢Δ∙n = Δ⊢n→⊢Δ∙n ⊢n
