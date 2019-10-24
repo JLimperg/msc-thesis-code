@@ -6,7 +6,6 @@ open import Induction.WellFounded public using
   ; module TransitiveClosure ; module Lexicographic )
 
 open import Relation.Binary using (Rel)
-open import Relation.Binary.Construct.Intersection using (_∩_)
 
 open import Util.HoTT.HLevel using (IsProp ; ∀-IsProp)
 open import Util.HoTT.Univalence using (funext)
@@ -113,19 +112,48 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
           _
 
 
-    wfIndΣ : ∀ {γ} (P : A → Set γ)
-      → (Q : ∀ x y → P x → P y → Set)
-      → (f : ∀ x
-          → (g : ∀ y → y < x → P y)
-          → (∀ y y<x z z<x → Q y z (g y y<x) (g z z<x))
-          → P x)
-      → (∀ x g g-resp y h h-resp
-          → (∀ z z<x z′ z′<y → Q z z′ (g z z<x) (h z′ z′<y))
-          → Q x y (f x g g-resp) (f y h h-resp))
-      → Σ[ f ∈ (∀ x → P x) ] (∀ x y → Q x y (f x) (f y))
-    wfIndΣ P Q f f-resp
-      = (λ x → wfIndΣ-acc P Q f f-resp x (<-wf x))
-      , λ x y → wfIndΣ-acc-resp P Q f f-resp x (<-wf x) y (<-wf y)
+    module _ {γ} (P : A → Set γ)
+      (Q : ∀ x y → P x → P y → Set)
+      (f : ∀ x
+        → (g : ∀ y → y < x → P y)
+        → (∀ y y<x z z<x → Q y z (g y y<x) (g z z<x))
+        → P x)
+      (f-resp : ∀ x g g-resp y h h-resp
+        → (∀ z z<x z′ z′<y → Q z z′ (g z z<x) (h z′ z′<y))
+        → Q x y (f x g g-resp) (f y h h-resp))
+      where
+
+      wfIndΣ : Σ[ f ∈ (∀ x → P x) ] (∀ x y → Q x y (f x) (f y))
+      wfIndΣ
+        = (λ x → wfIndΣ-acc P Q f f-resp x (<-wf x))
+        , λ x y → wfIndΣ-acc-resp P Q f f-resp x (<-wf x) y (<-wf y)
+
+
+      wfIndΣ-unfold : ∀ {x}
+        → wfIndΣ .proj₁ x
+        ≡ f x (λ y y<x → wfIndΣ .proj₁ y)
+            (λ y y<x z z<x → wfIndΣ .proj₂ y z)
+      wfIndΣ-unfold {x} with <-wf x
+      ... | acc rs
+        = go rs (λ y y<x → <-wf y)
+        where
+          go : (p q : (y : A) → y < x → Acc _<_ y)
+            → f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (p y y<x))
+                (λ y y<x z z<x
+                  → wfIndΣ-acc-resp P Q f f-resp y (p y y<x) z (p z z<x))
+            ≡ f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (q y y<x))
+                (λ y y<x z z<x
+                  → wfIndΣ-acc-resp P Q f f-resp y (q y y<x) z (q z z<x))
+          go p q
+            rewrite (funext λ y → funext λ y<x → Acc-IsProp (p y y<x) (q y y<x))
+            = refl
+
+
+      wfIndΣ′ : Σ[ g ∈ (∀ x → P x) ]
+        Σ[ g-param ∈ (∀ x y → Q x y (g x) (g y)) ]
+          (∀ {x} → g x ≡ f x (λ y y<x → g y) (λ y y<x z z<x → g-param y z))
+      wfIndΣ′ = wfIndΣ .proj₁ , wfIndΣ .proj₂ , wfIndΣ-unfold
+
 
   open Build public
 
