@@ -71,6 +71,7 @@ n ≥ m = m ≤ n
 pattern ≤-refl = reflexive refl
 pattern v0 = var zero
 pattern v1 = var (suc zero)
+pattern v2 = var (suc (suc zero))
 
 
 abstract

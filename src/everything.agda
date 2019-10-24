@@ -15,6 +15,7 @@ import Model.Type.Core
 import Ordinal.HoTT
 import Ordinal.Shulman
 import Source.Reduction
+import Source.Examples
 import Source.Size
 import Source.Size.Substitution.Canonical
 import Source.Size.Substitution.Theory
