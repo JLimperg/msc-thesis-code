@@ -32,25 +32,14 @@ sub σ (suc n) = suc (sub σ n)
 
 
 data Sub⊢ Δ : ∀ Ω (σ : Sub Δ Ω) → Set where
-  [] : (⊢Δ : ⊢ Δ) → Sub⊢ Δ [] σ
-  Snoc : (⊢m : Ω ⊢ m) (⊢σ : Sub⊢ Δ Ω σ) (n<m : n < sub σ m) (⊢n : Δ ⊢ n)
-    → Sub⊢ Δ (Ω ∙ m) (Snoc σ n)
+  [] : Sub⊢ Δ [] []
+  Snoc : (⊢σ : Sub⊢ Δ Ω σ) (n<m : n < sub σ m) → Sub⊢ Δ (Ω ∙ m) (Snoc σ n)
 
 
 syntax Sub⊢ Δ Ω σ = σ ∶ Δ ⇒ Ω
 
 
 abstract
-  σ∶Δ⇒Ω→⊢Δ : σ ∶ Δ ⇒ Ω → ⊢ Δ
-  σ∶Δ⇒Ω→⊢Δ ([] ⊢Δ) = ⊢Δ
-  σ∶Δ⇒Ω→⊢Δ (Snoc ⊢m ⊢σ n<m ⊢n) = Δ⊢n→⊢Δ ⊢n
-
-
-  σ∶Δ⇒Ω→⊢Ω : σ ∶ Δ ⇒ Ω → ⊢ Ω
-  σ∶Δ⇒Ω→⊢Ω ([] ⊢Δ) = []
-  σ∶Δ⇒Ω→⊢Ω (Snoc ⊢m ⊢σ n<m ⊢n) = Snoc (σ∶Δ⇒Ω→⊢Ω ⊢σ) ⊢m
-
-
   sub-Snoc : ∀ (σ : Sub Δ Ω) n o
     → sub (Snoc {m = m} σ n) (wk o) ≡ sub σ o
   sub-Snoc σ n (var x) = refl
@@ -62,9 +51,9 @@ abstract
 
   mutual
     subV-resp-< : σ ∶ Δ ⇒ Ω → var x < n → subV σ x < sub σ n
-    subV-resp-< {x = zero} (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n) (var _ refl)
+    subV-resp-< {x = zero} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var _ refl)
       = subst (n <_) (sym (sub-Snoc σ n m)) n<m
-    subV-resp-< {x = suc x} (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n) (var _ refl)
+    subV-resp-< {x = suc x} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var _ refl)
       = subst (subV σ x <_) (sym (sub-Snoc σ n (bound x)))
           (subV-resp-< ⊢σ (var _ refl))
     subV-resp-< ⊢σ (<suc .(var _) x<n) = <suc _ (sub-resp-< ⊢σ x<n)
@@ -87,19 +76,6 @@ abstract
   sub-resp-≤ ⊢σ ≤-refl = ≤-refl
 
 
-  subV-resp-⊢ : σ ∶ Δ ⇒ Ω → ∀ x → Δ ⊢ subV σ x
-  subV-resp-⊢ (Snoc ⊢m ⊢σ n<m ⊢n) zero = ⊢n
-  subV-resp-⊢ (Snoc ⊢m ⊢σ n<m ⊢n) (suc x) = subV-resp-⊢ ⊢σ x
-
-
-  sub-resp-⊢ : σ ∶ Δ ⇒ Ω → Ω ⊢ n → Δ ⊢ sub σ n
-  sub-resp-⊢ ⊢σ (var x ⊢Δ) = subV-resp-⊢ ⊢σ x
-  sub-resp-⊢ ⊢σ (∞ ⊢Ω) = ∞ (σ∶Δ⇒Ω→⊢Δ ⊢σ)
-  sub-resp-⊢ ⊢σ (⋆ ⊢Ω) = ⋆ (σ∶Δ⇒Ω→⊢Δ ⊢σ)
-  sub-resp-⊢ ⊢σ (zero ⊢Ω) = zero (σ∶Δ⇒Ω→⊢Δ ⊢σ)
-  sub-resp-⊢ ⊢σ (suc n<∞ ⊢n) = suc (sub-resp-< ⊢σ n<∞) (sub-resp-⊢ ⊢σ ⊢n)
-
-
 Weaken : Sub Δ Ω → Sub (Δ ∙ n) Ω
 Weaken [] = []
 Weaken (Snoc σ m) = Snoc (Weaken σ) (wk m)
@@ -119,12 +95,11 @@ abstract
   sub-Weaken σ (suc n) = cong suc (sub-Weaken σ n)
 
 
-  Weaken⊢ : Δ ⊢ n → σ ∶ Δ ⇒ Ω → Weaken σ ∶ Δ ∙ n ⇒ Ω
-  Weaken⊢ ⊢n ([] ⊢Δ) = [] (Snoc ⊢Δ ⊢n)
-  Weaken⊢ ⊢n (Snoc {m = m} {σ} {n} ⊢m ⊢σ n<m ⊢n₀)
-    = Snoc ⊢m (Weaken⊢ ⊢n ⊢σ)
+  Weaken⊢ : σ ∶ Δ ⇒ Ω → Weaken σ ∶ Δ ∙ n ⇒ Ω
+  Weaken⊢ [] = []
+  Weaken⊢ (Snoc {σ = σ} {n} {m} ⊢σ n<m)
+    = Snoc (Weaken⊢ ⊢σ)
         (subst (wk n <_) (sym (sub-Weaken σ m)) (wk-resp-< n<m))
-        (wk-resp-⊢ ⊢n₀ ⊢n)
 
 
 Keep : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
@@ -132,13 +107,10 @@ Keep σ = Snoc (Weaken σ) (var zero)
 
 
 abstract
-  Keep⊢ : σ ∶ Δ ⇒ Ω → Ω ⊢ n → m ≡ sub σ n → Keep σ ∶ Δ ∙ m ⇒ Ω ∙ n
-  Keep⊢ {Δ} {σ = σ} {n} ⊢σ ⊢n refl
-    = Snoc ⊢n (Weaken⊢ ⊢m ⊢σ)
+  Keep⊢ : σ ∶ Δ ⇒ Ω → m ≡ sub σ n → Keep σ ∶ Δ ∙ m ⇒ Ω ∙ n
+  Keep⊢ {Δ} {σ = σ} {n = n} ⊢σ refl
+    = Snoc (Weaken⊢ ⊢σ)
         (var (sub (Weaken σ) n) (sub-Weaken σ n))
-        (var zero (Δ⊢n→⊢Δ∙n ⊢m))
-    where
-      ⊢m = sub-resp-⊢ ⊢σ ⊢n
 
 
 mutual
@@ -162,9 +134,9 @@ mutual
 
 
 abstract
-  Id⊢ : ⊢ Δ → Id ∶ Δ ⇒ Δ
-  Id⊢ [] = [] []
-  Id⊢ (Snoc {n = n} ⊢Δ ⊢n) = Keep⊢ (Id⊢ ⊢Δ) ⊢n (sym (sub-Id n refl))
+  Id⊢ : Id ∶ Δ ⇒ Δ
+  Id⊢ {[]} = []
+  Id⊢ {Δ ∙ n} = Keep⊢ Id⊢ (sym (sub-Id _ refl))
 
 
 Wk : Sub (Δ ∙ n) Δ
@@ -176,8 +148,8 @@ abstract
   sub-Wk n = trans (sub-Weaken Id n) (cong wk (sub-Id _ refl))
 
 
-  Wk⊢ : Δ ⊢ n → Wk ∶ Δ ∙ n ⇒ Δ
-  Wk⊢ ⊢n = Weaken⊢ ⊢n (Id⊢ (Δ⊢n→⊢Δ ⊢n))
+  Wk⊢ : Wk ∶ Δ ∙ n ⇒ Δ
+  Wk⊢ = Weaken⊢ Id⊢
 
 
 Fill : Size Δ → Sub Δ (Δ ∙ m)
@@ -185,9 +157,9 @@ Fill n = Snoc Id n
 
 
 abstract
-  Fill⊢ : Δ ⊢ n → Δ ⊢ m → n < m → Fill n ∶ Δ ⇒ Δ ∙ m
-  Fill⊢ {n = n} ⊢n ⊢m n<m
-    = Snoc ⊢m (Id⊢ (Δ⊢n→⊢Δ ⊢m)) (subst (n <_) (sym (sub-Id _ refl)) n<m) ⊢n
+  Fill⊢ : n < m → Fill n ∶ Δ ⇒ Δ ∙ m
+  Fill⊢ {n = n} n<m
+    = Snoc Id⊢ (subst (n <_) (sym (sub-Id _ refl)) n<m)
 
 
 _>>_ : Sub Δ Δ′ → Sub Δ′ Δ″ → Sub Δ Δ″
@@ -218,11 +190,10 @@ abstract
 
 
   >>⊢ : σ ∶ Δ ⇒ Δ′ → τ ∶ Δ′ ⇒ Δ″ → σ >> τ ∶ Δ ⇒ Δ″
-  >>⊢ ⊢σ ([] ⊢Δ) = [] (σ∶Δ⇒Ω→⊢Δ ⊢σ)
-  >>⊢ {σ = σ} ⊢σ (Snoc {m = m} {τ} {n} ⊢m ⊢τ n<m ⊢n)
-    = Snoc ⊢m (>>⊢ ⊢σ ⊢τ)
+  >>⊢ ⊢σ [] = []
+  >>⊢ {σ = σ} ⊢σ (Snoc {σ = τ} {n} {m} ⊢τ n<m)
+    = Snoc (>>⊢ ⊢σ ⊢τ)
         (subst (sub σ n <_) (sym (sub->> m refl)) (sub-resp-< ⊢σ n<m))
-        (sub-resp-⊢ ⊢σ ⊢n)
 
 
 Skip : Sub (Δ ∙ n ∙ v0) (Δ ∙ n)
@@ -230,14 +201,11 @@ Skip = Snoc (Weaken Wk) (var zero)
 
 
 abstract
-  Skip⊢ : Δ ⊢ n → Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
-  Skip⊢ {n = n} ⊢n
-    = Snoc ⊢n (Weaken⊢ (var zero ⊢Δ∙n) (Wk⊢ ⊢n))
+  Skip⊢ : Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
+  Skip⊢ {n = n}
+    = Snoc (Weaken⊢ Wk⊢)
         (<→≤→< (var v1 refl) (<→≤
           (var (sub (Weaken Wk) n) (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))
-        (var zero (Snoc ⊢Δ∙n (var zero ⊢Δ∙n)))
-    where
-      ⊢Δ∙n = Δ⊢n→⊢Δ∙n ⊢n
 
 
   Weaken>> : Weaken σ >> τ ≡ Weaken {n = n} (σ >> τ)

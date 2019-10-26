@@ -53,25 +53,25 @@ variable σ τ ι : Sub Δ Ω
 
 
 data Sub⊢ᵤ : ∀ Δ Ω → Sub Δ Ω → Set where
-  Id : (⊢Δ : ⊢ Δ) → Sub⊢ᵤ Δ Δ Id
+  Id : Sub⊢ᵤ Δ Δ Id
   comp : (⊢σ : Sub⊢ᵤ Δ Δ′ σ) (⊢τ : Sub⊢ᵤ Δ′ Δ″ τ) → Sub⊢ᵤ Δ Δ″ (σ >> τ)
-  Wk : (⊢n : Δ ⊢ n) → Sub⊢ᵤ (Δ ∙ n) Δ Wk
-  Keep : (⊢σ : Sub⊢ᵤ Δ Ω σ) (⊢n : Ω ⊢ n) (m≡n[σ] : m ≡ sub σ n)
+  Wk : Sub⊢ᵤ (Δ ∙ n) Δ Wk
+  Keep : (⊢σ : Sub⊢ᵤ Δ Ω σ) (m≡n[σ] : m ≡ sub σ n)
     → Sub⊢ᵤ (Δ ∙ m) (Ω ∙ n) (Keep σ)
-  Fill : (⊢n : Δ ⊢ n) (⊢m : Δ ⊢ m) (n<m : n < m) → Sub⊢ᵤ Δ (Δ ∙ m) (Fill n)
-  Skip : (⊢n : Δ ⊢ n) → Sub⊢ᵤ (Δ ∙ n ∙ v0) (Δ ∙ n) Skip
+  Fill : (n<m : n < m) → Sub⊢ᵤ Δ (Δ ∙ m) (Fill n)
+  Skip : Sub⊢ᵤ (Δ ∙ n ∙ v0) (Δ ∙ n) Skip
 
 
 syntax Sub⊢ᵤ Δ Ω σ = σ ∶ Δ ⇒ᵤ Ω
 
 
 ⟨⟩-resp-⊢ : σ ∶ Δ ⇒ᵤ Ω → ⟨ σ ⟩ ∶ Δ ⇒ Ω
-⟨⟩-resp-⊢ (Id ⊢Δ) = Can.Id⊢ ⊢Δ
+⟨⟩-resp-⊢ Id = Can.Id⊢
 ⟨⟩-resp-⊢ (comp ⊢σ ⊢τ) = Can.>>⊢ (⟨⟩-resp-⊢ ⊢σ) (⟨⟩-resp-⊢ ⊢τ)
-⟨⟩-resp-⊢ (Wk ⊢n) = Can.Wk⊢ ⊢n
-⟨⟩-resp-⊢ (Keep ⊢σ ⊢n m≡n[σ]) = Can.Keep⊢ (⟨⟩-resp-⊢ ⊢σ) ⊢n m≡n[σ]
-⟨⟩-resp-⊢ (Fill ⊢n ⊢m n<m) = Can.Fill⊢ ⊢n ⊢m n<m
-⟨⟩-resp-⊢ (Skip ⊢n) = Can.Skip⊢ ⊢n
+⟨⟩-resp-⊢ Wk = Can.Wk⊢
+⟨⟩-resp-⊢ (Keep ⊢σ m≡n[σ]) = Can.Keep⊢ (⟨⟩-resp-⊢ ⊢σ) m≡n[σ]
+⟨⟩-resp-⊢ (Fill n<m) = Can.Fill⊢ n<m
+⟨⟩-resp-⊢ Skip = Can.Skip⊢
 
 
 record _≈_ (σ τ : Sub Δ Ω) : Set where

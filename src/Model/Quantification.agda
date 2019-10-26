@@ -5,7 +5,6 @@ open import Model.RGraph as RG using (RGraph)
 open import Model.Size as MS using (_<_) renaming
   ( ⟦_⟧ΔRG to ⟦_⟧Δ ; ⟦_⟧nRG to ⟦_⟧n ; ⟦_⟧σRG to ⟦_⟧σ)
 open import Model.Type.Core
-open import Source.Size using (_⊢_ ; ⊢_)
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SS using (Sub⊢ᵤ)
 open import Util.HoTT.Equiv
@@ -116,10 +115,9 @@ abstract
 
 
 absₛ : ∀ {Δ n} {Γ : ⟦Type⟧ ⟦ Δ ⟧Δ} {T : ⟦Type⟧ ⟦ Δ ∙ n ⟧Δ}
-  → (⊢n : Δ ⊢ n)
-  → subT ⟦ SS.Wk ⊢n ⟧σ Γ ⇒ T
+  → subT ⟦ SS.Wk ⟧σ Γ ⇒ T
   → Γ ⇒ ⟦∀⟧ n T
-absₛ {Δ} {n} {Γ} {T} ⊢n f = record
+absₛ {Δ} {n} {Γ} {T} f = record
   { fobj = λ {δ} x → record
     { arr = λ m m<n → f .fobj x
     ; param = λ m m<n m′ m′<n → f .feq _ (Γ .eq-refl x)
@@ -129,12 +127,10 @@ absₛ {Δ} {n} {Γ} {T} ⊢n f = record
 
 
 appₛ : ∀ {Δ n m} {Γ : ⟦Type⟧ ⟦ Δ ⟧Δ} {T : ⟦Type⟧ ⟦ Δ ∙ n ⟧Δ}
-  → (⊢n : Δ ⊢ n)
-  → (⊢m : Δ ⊢ m)
   → (m<n : m SS.< n)
   → Γ ⇒ ⟦∀⟧ n T
-  → Γ ⇒ subT ⟦ SS.Fill ⊢m ⊢n m<n ⟧σ T
-appₛ {m = m} {T = T} ⊢n ⊢m m<n f = record
+  → Γ ⇒ subT ⟦ SS.Fill m<n ⟧σ T
+appₛ {m = m} {T = T} m<n f = record
   { fobj = λ {δ} x → f .fobj x .arr (⟦ m ⟧n .fobj δ) (MS.⟦<⟧ m<n)
   ; feq = λ δ≈δ′ {x y} x≈y → f .feq _ x≈y _ _ _ _
   }
@@ -151,11 +147,11 @@ appₛ∘absₛ {Δ} {n} {Γ} {T} m m<n t .≈⁻ γ x = refl
 -}
 
 
-subT-⟦∀⟧ : ∀ {Δ Ω n σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (⊢n : Ω SS.⊢ n) (T : ⟦Type⟧ ⟦ Ω ∙ n ⟧Δ)
+subT-⟦∀⟧ : ∀ {Δ Ω n σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (T : ⟦Type⟧ ⟦ Ω ∙ n ⟧Δ)
   → ⟦∀⟧ (n [ σ ]ᵤ)
-      (subT (⟦_⟧σ {Ω = Ω ∙ n} (Keep ⊢σ ⊢n refl)) T)
+      (subT (⟦_⟧σ {Ω = Ω ∙ n} (Keep ⊢σ refl)) T)
   ≈⟦Type⟧ subT ⟦ ⊢σ ⟧σ (⟦∀⟧ n T)
-subT-⟦∀⟧ {Δ} {Ω} {n} {σ} ⊢σ ⊢n T = record
+subT-⟦∀⟧ {Δ} {Ω} {n} {σ} ⊢σ T = record
   { forth = record
     { fobj = λ {γ} f → record
       { arr = λ m m<n

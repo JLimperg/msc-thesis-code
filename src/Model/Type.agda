@@ -14,10 +14,10 @@ open import Model.Size as MS using
   ( ⟦_⟧ΔRG to ⟦_⟧Δ ; ⟦_⟧nRG to ⟦_⟧n ; ⟦_⟧σRG to ⟦_⟧σ )
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SS using (Sub⊢ᵤ ; ⟨_⟩)
-open import Source.Type as ST using (_⊢_type ; _⊢_ctx)
 open import Util.Prelude hiding (id ; _∘_ ; _×_ ; ⊤)
 
 import Source.Size as SS
+import Source.Type as ST
 
 open MS._≤_
 
@@ -42,9 +42,9 @@ open MS._≤_
 ⇒-resp-≈⟦Type⟧ T≈T′ U≈U′ f = U≈U′ .forth ∘ f ∘ T≈T′ .back
 
 
-⟦subT⟧ : ∀ {Δ Ω σ T} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (⊢T : Ω ST.⊢ T type)
+⟦subT⟧ : ∀ {Δ Ω σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) T
   → ⟦ T [ σ ]ᵤ ⟧T ≈⟦Type⟧ subT ⟦ ⊢σ ⟧σ ⟦ T ⟧T
-⟦subT⟧ {T = T} ⊢σ (ST.Nat n ⊢n) = record
+⟦subT⟧ ⊢σ (ST.Nat n) = record
   { forth = record
     { fobj = castℕ≤ (reflexive (MS.⟦sub⟧ ⊢σ n))
     ; feq = λ γ≈γ′ m≡m → m≡m
@@ -56,7 +56,7 @@ open MS._≤_
   ; back-forth = ≈⁺ λ γ x → ℕ≤-≡⁺ _ _ refl
   ; forth-back = ≈⁺ λ γ x → ℕ≤-≡⁺ _ _ refl
   }
-⟦subT⟧ ⊢σ (ST.Stream n ⊢n) = record
+⟦subT⟧ ⊢σ (ST.Stream n) = record
   { forth = record
     { fobj = castColist (reflexive (sym (MS.⟦sub⟧ ⊢σ n)))
     ; feq = λ γ≈γ′ xs≈ys a a₁ a₂ → xs≈ys _ _ _
@@ -68,34 +68,32 @@ open MS._≤_
   ; back-forth = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-prop _ _)
   ; forth-back = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-prop _ _)
   }
-⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (ST.arr T U ⊢T ⊢U)
-  = ≈⟦Type⟧-trans (↝-resp-≈⟦Type⟧ _ _ _ _ (⟦subT⟧ ⊢σ ⊢T) (⟦subT⟧ ⊢σ ⊢U))
+⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (T ST.⇒ U)
+  = ≈⟦Type⟧-trans (↝-resp-≈⟦Type⟧ _ _ _ _ (⟦subT⟧ ⊢σ T) (⟦subT⟧ ⊢σ U))
       (subT-↝ ⟦ ⊢σ ⟧σ ⟦ T ⟧T ⟦ U ⟧T)
-⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (ST.pi n T ⊢n ⊢T)
-  = ≈⟦Type⟧-trans (⟦∀⟧-resp-≈⟦Type⟧ (n [ σ ]ᵤ) (⟦subT⟧ (SS.Keep ⊢σ ⊢n refl) ⊢T))
-      (subT-⟦∀⟧ ⊢σ ⊢n ⟦ T ⟧T)
+⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (ST.Π n , T)
+  = ≈⟦Type⟧-trans (⟦∀⟧-resp-≈⟦Type⟧ (n [ σ ]ᵤ) (⟦subT⟧ (SS.Keep ⊢σ refl) T))
+      (subT-⟦∀⟧ ⊢σ ⟦ T ⟧T)
 
 
-⟦subΓ⟧ : ∀ {Δ Ω σ Γ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (⊢Γ : Ω ST.⊢ Γ ctx)
+⟦subΓ⟧ : ∀ {Δ Ω σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) Γ
   → ⟦ Γ [ σ ]ᵤ ⟧Γ ≈⟦Type⟧ subT ⟦ ⊢σ ⟧σ ⟦ Γ ⟧Γ
-⟦subΓ⟧ σ (ST.[] _) = record
+⟦subΓ⟧ σ ST.[] = record
   { forth = record { fobj = λ x → x ; feq = λ γ≈γ′ x → x }
   ; back = record { fobj = λ x → x ; feq = λ γ≈γ′ x → x }
   ; back-forth = ≈⁺ λ γ x → refl
   ; forth-back = ≈⁺ λ γ x → refl
   }
-⟦subΓ⟧ σ (ST.Snoc ⊢Γ ⊢T) = ×-resp-≈⟦Type⟧ (⟦subΓ⟧ σ ⊢Γ) (⟦subT⟧ σ ⊢T)
+⟦subΓ⟧ σ (Γ ST.∙ T) = ×-resp-≈⟦Type⟧ (⟦subΓ⟧ σ Γ) (⟦subT⟧ σ T)
 
 
 subₛ
   : ∀ {Δ Ω σ Γ T}
-  → (⊢Γ : Ω ⊢ Γ ctx)
-  → (⊢T : Ω ⊢ T type)
   → (⊢σ : σ ∶ Δ ⇒ᵤ Ω)
   → ⟦ Γ ⟧Γ ⇒ ⟦ T ⟧T
   → ⟦ Γ [ σ ]ᵤ ⟧Γ ⇒ ⟦ T [ σ ]ᵤ ⟧T
-subₛ ⊢Γ ⊢T ⊢σ f
-  = ⟦subT⟧ ⊢σ ⊢T .back ∘ subt ⟦ ⊢σ ⟧σ f ∘ ⟦subΓ⟧ ⊢σ ⊢Γ .forth
+subₛ {Γ = Γ} {T} ⊢σ f
+  = ⟦subT⟧ ⊢σ T .back ∘ subt ⟦ ⊢σ ⟧σ f ∘ ⟦subΓ⟧ ⊢σ Γ .forth
 
 
 ≡→≈⟦Type⟧Γ : ∀ {Δ} {Γ Ψ : ST.Ctx Δ}

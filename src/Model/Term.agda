@@ -9,13 +9,13 @@ open import Model.Type as MT
 open import Util.HoTT.Equiv
 open import Util.Relation.Binary.PropositionalEquality using (happly)
 open import Util.Prelude hiding (id ; _∘_ ; _×_)
-open import Source.Size as SS using (v0 ; v1 ; _⊢_ ; ⊢_)
+open import Source.Size as SS using (v0 ; v1)
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SU using (Sub⊢ᵤ)
 open import Source.Term
-open import Source.Type as ST using (_⊢_type ; _⊢_ctx)
 
 import Model.RGraph as RG
+import Source.Type as ST
 
 open Category._≅_
 open MS.Size
@@ -29,36 +29,27 @@ open ST.Ctx
 ⟦_⟧x : ∀ {Δ Γ x T}
   → Δ , Γ ⊢ₓ x ∶ T
   → ⟦ Γ ⟧Γ ⇒ ⟦ T ⟧T
-⟦_⟧x {Γ = Γ ∙ T} (zero _ _) = π₂ ⟦ Γ ⟧Γ
-⟦ suc {U = U} x _ ⟧x = ⟦ x ⟧x ∘ π₁ ⟦ U ⟧T
+⟦_⟧x {Γ = Γ ∙ T} zero = π₂ ⟦ Γ ⟧Γ
+⟦ suc {U = U} x ⟧x = ⟦ x ⟧x ∘ π₁ ⟦ U ⟧T
 
 
 ⟦_⟧t : ∀ {Δ Γ t T}
   → Δ , Γ ⊢ t ∶ T
   → ⟦ Γ ⟧Γ ⇒ ⟦ T ⟧T
-⟦ var x ⊢x ⟧t = ⟦ ⊢x ⟧x
-⟦ abs {Γ = Γ} {U = U} T t ⊢t ⟧t
+⟦ var ⊢x ⟧t = ⟦ ⊢x ⟧x
+⟦ abs {Γ = Γ} {T} {t} {U} ⊢t ⟧t
   = curry ⟦ Γ ⟧Γ ⟦ T ⟧T ⟦ U ⟧T ⟦ ⊢t ⟧t
-⟦ app {T = T} {U = U} t u ⊢t ⊢u ⟧t
+⟦ app {T = T} {U = U} ⊢t ⊢u ⟧t
   = eval ⟦ T ⟧T ⟦ U ⟧T ∘ ⟨ ⟦ ⊢t ⟧t , ⟦ ⊢u ⟧t ⟩
-⟦ absₛ {Γ = Γ} n T t ⊢n ⊢Γ ⊢t refl ⟧t
-  = MT.absₛ ⊢n (⟦ ⊢t ⟧t ∘ ⟦subΓ⟧ (SU.Wk ⊢n) ⊢Γ .back)
-⟦ appₛ {Δ} {n} {Γ} {T} t m m<n ⊢m ⊢t refl ⟧t
-  = ⟦subT⟧ (SU.Fill ⊢m ⊢n m<n) ⊢T .back ∘ MT.appₛ ⊢n ⊢m m<n ⟦ ⊢t ⟧t
-  where
-    abstract
-      ⊢n : Δ ⊢ n
-      ⊢n with ⊢t→⊢T ⊢t
-      ... | ST.pi _ _ ⊢n _ = ⊢n
-
-      ⊢T : Δ SS.∙ n ⊢ T type
-      ⊢T with ⊢t→⊢T ⊢t
-      ... | ST.pi _ _ _ ⊢T = ⊢T
-⟦ zero n<⋆ ⊢n ⊢Γ ⟧t = record
+⟦ absₛ {Γ = Γ} ⊢t refl ⟧t
+  = MT.absₛ (⟦ ⊢t ⟧t ∘ ⟦subΓ⟧ SU.Wk Γ .back)
+⟦ appₛ {Δ} {n} {Γ} {T = T} m<n ⊢t refl ⟧t
+  = ⟦subT⟧ (SU.Fill m<n) T .back ∘ MT.appₛ m<n ⟦ ⊢t ⟧t
+⟦ zero n<⋆ ⟧t = record
   { fobj = λ γ → zero≤ _
   ; feq = λ δ≈δ′ x → refl
   }
-⟦ suc n<⋆ m<n ⊢n ⊢i ⟧t = record
+⟦ suc n<⋆ m<n ⊢i ⟧t = record
   { fobj = λ γ → suc≤ _ _ (MS.⟦<⟧ m<n) (⟦ ⊢i ⟧t .fobj γ)
   ; feq = λ δ≈δ′ x → cong suc (⟦ ⊢i ⟧t .feq ⊤.tt x)
   }
@@ -73,7 +64,7 @@ open ST.Ctx
   { fobj = λ γ → MT.head (⟦ ⊢is ⟧t .fobj γ) , MS.<→≤ MS.nat<∞
   ; feq = λ δ≈δ′ γ≈γ′ → head-≡⁺ (⟦ ⊢is ⟧t .feq ⊤.tt γ≈γ′)
   }
-⟦ tail n<⋆ m<n ⊢m ⊢is ⟧t = record
+⟦ tail n<⋆ m<n ⊢is ⟧t = record
   { fobj = λ γ → MT.tail (⟦ ⊢is ⟧t .fobj γ) _ (MS.⟦<⟧ m<n)
   ; feq = λ δ≈δ′ γ≈γ′ i i≤mδ i≤mδ′
       → tail-≡⁺ (⟦ ⊢is ⟧t .feq _ γ≈γ′) _ _ (MS.⟦<⟧ m<n) (MS.⟦<⟧ m<n) i i≤mδ i≤mδ′
@@ -81,32 +72,13 @@ open ST.Ctx
 ⟦ caseNat {Δ} {n} {T = T} n<⋆ ⊢i ⊢z ⊢s refl ⟧t = record
   { fobj = λ γ → caseℕ≤ (⟦ ⊢i ⟧t .fobj γ) (⟦ ⊢z ⟧t .fobj γ)
       λ m m<n i
-        → ⟦subT⟧ (SU.Wk ⊢n) ⊢T .forth .fobj
+        → ⟦subT⟧ SU.Wk T .forth .fobj
             (⟦ ⊢s ⟧t .fobj γ .arr m m<n .fobj i)
   ; feq = λ δ≈δ′ γ≈γ′ → {!!}
   }
-  where
-    abstract
-      ⊢n : Δ ⊢ n
-      ⊢n with ⊢t→⊢T ⊢i
-      ... | ST.Nat _ ⊢n = ⊢n
-
-      ⊢T : Δ ⊢ T type
-      ⊢T = ⊢t→⊢T ⊢z
-⟦ fix {Δ} {n} {Γ} {T = T} n<⋆ ⊢n ⊢t refl refl ⟧t
-  = ⟦subT⟧ (SU.Fill ⊢n ⊢⋆ n<⋆) ⊢T .back ∘ term⇒
+⟦ fix {Δ} {n} {Γ} {T = T} n<⋆ ⊢t refl refl ⟧t
+  = ⟦subT⟧ (SU.Fill n<⋆) T .back ∘ term⇒
   module ⟦⟧t-fix where
-    abstract
-      ⊢Δ : ⊢ Δ
-      ⊢Δ = SS.Δ⊢n→⊢Δ ⊢n
-
-      ⊢T : Δ SS.∙ ⋆ ⊢ T type
-      ⊢T with ⊢t→⊢T ⊢t
-      ... | ST.pi _ _ _ (ST.arr _ _ _ ⊢T) = ⊢T
-
-      ⊢⋆ : Δ ⊢ ⋆
-      ⊢⋆ = _⊢_.⋆ ⊢Δ
-
     go
       : Σ[ f ∈ (∀ n n<⋆ δ → ⟦ Γ ⟧Γ .Obj δ → ⟦ T ⟧T .Obj (δ , n , n<⋆)) ]
         Σ[ f-param ∈ (∀ n n′ n<⋆ n′<⋆ δ δ′ (γ : ⟦ Γ ⟧Γ .Obj δ) (γ′ : ⟦ Γ ⟧Γ .Obj δ′)
@@ -118,14 +90,14 @@ open ST.Ctx
         → ⟦ T ⟧T .eq _ (f n<⋆ δ γ) (g m<⋆ δ′ γ′))
       (λ n rec rec-resp n<⋆ δ γ
         → ⟦ ⊢t ⟧t .fobj γ .arr n n<⋆ .fobj
-            (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ (SU.Skip ⊢⋆) ⊢T) .back record
+            (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ SU.Skip T) .back record
               { arr = λ m m<n → rec m m<n (MS.<-trans m<n n<⋆) δ γ
               ; param = λ m m<n m′ m′<n
                   → rec-resp m m<n m′ m′<n _ _ δ δ γ γ (⟦ Γ ⟧Γ .eq-refl γ)
               }))
       λ n g g-resp m h h-resp g≈h n<⋆ m<⋆ δ δ′ γ γ′ γ≈γ′
         → ⟦ ⊢t ⟧t .feq _ γ≈γ′ n n<⋆ m m<⋆ λ k k<n k′ k′<m
-            → ⟦subT⟧ (SU.Skip ⊢⋆) ⊢T .back .feq _
+            → ⟦subT⟧ SU.Skip T .back .feq _
                 (g≈h k k<n k′ k′<m _ _ δ δ′ γ γ′ γ≈γ′)
 
     term : ∀ n n<⋆ δ → ⟦ Γ ⟧Γ .Obj δ → ⟦ T ⟧T .Obj (δ , n , n<⋆)
@@ -136,7 +108,7 @@ open ST.Ctx
       → ⟦ T ⟧T .eq _ (term n n<⋆ δ γ) (term n′ n′<⋆ δ′ γ′)
     term-param = go .proj₂ .proj₁
 
-    term⇒ : ⟦ Γ ⟧Γ ⇒ subT ⟦ SU.Fill ⊢n ⊢⋆ n<⋆ ⟧σ ⟦ T ⟧T
+    term⇒ : ⟦ Γ ⟧Γ ⇒ subT ⟦ SU.Fill n<⋆ ⟧σ ⟦ T ⟧T
     term⇒ = record
       { fobj = term _ _ _
       ; feq = λ δ≈δ′ → term-param _ _ _ _ _ _ _ _
@@ -145,7 +117,7 @@ open ST.Ctx
     term-unfold₀ : ∀ {n}
       → term n
       ≡ λ n<⋆ δ γ → ⟦ ⊢t ⟧t .fobj γ .arr n n<⋆ .fobj
-            (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ (SU.Skip ⊢⋆) ⊢T) .back record
+            (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ SU.Skip T) .back record
               { arr = λ m m<n → term m (MS.<-trans m<n n<⋆) δ γ
               ; param = λ m m<n m′ m′<n
                   → term-param _ _ _ _ _ _ _ _ (⟦ Γ ⟧Γ .eq-refl γ)
@@ -155,24 +127,17 @@ open ST.Ctx
     term-unfold : ∀ {n n<⋆ δ γ}
       → term n n<⋆ δ γ
       ≡ ⟦ ⊢t ⟧t .fobj γ .arr n n<⋆ .fobj
-          (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ (SU.Skip ⊢⋆) ⊢T) .back record
+          (⟦∀⟧′-resp-≈⟦Type⟧ (⟦subT⟧ SU.Skip T) .back record
             { arr = λ m m<n → term m (MS.<-trans m<n n<⋆) δ γ
             ; param = λ m m<n m′ m′<n
                 → term-param _ _ _ _ _ _ _ _ (⟦ Γ ⟧Γ .eq-refl γ)
             })
     term-unfold {n} {n<⋆} {δ} {γ} = cong (λ f → f n<⋆ δ γ) term-unfold₀
 
-{-
+
 ⟦_⟧ν : ∀ {Δ} {Γ Ψ : ST.Ctx Δ} {ν} → ν ∶ Γ ⇛ Ψ → ⟦ Γ ⟧Γ ⇒ ⟦ Ψ ⟧Γ
-⟦ [] _ ⟧ν = ! _
+⟦ [] ⟧ν = ! _
 ⟦ Snoc ⊢ν ⊢t ⟧ν = ⟨ ⟦ ⊢ν ⟧ν , ⟦ ⊢t ⟧t ⟩
-
-
-⟦cast⊢Γ⟧ : ∀ {Δ Γ Ψ t T}
-  → (p : Γ ≡ Ψ)
-  → (⊢t : Δ , Γ ⊢ t ∶ T)
-  → ⟦ cast⊢Γ p ⊢t ⟧t ≈ ⟦ ⊢t ⟧t ∘ ≡→≈⟦Type⟧ (cong ⟦_⟧Γ p) .back
-⟦cast⊢Γ⟧ refl ⊢t = ≈⁺ (λ δ x → refl)
 
 
 ⟦sub⟧ : ∀ {Δ Γ Ψ ν t T}
@@ -182,6 +147,7 @@ open ST.Ctx
 ⟦sub⟧ ⊢ν ⊢t = {!!}
 
 
+{-
 ⟦subₛ⟧ : ∀ {Δ Ω Γ t T}
   → (σ : SU.Sub Δ Ω)
   → (⊢t : Ω , Γ ⊢ t ∶ T)
@@ -259,9 +225,4 @@ open ST.Ctx
 -- ⟦subₛ-resp-⊢⟧ σ (fix T) = {!!}
 -- ⟦subₛ-resp-⊢⟧ σ (cast⊢ x x₁ ⊢t) = {!!}
 
-
--- -} -- TODO
--- -} -- TODO
--- -} -- TODO
--- -} -- TODO
 -- -} -- TODO

@@ -18,7 +18,7 @@ import Data.Nat.Properties as ℕ
 import Relation.Binary.Construct.On as On
 
 open import Model.RGraph as RG using (RGraph)
-open import Source.Size as S using (Δ ; Ω ; _⊢_ ; ⊢_)
+open import Source.Size as S using (Δ ; Ω)
 open import Source.Size.Substitution.Universe using (⟨_⟩ ; Sub⊢ᵤ)
 open import Util.HoTT.HLevel
 open import Util.HoTT.Univalence
@@ -550,14 +550,14 @@ abstract
 
 mutual
   ⟦_⟧σ : ∀ {σ} → σ ∶ Δ ⇒ᵤ Ω → Functor ⟦ Δ ⟧Δ ⟦ Ω ⟧Δ
-  ⟦ Id _ ⟧σ = Cat.id
+  ⟦ Id ⟧σ = Cat.id
   ⟦ comp σ τ ⟧σ = ⟦ τ ⟧σ Cat.∘ ⟦ σ ⟧σ
-  ⟦ Wk {n = n} ⊢n ⟧σ = π₁ n
-  ⟦ Fill {n = n} ⊢n ⊢m n<m ⟧σ = record
+  ⟦ Wk {n = n} ⟧σ = π₁ n
+  ⟦ Fill {n = n} n<m ⟧σ = record
     { fobj = λ δ → δ , ⟦ n ⟧n .fobj δ , ⟦<⟧ n<m
     ; fmap = λ δ≤δ′ → δ≤δ′ , ⟦ n ⟧n .fmap δ≤δ′
     }
-  ⟦ Keep {σ = σ} {n = n} ⊢σ ⊢n refl ⟧σ = record
+  ⟦ Keep {σ = σ} {n = n} ⊢σ refl ⟧σ = record
     { fobj = λ where
         (δ , m , m<n)
           → ⟦ ⊢σ ⟧σ .fobj δ , m
@@ -565,7 +565,7 @@ mutual
     ; fmap = λ { (δ≤δ′ , m≤m′)
         → ⟦ ⊢σ ⟧σ .fmap δ≤δ′ , m≤m′ }
     }
-  ⟦ Skip {n = n} ⊢n ⟧σ = record
+  ⟦ Skip {n = n} ⟧σ = record
     { fobj = λ { ((δ , m , m<n) , k , k<m)  → δ , k , <-trans k<m m<n }
     ; fmap = λ { ((δ≤δ′ , m≤m′) , k≤k′) → δ≤δ′ , k≤k′ }
     }
@@ -574,20 +574,20 @@ mutual
   abstract
     ⟦subV′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (x : S.Var Ω) {δ}
       → ⟦ S.subV′ σ x ⟧n .fobj δ ≡ ⟦ x ⟧x .fobj (⟦ ⊢σ ⟧σ .fobj δ)
-    ⟦subV′⟧ (Id _) x = refl
+    ⟦subV′⟧ Id x = refl
     ⟦subV′⟧ (comp {σ = σ} {τ = τ} ⊢σ ⊢τ) x
       = trans (⟦sub′⟧ ⊢σ (S.subV′ τ x)) (⟦subV′⟧ ⊢τ x)
-    ⟦subV′⟧ (Wk ⊢n) x = refl
-    ⟦subV′⟧ (Keep {σ = σ} ⊢σ ⊢n refl) zero = refl
-    ⟦subV′⟧ (Keep {σ = σ} {n = n} ⊢σ ⊢n refl) (suc x) {δ}
+    ⟦subV′⟧ Wk x = refl
+    ⟦subV′⟧ (Keep {σ = σ} ⊢σ refl) zero = refl
+    ⟦subV′⟧ (Keep {σ = σ} {n = n} ⊢σ refl) (suc x) {δ}
       rewrite ≅F⁻ (⟦wk⟧≅π₁ (S.sub σ n) (S.subV′ σ x)) {δ}
       = ⟦subV′⟧ ⊢σ x
       -- If we write `trans ? ?` instead of the rewrite, the termination checker
       -- complains.
-    ⟦subV′⟧ (Fill ⊢n ⊢m n<m) zero = refl
-    ⟦subV′⟧ (Fill ⊢n ⊢m n<m) (suc x) = refl
-    ⟦subV′⟧ (Skip ⊢n) zero = refl
-    ⟦subV′⟧ (Skip ⊢n) (suc x) = refl
+    ⟦subV′⟧ (Fill n<m) zero = refl
+    ⟦subV′⟧ (Fill n<m) (suc x) = refl
+    ⟦subV′⟧ Skip zero = refl
+    ⟦subV′⟧ Skip (suc x) = refl
 
 
     ⟦sub′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
@@ -614,16 +614,16 @@ abstract
 
   ⟦⟧σ-param : ∀ {σ} (p q : σ ∶ Δ ⇒ᵤ Ω) {δ}
     → ⟦ p ⟧σ .fobj δ ≡ ⟦ q ⟧σ .fobj δ
-  ⟦⟧σ-param {σ = Id} (Id ⊢Δ) (Id ⊢Δ₁) = refl
-  ⟦⟧σ-param {σ = σ >> τ} (comp p p′) (comp q q′)
+  ⟦⟧σ-param Id Id = refl
+  ⟦⟧σ-param (comp p p′) (comp q q′)
     = trans (⟦⟧σ-param p′ q′) (cong (⟦ q′ ⟧σ .fobj) (⟦⟧σ-param p q))
-  ⟦⟧σ-param {σ = Wk} (Wk ⊢n) (Wk ⊢n₁) = refl
-  ⟦⟧σ-param {Ω = Ω ∙ m} {σ = Keep σ} (Keep p ⊢n refl) (Keep q ⊢n₁ m≡n[σ]₁)
+  ⟦⟧σ-param Wk Wk = refl
+  ⟦⟧σ-param {Ω = Ω ∙ m} (Keep p refl) (Keep q m≡n[σ]₁)
     rewrite S.Size-IsSet m≡n[σ]₁ refl
     = ⟦Δ∙n⟧-≡⁺ Ω m _ _ (⟦⟧σ-param p q) refl
-  ⟦⟧σ-param {Δ = Δ} {σ = Fill {m = m} n} (Fill ⊢n ⊢m n<m) (Fill ⊢n₁ ⊢m₁ n<m₁)
+  ⟦⟧σ-param {Δ = Δ} {σ = Fill {m = m} n} (Fill n<m) (Fill n<m₁)
     = ⟦Δ∙n⟧-≡⁺ Δ m (⟦<⟧ n<m) (⟦<⟧ n<m₁) refl refl
-  ⟦⟧σ-param {σ = Skip} (Skip ⊢n) (Skip ⊢n₁) = refl
+  ⟦⟧σ-param Skip Skip = refl
 
 
 ⟦_⟧ΔRG : S.Ctx → RGraph

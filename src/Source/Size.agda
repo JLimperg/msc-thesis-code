@@ -9,7 +9,6 @@ open import Util.Relation.Binary.PropositionalEquality using
   ( trans-injectiveˡ ; cong₂-dep )
 
 
-infix  0 _⊢_ ⊢_
 infix  4 _<_ _≤_
 infixl 4 _∙_
 
@@ -150,38 +149,3 @@ abstract
   wk≢varzero {n = ⋆} ()
   wk≢varzero {n = zero} ()
   wk≢varzero {n = suc n} ()
-
-
-mutual
-  data _⊢_ (Δ : Ctx) : (x : Size Δ) → Set where
-    var : ∀ x (⊢Δ : ⊢ Δ) → Δ ⊢ var x
-    ∞ : (⊢Δ : ⊢ Δ) → Δ ⊢ ∞
-    ⋆ : (⊢Δ : ⊢ Δ) → Δ ⊢ ⋆
-    zero : (⊢Δ : ⊢ Δ) → Δ ⊢ zero
-    suc : (n<∞ : n < ∞) (⊢n : Δ ⊢ n) → Δ ⊢ suc n
-
-
-  data ⊢_ : (Δ : Ctx) → Set where
-    [] : ⊢ []
-    Snoc : ⊢ Δ → Δ ⊢ n → ⊢ Δ ∙ n
-
-
-abstract
-  Δ⊢n→⊢Δ : Δ ⊢ n → ⊢ Δ
-  Δ⊢n→⊢Δ (var x ⊢Δ) = ⊢Δ
-  Δ⊢n→⊢Δ (∞ ⊢Δ) = ⊢Δ
-  Δ⊢n→⊢Δ (⋆ ⊢Δ) = ⊢Δ
-  Δ⊢n→⊢Δ (zero ⊢Δ) = ⊢Δ
-  Δ⊢n→⊢Δ (suc n<∞ Δ⊢n) = Δ⊢n→⊢Δ Δ⊢n
-
-
-  Δ⊢n→⊢Δ∙n : Δ ⊢ n → ⊢ Δ ∙ n
-  Δ⊢n→⊢Δ∙n ⊢n = Snoc (Δ⊢n→⊢Δ ⊢n) ⊢n
-
-
-  wk-resp-⊢ : Δ ⊢ n → Δ ⊢ m → Δ ∙ m ⊢ wk n
-  wk-resp-⊢ {n = var x} ⊢n ⊢m = var (suc x) (Δ⊢n→⊢Δ∙n ⊢m)
-  wk-resp-⊢ {n = ∞} ⊢n ⊢m = ∞ (Δ⊢n→⊢Δ∙n ⊢m)
-  wk-resp-⊢ {n = ⋆} ⊢n ⊢m = ⋆ (Δ⊢n→⊢Δ∙n ⊢m)
-  wk-resp-⊢ {n = zero} ⊢n ⊢m = zero (Δ⊢n→⊢Δ∙n ⊢m)
-  wk-resp-⊢ {n = suc n} (suc n<∞ ⊢n) ⊢m = suc (wk-resp-< n<∞) (wk-resp-⊢ ⊢n ⊢m)

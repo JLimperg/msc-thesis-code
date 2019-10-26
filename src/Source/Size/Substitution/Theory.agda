@@ -60,14 +60,14 @@ record SubTheory (A : Ctx → Set) (A⊢ : ∀ {Δ} → A Δ → Set) : Set wher
     []ᵤ-resp-⊢ σ ⊢a = []-resp-⊢ ⊢a (SU.⟨⟩-resp-⊢ σ)
 
 
-    [Id]ᵤ : ∀ {Δ} (a : A Δ) (⊢Δ : ⊢ Δ) → a [ SU.Id ]ᵤ ≡ a
-    [Id]ᵤ a ⊢Δ = [Id] a
+    [Id]ᵤ : ∀ {Δ} (a : A Δ) → a [ SU.Id ]ᵤ ≡ a
+    [Id]ᵤ a = [Id] a
 
 
-    [Id]ᵤ′ : ∀ {Δ} {σ : SU.Sub Δ Δ} (a : A Δ) (⊢Δ : ⊢ Δ)
+    [Id]ᵤ′ : ∀ {Δ} {σ : SU.Sub Δ Δ} (a : A Δ)
       → σ SU.≈ SU.Id
       → a [ σ ]ᵤ ≡ a
-    [Id]ᵤ′ a ⊢Δ (SU.≈⁺ p) = [Id]′ a p
+    [Id]ᵤ′ a (SU.≈⁺ p) = [Id]′ a p
 
 
     [>>]ᵤ : ∀ {Δ Δ′ Δ″} (σ : SU.Sub Δ Δ′) (τ : SU.Sub Δ′ Δ″) (a : A Δ″)
@@ -92,10 +92,9 @@ open SubTheory {{...}} public
 
 
 instance
-  SubTheory-Size : SubTheory Size (λ {Δ} n → Δ ⊢ n)
+  SubTheory-Size : SubTheory Size (λ {Δ} n → ⊤)
   SubTheory-Size = record
     { _[_] = λ n σ → SC.sub σ n
-    ; []-resp-⊢ = λ ⊢n ⊢σ → SC.sub-resp-⊢ ⊢σ ⊢n
     ; [Id] = λ n → SC.sub-Id n refl
     ; [>>] = λ σ τ n → SC.sub->> n refl
     }
