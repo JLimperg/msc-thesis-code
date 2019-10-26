@@ -126,7 +126,7 @@ suc∞⊢
 -- TODO decide on a consistent concrete syntax.
 {-
 plus : ∀ n < ⋆. ℕ n → ℕ ∞ → ℕ ∞
-plus ≔ Λ n < ⋆. fix[∀ m < ⋆. ℕ m → ℕ ∞ → ℕ ∞]
+plus ≔ Λ n < ⋆. fix[ℕ ∙ → ℕ ∞ → ℕ ∞]
   (Λ n < ⋆. λ rec : (Λ m < n. ℕ m → ℕ ∞ → ℕ ∞).
     λ i : ℕ n. λ j : ℕ ∞. caseℕ[ℕ ∞] n i
       j
@@ -168,3 +168,64 @@ plus⊢
         refl
         refl)
       refl
+
+
+{-
+zeros : ∀ n < ⋆. Stream n
+zeros ≔ Λ n < ⋆. fix[Stream ∙]
+  (Λ n < ⋆. λ rec : (∀ m < n. Stream m).
+    cons (zero ∞) n rec)
+  n
+-}
+zeros : ∀ {Δ} → Term Δ
+zeros = Λₛ ⋆ , fix (Stream v0)
+  (Λₛ ⋆ , Λ (Π v0 , Stream v0) , cons (zero ∞) v0 (var 0))
+  v0
+
+
+zeros⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ zeros ∶ Π ⋆ , Stream v0
+zeros⊢
+  = absₛ
+      (fix (var _ refl)
+        (absₛ
+          (abs
+            (cons (var _ refl) (zero ∞<⋆) (var zero)))
+          refl)
+        refl
+        refl)
+      refl
+
+
+{-
+map : (ℕ ∞ → ℕ ∞) → ∀ n < ⋆. Stream n → Stream n
+map ≔ λ f : ℕ ∞ → ℕ ∞. Λ n < ⋆. fix[Stream ∙ → Stream ∙]
+  (Λ n < ⋆. λ rec : (Λ m < n. Stream m → Stream m). λ xs : Stream n.
+    cons (f (head n xs)) n (Λ m < n. rec m (tail n xs m)))
+  n
+-}
+map : ∀ {Δ} → Term Δ
+map = Λ (Nat ∞ ⇒ Nat ∞) , Λₛ ⋆ , fix (Stream v0 ⇒ Stream v0)
+  (Λₛ ⋆ , Λ (Π v0 , Stream v0 ⇒ Stream v0) , Λ Stream v0 ,
+    cons (var 2 · head v0 (var 0)) v0
+      (Λₛ v0 , var 1 ·ₛ v0 · tail v1 (var 0) v0))
+  v0
+
+
+map⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ map ∶ (Nat ∞ ⇒ Nat ∞) ⇒ (Π ⋆ , Stream v0 ⇒ Stream v0)
+map⊢
+  = abs
+      (absₛ
+        (fix (var _ refl)
+          (absₛ
+            (abs
+              (abs
+                (cons
+                  (var _ refl)
+                  (app (var (suc (suc zero))) (head (var _ refl) (var zero)))
+                  (absₛ (app (appₛ (var _ refl) (var (suc zero)) refl)
+                      (tail (var _ refl) (var _ refl) (var zero)))
+                  refl))))
+            refl)
+          refl
+          refl)
+        refl)
