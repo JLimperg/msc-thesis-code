@@ -2,7 +2,7 @@
 module Source.Reduction where
 
 open import Source.Size as S using
-  ( Size ; _<_ ; _≤_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b
+  ( Size ; _<_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b
   ; n′ ; m′ ; o′ ; b′ ; v0 ; v1 )
 open import Source.Size.Substitution.Theory
 open import Source.Type as T using

@@ -9,7 +9,7 @@ open import Util.Relation.Binary.PropositionalEquality using
   ( trans-injectiveˡ ; cong₂-dep )
 
 
-infix  4 _<_ _≤_
+infix  4 _<_
 infixl 4 _∙_
 
 
@@ -58,16 +58,6 @@ data _<_ {Δ} : (n m : Size Δ) → Set where
   <-trans : n < m → m < o → n < o
 
 
-data _≤_ {Δ} : (n m : Size Δ) → Set where
-  <→≤ : n < m → n ≤ m
-  reflexive : n ≡ m → n ≤ m
-
-
-_≥_ : (n m : Size Δ) → Set
-n ≥ m = m ≤ n
-
-
-pattern ≤-refl = reflexive refl
 pattern v0 = var zero
 pattern v1 = var (suc zero)
 pattern v2 = var (suc (suc zero))
@@ -121,31 +111,3 @@ abstract
   wk-resp-< (suc<∞ n n<∞) = suc<∞ (wk n) (wk-resp-< n<∞)
   wk-resp-< ∞<⋆ = ∞<⋆
   wk-resp-< (<-trans n<m m<o) = <-trans (wk-resp-< n<m) (wk-resp-< m<o)
-
-
-  wk-resp-≤ : n ≤ m → wk {n = o} n ≤ wk m
-  wk-resp-≤ (<→≤ n<m) = <→≤ (wk-resp-< n<m)
-  wk-resp-≤ ≤-refl = ≤-refl
-
-
-  ≤→<→< : n ≤ m → m < o → n < o
-  ≤→<→< (<→≤ n<m) m<o = <-trans n<m m<o
-  ≤→<→< ≤-refl m<o = m<o
-
-
-  <→≤→< : n < m → m ≤ o → n < o
-  <→≤→< n<m (<→≤ m<o) = <-trans n<m m<o
-  <→≤→< n<m ≤-refl = n<m
-
-
-  ≤-trans : n ≤ m → m ≤ o → n ≤ o
-  ≤-trans (<→≤ n<m) m≤o = <→≤ (<→≤→< n<m m≤o)
-  ≤-trans ≤-refl n≤o = n≤o
-
-
-  wk≢varzero : wk {n = o} n ≢ var zero
-  wk≢varzero {n = var x} ()
-  wk≢varzero {n = ∞} ()
-  wk≢varzero {n = ⋆} ()
-  wk≢varzero {n = zero} ()
-  wk≢varzero {n = suc n} ()

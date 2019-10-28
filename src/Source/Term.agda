@@ -2,7 +2,7 @@
 module Source.Term where
 
 open import Source.Size as S using
-  ( Size ; _<_ ; _≤_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b ; v0 ; v1 )
+  ( Size ; _<_ ; Δ ; Δ′ ; Δ″ ; Ω ; Ω′ ; Ω″ ; n ; m ; o ; b ; v0 ; v1 )
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Canonical as SC using () renaming
   ( Sub⊢ to Subₛ⊢ )

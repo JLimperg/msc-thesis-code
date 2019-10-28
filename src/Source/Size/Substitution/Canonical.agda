@@ -71,11 +71,6 @@ abstract
       = <-trans (sub-resp-< ⊢σ n<m) (sub-resp-< ⊢σ m<o)
 
 
-  sub-resp-≤ : σ ∶ Δ ⇒ Ω → n ≤ m → sub σ n ≤ sub σ m
-  sub-resp-≤ ⊢σ (<→≤ n<m) = <→≤ (sub-resp-< ⊢σ n<m)
-  sub-resp-≤ ⊢σ ≤-refl = ≤-refl
-
-
 Weaken : Sub Δ Ω → Sub (Δ ∙ n) Ω
 Weaken [] = []
 Weaken (Snoc σ m) = Snoc (Weaken σ) (wk m)
@@ -204,8 +199,8 @@ abstract
   Skip⊢ : Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
   Skip⊢ {n = n}
     = Snoc (Weaken⊢ Wk⊢)
-        (<→≤→< (var v1 refl) (<→≤
-          (var (sub (Weaken Wk) n) (trans (sub-Weaken Wk n) (cong wk (sub-Wk n))))))
+        (<-trans (var v1 refl)
+          (var (sub (Weaken Wk) n) (trans (sub-Weaken Wk n) (cong wk (sub-Wk n)))))
 
 
   Weaken>> : Weaken σ >> τ ≡ Weaken {n = n} (σ >> τ)

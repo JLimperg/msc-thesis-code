@@ -36,7 +36,6 @@ open S.Sub
 open S.Sub⊢ᵤ
 open S.Var
 open S._<_ hiding (<-trans)
-open S._≤_
 
 
 infix 4 _<_ _≤_
@@ -533,19 +532,13 @@ abstract
     = subst (fobj ⟦ x ⟧x δ <_) (sym (≅F⁻ (⟦wk⟧≅π₁ _ (S.bound x)))) (⟦<⟧ₓ x)
 
 
-  mutual
-    ⟦<⟧ : {n m : S.Size Δ} → n S.< m → ⟦ n ⟧n <F ⟦ m ⟧n
-    ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
-    ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
-    ⟦<⟧ zero<∞ = nat<∞
-    ⟦<⟧ (suc<∞ n n<∞) = ssuc-resp-< (⟦<⟧ n<∞)
-    ⟦<⟧ ∞<⋆ = ∞<⋆
-    ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
-
-
-    ⟦≤⟧ : {n m : S.Size Δ} → n S.≤ m → ⟦ n ⟧n ≤F ⟦ m ⟧n
-    ⟦≤⟧ (<→≤ n<m) = <→≤ (⟦<⟧ n<m)
-    ⟦≤⟧ S.≤-refl = ≤-refl
+  ⟦<⟧ : {n m : S.Size Δ} → n S.< m → ⟦ n ⟧n <F ⟦ m ⟧n
+  ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
+  ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
+  ⟦<⟧ zero<∞ = nat<∞
+  ⟦<⟧ (suc<∞ n n<∞) = ssuc-resp-< (⟦<⟧ n<∞)
+  ⟦<⟧ ∞<⋆ = ∞<⋆
+  ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
 
 
 mutual
