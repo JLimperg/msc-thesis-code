@@ -29,7 +29,6 @@ open S._<_ hiding (<-trans)
 
 
 infix 4 _<_ _≤_
-infixr 5 _ₙ⊓_ _⊓_
 
 
 data Size : Set where
@@ -94,6 +93,34 @@ abstract
   ≤-trans n≤m (<→≤ m<o) = <→≤ (≤→<→< n≤m m<o)
 
 
+  ≤-nat⁺ : ∀ {n m} → n ℕ.≤ m → nat n ≤ nat m
+  ≤-nat⁺ {m = zero} ℕ.z≤n = ≤-refl
+  ≤-nat⁺ {m = suc m} ℕ.z≤n = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
+  ≤-nat⁺ (ℕ.s≤s n≤m) with ≤-nat⁺ n≤m
+  ... | ≤-refl = ≤-refl
+  ... | <→≤ (nat n<m) = <→≤ (nat (ℕ.s≤s n<m))
+
+
+  0≤n : nat 0 ≤ n
+  0≤n {nat zero} = ≤-refl
+  0≤n {nat (suc n)} = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
+  0≤n {∞} = <→≤ nat<∞
+  0≤n {⋆} = <→≤ nat<⋆
+
+
+  n<m→Sn≤m : ∀ {n} → nat n < m → nat (suc n) ≤ m
+  n<m→Sn≤m (nat (ℕ.s≤s n≤m)) = ≤-nat⁺ (ℕ.s≤s n≤m)
+  n<m→Sn≤m nat<∞ = <→≤ nat<∞
+  n<m→Sn≤m nat<⋆ = <→≤ nat<⋆
+
+
+  Sn≤m→n<m : ∀ {n} → nat (suc n) ≤ m → nat n < m
+  Sn≤m→n<m ≤-refl = nat (ℕ.s≤s ℕ.≤-refl)
+  Sn≤m→n<m (<→≤ (nat Sn<m)) = nat (ℕ.<-trans (ℕ.s≤s ℕ.≤-refl) Sn<m)
+  Sn≤m→n<m (<→≤ nat<∞) = nat<∞
+  Sn≤m→n<m (<→≤ nat<⋆) = nat<⋆
+
+
   <-irrefl : ¬ (n < n)
   <-irrefl (nat n<n) = ℕ.<-irrefl refl n<n
 
@@ -101,6 +128,20 @@ abstract
   ≤-antisym : n ≤ m → m ≤ n → n ≡ m
   ≤-antisym ≤-refl m≤n = refl
   ≤-antisym (<→≤ n<m) m≤n = ⊥-elim (<-irrefl (<→≤→< n<m m≤n))
+
+
+  <-IsProp : (p q : n < m) → p ≡ q
+  <-IsProp (nat p) (nat q) = cong nat (ℕ.<-irrelevant p q)
+  <-IsProp nat<∞ nat<∞ = refl
+  <-IsProp nat<⋆ nat<⋆ = refl
+  <-IsProp ∞<⋆ ∞<⋆ = refl
+
+
+  ≤-IsProp : (p q : n ≤ m) → p ≡ q
+  ≤-IsProp ≤-refl (reflexive p) = cong reflexive (Size-IsSet _ _)
+  ≤-IsProp ≤-refl (<→≤ n<n) = ⊥-elim (<-irrefl n<n)
+  ≤-IsProp (<→≤ n<n) ≤-refl = ⊥-elim (<-irrefl n<n)
+  ≤-IsProp (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-IsProp _ _)
 
 
   <ℕ-acc→<-acc : ∀ {n} → Acc ℕ._<_ n → Acc _<_ (nat n)
@@ -137,36 +178,6 @@ open WFInd.Build <-wf public using () renaming
 
 
 <-ind-ind₂ = WFInd.wfInd-ind₂ <-wf
-
-
-abstract
-  <-IsProp : (p q : n < m) → p ≡ q
-  <-IsProp (nat p) (nat q) = cong nat (ℕ.<-irrelevant p q)
-  <-IsProp nat<∞ nat<∞ = refl
-  <-IsProp nat<⋆ nat<⋆ = refl
-  <-IsProp ∞<⋆ ∞<⋆ = refl
-
-
-  ≤-IsProp : (p q : n ≤ m) → p ≡ q
-  ≤-IsProp ≤-refl (reflexive p) = cong reflexive (Size-IsSet _ _)
-  ≤-IsProp ≤-refl (<→≤ n<n) = ⊥-elim (<-irrefl n<n)
-  ≤-IsProp (<→≤ n<n) ≤-refl = ⊥-elim (<-irrefl n<n)
-  ≤-IsProp (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-IsProp _ _)
-
-
-  ≤-nat⁺ : ∀ {n m} → n ℕ.≤ m → nat n ≤ nat m
-  ≤-nat⁺ {m = zero} ℕ.z≤n = ≤-refl
-  ≤-nat⁺ {m = suc m} ℕ.z≤n = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
-  ≤-nat⁺ (ℕ.s≤s n≤m) with ≤-nat⁺ n≤m
-  ... | ≤-refl = ≤-refl
-  ... | <→≤ (nat n<m) = <→≤ (nat (ℕ.s≤s n<m))
-
-
-  0≤n : nat 0 ≤ n
-  0≤n {nat zero} = ≤-refl
-  0≤n {nat (suc n)} = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
-  0≤n {∞} = <→≤ nat<∞
-  0≤n {⋆} = <→≤ nat<⋆
 
 
 Size< : Size → Set
@@ -211,86 +222,6 @@ abstract
 
   n<ssucn : n < ∞ → n < ssuc n
   n<ssucn nat<∞ = nat (ℕ.s≤s ℕ.≤-refl)
-
-
-_ₙ⊓_ : ℕ → Size → ℕ
-n ₙ⊓ nat m = n ℕ.⊓ m
-n ₙ⊓ ∞ = n
-n ₙ⊓ ⋆ = n
-
-
-_⊓_ : Size → Size → Size
-nat n ⊓ m = nat (n ₙ⊓ m)
-∞ ⊓ nat n = nat n
-∞ ⊓ ∞ = ∞
-∞ ⊓ ⋆ = ∞
-⋆ ⊓ m = m
-
-
-abstract
-  nₙ⊓m≤m : ∀ n m → nat (n ₙ⊓ m) ≤ m
-  nₙ⊓m≤m n (nat m) = ≤-nat⁺ (ℕ.m⊓n≤n n m)
-  nₙ⊓m≤m n ∞ = <→≤ nat<∞
-  nₙ⊓m≤m n ⋆ = <→≤ nat<⋆
-
-
-  n≤m→nₙ⊓m≡n : ∀ {n m} → nat n ≤ m → n ₙ⊓ m ≡ n
-  n≤m→nₙ⊓m≡n ≤-refl = ℕ.m≤n⇒m⊓n≡m ℕ.≤-refl
-  n≤m→nₙ⊓m≡n (<→≤ (nat n<m)) = ℕ.m≤n⇒m⊓n≡m (ℕ.<⇒≤ n<m)
-  n≤m→nₙ⊓m≡n (<→≤ nat<∞) = refl
-  n≤m→nₙ⊓m≡n (<→≤ nat<⋆) = refl
-
-
-  ₙ⊓-assoc : ∀ n m o → (n ₙ⊓ m) ₙ⊓ o ≡ n ₙ⊓ (m ⊓ o)
-  ₙ⊓-assoc n (nat m) (nat o) = ℕ.⊓-assoc n m o
-  ₙ⊓-assoc n (nat m) ∞ = refl
-  ₙ⊓-assoc n (nat m) ⋆ = refl
-  ₙ⊓-assoc n ∞ (nat o) = refl
-  ₙ⊓-assoc n ∞ ∞ = refl
-  ₙ⊓-assoc n ∞ ⋆ = refl
-  ₙ⊓-assoc n ⋆ o = refl
-
-
-  n≤m→n⊓m≡n : ∀ {n m} → n ≤ m → n ⊓ m ≡ n
-  n≤m→n⊓m≡n {nat n} {m} n≤m = cong nat (n≤m→nₙ⊓m≡n n≤m)
-  n≤m→n⊓m≡n {∞} {.∞} ≤-refl = refl
-  n≤m→n⊓m≡n {∞} {.⋆} (<→≤ ∞<⋆) = refl
-  n≤m→n⊓m≡n {⋆} {.⋆} ≤-refl = refl
-
-
-  ⊓-comm : ∀ n m → n ⊓ m ≡ m ⊓ n
-  ⊓-comm (nat n) (nat m) = cong nat (ℕ.⊓-comm n m)
-  ⊓-comm (nat n) ∞ = refl
-  ⊓-comm (nat n) ⋆ = refl
-  ⊓-comm ∞ (nat n) = refl
-  ⊓-comm ∞ ∞ = refl
-  ⊓-comm ∞ ⋆ = refl
-  ⊓-comm ⋆ (nat n) = refl
-  ⊓-comm ⋆ ∞ = refl
-  ⊓-comm ⋆ ⋆ = refl
-
-
-  m≤n→n⊓m≡m : ∀ {n m} → m ≤ n → n ⊓ m ≡ m
-  m≤n→n⊓m≡m {n} {m} m≤n = trans (⊓-comm n m) (n≤m→n⊓m≡n m≤n)
-
-
-  0ₙ⊓n≡0 : ∀ n → 0 ₙ⊓ n ≡ 0
-  0ₙ⊓n≡0 (nat n) = refl
-  0ₙ⊓n≡0 ∞ = refl
-  0ₙ⊓n≡0 ⋆ = refl
-
-
-  n<m→Sn≤m : ∀ {n} → nat n < m → nat (suc n) ≤ m
-  n<m→Sn≤m (nat (ℕ.s≤s n≤m)) = ≤-nat⁺ (ℕ.s≤s n≤m)
-  n<m→Sn≤m nat<∞ = <→≤ nat<∞
-  n<m→Sn≤m nat<⋆ = <→≤ nat<⋆
-
-
-  Sn≤m→n<m : ∀ {n} → nat (suc n) ≤ m → nat n < m
-  Sn≤m→n<m ≤-refl = nat (ℕ.s≤s ℕ.≤-refl)
-  Sn≤m→n<m (<→≤ (nat Sn<m)) = nat (ℕ.<-trans (ℕ.s≤s ℕ.≤-refl) Sn<m)
-  Sn≤m→n<m (<→≤ nat<∞) = nat<∞
-  Sn≤m→n<m (<→≤ nat<⋆) = nat<⋆
 
 
 mutual
