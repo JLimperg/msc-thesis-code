@@ -2,7 +2,7 @@
 module Model.Nat where
 
 open import Model.Size as MS using
-  ( Size ; _≤_ ; _<_ ; ≤-prop ) renaming
+  ( Size ; _≤_ ; _<_ ; ≤-IsProp ) renaming
   ( SizesRG to Sizes )
 open import Model.Type.Core
 open import Util.HoTT.HLevel
@@ -19,14 +19,14 @@ open Size
 
 
 ℕ≤-IsSet : ∀ {n} → IsSet (ℕ≤ n)
-ℕ≤-IsSet = Σ-IsSet ℕ.≡-irrelevant (λ m → IsOfHLevel-suc 1 ≤-prop)
+ℕ≤-IsSet = Σ-IsSet ℕ.≡-irrelevant λ m → IsOfHLevel-suc 1 ≤-IsProp
 
 
 abstract
   ℕ≤-≡⁺ : ∀ {n} {m m′} (m≤n : nat m ≤ n) (m′≤n : nat m′ ≤ n)
     → m ≡ m′
     → (m , m≤n) ≡ (m′ , m′≤n)
-  ℕ≤-≡⁺ _ _ m≡m′ = Σ-≡⁺ (m≡m′ , ≤-prop _ _)
+  ℕ≤-≡⁺ _ _ m≡m′ = Σ-≡⁺ (m≡m′ , ≤-IsProp _ _)
 
 
 Nat : ⟦Type⟧ Sizes

@@ -2,7 +2,7 @@
 module Model.Stream where
 
 open import Model.Size as MS using
-  ( Size ; _≤_ ; _<_ ; ≤-prop ; ≤-trans ) renaming
+  ( Size ; _≤_ ; _<_ ; ≤-IsProp ; ≤-trans ) renaming
   ( SizesRG to Sizes )
 open import Model.Type.Core
 open import Util.HoTT.HLevel
@@ -28,7 +28,7 @@ abstract
   Colist-≡⁻ : ∀ {n} {xs ys : Colist n}
     → xs ≡ ys
     → ∀ m m≤n₀ m≤n₁ → xs m m≤n₀ ≡ ys m m≤n₁
-  Colist-≡⁻ {xs = xs} refl m m≤n₀ m≤n₁ = cong (xs m) (≤-prop _ _)
+  Colist-≡⁻ {xs = xs} refl m m≤n₀ m≤n₁ = cong (xs m) (≤-IsProp _ _)
 
 
   Colist-IsSet : ∀ {n} → IsSet (Colist n)
@@ -46,7 +46,7 @@ Stream = record
   ; eqHProp = λ {n} {n′} _ xs ys
       → ∀-HProp ℕ λ m → ∀-HProp (nat m ≤ n) λ m≤n → ∀-HProp (nat m ≤ n′) λ m≤n′
       → HLevel⁺ (xs m m≤n ≡ ys m m≤n′) ℕ.≡-irrelevant
-  ; eq-refl = λ x m m≤n m≤n′ → cong (x m) (≤-prop _ _)
+  ; eq-refl = λ x m m≤n m≤n′ → cong (x m) (≤-IsProp _ _)
   }
 
 
@@ -75,7 +75,7 @@ abstract
   cons-≡⁺ i≡i′ is≡is′ zero m<n₀ m<n₁ = i≡i′
   cons-≡⁺ {is′ = is′} i≡i′ is≡is′ (suc m) m<n m<n′
     = trans (is≡is′ (nat m) (MS.Sn≤m→n<m m<n) (MS.Sn≤m→n<m m<n′) m MS.≤-refl)
-        (cong (λ p → is′ _ p _ _) (MS.<-prop _ _))
+        (cong (λ p → is′ _ p _ _) (MS.<-IsProp _ _))
 
 
   head-≡⁺ : ∀ {n n′ is is′}
@@ -91,4 +91,4 @@ abstract
     → tail is m m<n k k≤m ≡ tail is′ m′ m′<n′ k k≤m′
   tail-≡⁺ {is′ = is′} is≡is′ m m′ m<n m′<n′ k k≤m k≤m′
     = trans (is≡is′ (suc k) _ (MS.n<m→Sn≤m (MS.≤→<→< k≤m′ m′<n′)))
-        (cong (is′ (suc k)) (≤-prop _ _))
+        (cong (is′ (suc k)) (≤-IsProp _ _))

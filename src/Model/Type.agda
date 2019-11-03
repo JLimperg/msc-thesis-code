@@ -10,7 +10,7 @@ open import Model.Stream public
 open import Model.Quantification public
 
 open import Model.Size as MS using
-  ( ≤-prop ) renaming
+  ( ≤-IsProp ) renaming
   ( ⟦_⟧ΔRG to ⟦_⟧Δ ; ⟦_⟧nRG to ⟦_⟧n ; ⟦_⟧σRG to ⟦_⟧σ )
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SS using (Sub⊢ᵤ ; ⟨_⟩)
@@ -65,8 +65,8 @@ open MS._≤_
     { fobj = castColist (reflexive (MS.⟦sub⟧ ⊢σ n))
     ; feq = λ γ≈γ′ xs≈ys a a₁ a₂ → xs≈ys _ _ _
     }
-  ; back-forth = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-prop _ _)
-  ; forth-back = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-prop _ _)
+  ; back-forth = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-IsProp _ _)
+  ; forth-back = ≈⁺ λ γ xs → Colist-≡⁺ λ m m≤n → cong (xs m) (≤-IsProp _ _)
   }
 ⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (T ST.⇒ U)
   = ≈⟦Type⟧-trans (↝-resp-≈⟦Type⟧ _ _ _ _ (⟦subT⟧ ⊢σ T) (⟦subT⟧ ⊢σ U))

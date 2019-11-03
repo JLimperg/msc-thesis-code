@@ -1,15 +1,6 @@
 {-# OPTIONS --without-K #-} --TODO
 module Model.Size where
 
-open import Cats.Category
-open import Cats.Category.Cat using (Cat)
-open import Cats.Category.Fun using (Fun)
-open import Cats.Category.Fun.Facts using (≅→≈ ; ≈→≅)
-open import Cats.Category.One using (One)
-open import Cats.Category.Preorder using (preorderAsCategory)
-open import Cats.Functor using (Functor)
-open import Cats.Functor.Const using (Const)
-open import Cats.Trans.Iso using (NatIso)
 open import Relation.Binary using (Rel ; Preorder ; IsPreorder)
 
 import Data.Nat as ℕ
@@ -29,7 +20,6 @@ open import Util.Relation.Binary.PropositionalEquality as ≡ using (cong₂-dep
 import Source.Size.Substitution.Canonical as SC
 import Source.Size.Substitution.Universe as S
 
-open Functor
 open S.Ctx
 open S.Size
 open S.Sub
@@ -40,15 +30,6 @@ open S._<_ hiding (<-trans)
 
 infix 4 _<_ _≤_
 infixr 5 _ₙ⊓_ _⊓_
-
-
-private
-  module Fun {lo la l≈ lo′ la′ l≈′}
-    {C : Category lo la l≈} {D : Category lo′ la′ l≈′}
-    = Category (Fun C D)
-
-
-  module Cat {lo la l≈} = Category (Cat lo la l≈)
 
 
 data Size : Set where
@@ -113,19 +94,6 @@ abstract
   ≤-trans n≤m (<→≤ m<o) = <→≤ (≤→<→< n≤m m<o)
 
 
-≤-IsPreorder : IsPreorder _≡_ _≤_
-≤-IsPreorder = record
-  { isEquivalence = ≡.isEquivalence
-  ; reflexive = λ { refl → ≤-refl }
-  ; trans = ≤-trans
-  }
-
-
-≤-Preorder : Preorder 0ℓ 0ℓ 0ℓ
-≤-Preorder = record { isPreorder = ≤-IsPreorder }
-
-
-abstract
   <-irrefl : ¬ (n < n)
   <-irrefl (nat n<n) = ℕ.<-irrefl refl n<n
 
@@ -172,31 +140,18 @@ open WFInd.Build <-wf public using () renaming
 
 
 abstract
-  <-prop : (p q : n < m) → p ≡ q
-  <-prop (nat p) (nat q) = cong nat (ℕ.<-irrelevant p q)
-  <-prop nat<∞ nat<∞ = refl
-  <-prop nat<⋆ nat<⋆ = refl
-  <-prop ∞<⋆ ∞<⋆ = refl
+  <-IsProp : (p q : n < m) → p ≡ q
+  <-IsProp (nat p) (nat q) = cong nat (ℕ.<-irrelevant p q)
+  <-IsProp nat<∞ nat<∞ = refl
+  <-IsProp nat<⋆ nat<⋆ = refl
+  <-IsProp ∞<⋆ ∞<⋆ = refl
 
 
-  nat-inj-< : ∀ {n m} → nat n < nat m → n ℕ.< m
-  nat-inj-< (nat n<m) = n<m
-
-
-  nat-inj-≤ : ∀ {n m} → nat n ≤ nat m → n ℕ.≤ m
-  nat-inj-≤ ≤-refl = ℕ.≤-refl
-  nat-inj-≤ (<→≤ n<m) = ℕ.<⇒≤ (nat-inj-< n<m)
-
-
-  n≤n-contr : (p : n ≤ n) → p ≡ reflexive refl
-  n≤n-contr (reflexive x) = cong reflexive (Size-IsSet _ _)
-  n≤n-contr (<→≤ n<n) = ⊥-elim (<-irrefl n<n)
-
-
-  ≤-prop : (p q : n ≤ m) → p ≡ q
-  ≤-prop ≤-refl q = sym (n≤n-contr q)
-  ≤-prop (<→≤ n<n) ≤-refl = ⊥-elim (<-irrefl n<n)
-  ≤-prop (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-prop _ _)
+  ≤-IsProp : (p q : n ≤ m) → p ≡ q
+  ≤-IsProp ≤-refl (reflexive p) = cong reflexive (Size-IsSet _ _)
+  ≤-IsProp ≤-refl (<→≤ n<n) = ⊥-elim (<-irrefl n<n)
+  ≤-IsProp (<→≤ n<n) ≤-refl = ⊥-elim (<-irrefl n<n)
+  ≤-IsProp (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-IsProp _ _)
 
 
   ≤-nat⁺ : ∀ {n m} → n ℕ.≤ m → nat n ≤ nat m
@@ -214,87 +169,17 @@ abstract
   0≤n {⋆} = <→≤ nat<⋆
 
 
-Sizes : Category 0ℓ 0ℓ 0ℓ
-Sizes = preorderAsCategory ≤-Preorder
-
-
-module Sizes = Category Sizes
-
-
-abstract
-  Sizes-univalent : n Sizes.≅ m → n ≡ m
-  Sizes-univalent n≅m = ≤-antisym (Category._≅_.forth n≅m) (Category._≅_.back n≅m)
-
-
--- The following two lemmas could be generalised to functors into any
--- thin/univalent category.
-≅F⁺ : ∀ {lo la l≈} {C : Category lo la l≈} {F G : Functor C Sizes}
-  → (∀ {c} → fobj F c ≡ fobj G c)
-  → F Fun.≅ G
-≅F⁺ F≡G = ≈→≅ (record { iso = Sizes.≅.reflexive F≡G })
-
-
-≅F⁻ : ∀ {lo la l≈} {C : Category lo la l≈} {F G : Functor C Sizes}
-  → F Fun.≅ G
-  → ∀ {c} → fobj F c ≡ fobj G c
-≅F⁻ F≅G = Sizes-univalent (NatIso.iso (≅→≈ F≅G))
-
-
 Size< : Size → Set
 Size< n = ∃[ m ] (m < n)
 
 
 abstract
   Size<-≡⁺ : (m k : Size< n) → proj₁ m ≡ proj₁ k → m ≡ k
-  Size<-≡⁺ (m , _) (k , _) refl = cong (m ,_) (<-prop _ _)
+  Size<-≡⁺ (m , _) (k , _) refl = cong (m ,_) (<-IsProp _ _)
 
 
 Size<-IsSet : ∀ {n} → IsSet (Size< n)
-Size<-IsSet = Σ-IsSet Size-IsSet (λ _ → IsOfHLevel-suc 1 <-prop)
-
-
-≤-Preorder-< : Size → Preorder 0ℓ 0ℓ 0ℓ
-≤-Preorder-< n = record
-  { Carrier = Size< n
-  ; isPreorder = On.isPreorder proj₁ ≤-IsPreorder
-  }
-
-
-Sizes< : Size → Category 0ℓ 0ℓ 0ℓ
-Sizes< n = preorderAsCategory (≤-Preorder-< n)
-
-
-module Sizes< {n} = Category (Sizes< n)
-
-
-Sizes<-≅⁺
-  : n ≡ m
-  → {n<o : n < o} {m<o : m < o}
-  → (n , n<o) Sizes<.≅ (m , m<o)
-Sizes<-≅⁺ n≡m = record
-  { forth = reflexive n≡m
-  ; back = reflexive (sym n≡m)
-  }
-
-
-Sizes<F : Functor Sizes (Cat 0ℓ 0ℓ 0ℓ)
-Sizes<F = record
-  { fobj = Sizes<
-  ; fmap = λ n≤m → record
-    { fobj = λ { (o , o<n) → o , <→≤→< o<n n≤m }
-    ; fmap = id
-    }
-  ; fmap-resp = λ _ → record { iso = Sizes<-≅⁺ refl }
-  ; fmap-id = record { iso = Sizes<-≅⁺ refl }
-  ; fmap-∘ = record { iso = Sizes<-≅⁺ refl }
-  }
-
-
-Sizes<→Sizes : ∀ {n} → Functor (Sizes< n) Sizes
-Sizes<→Sizes = record
-  { fobj = proj₁
-  ; fmap = id
-  }
+Size<-IsSet = Σ-IsSet Size-IsSet λ _ → IsOfHLevel-suc 1 <-IsProp
 
 
 szero : Size
@@ -326,13 +211,6 @@ abstract
 
   n<ssucn : n < ∞ → n < ssuc n
   n<ssucn nat<∞ = nat (ℕ.s≤s ℕ.≤-refl)
-
-
-ssucF : Functor Sizes Sizes
-ssucF = record
-  { fobj = ssuc
-  ; fmap = ssuc-resp-≤
-  }
 
 
 _ₙ⊓_ : ℕ → Size → ℕ
@@ -416,68 +294,38 @@ abstract
 
 
 mutual
-  ⟦_⟧Δ : S.Ctx → Category 0ℓ 0ℓ 0ℓ
-  ⟦ [] ⟧Δ = One _ _ _
-  ⟦ Δ ∙ n ⟧Δ = record
-    { Obj = Σ[ δ ∈ Δ.Obj ] Category.Obj (Sizes< (fobj ⟦ n ⟧n δ))
-    ; _⇒_ = λ { (δ , m , m<n) (γ , o , o<n) → (δ Δ.⇒ γ) × m ≤ o }
-    ; _≈_ = λ _ _ → ⊤
-    ; id = Δ.id , ≤-refl
-    ; _∘_ = λ { (f , p) (g , q) → f Δ.∘ g , ≤-trans q p }
-    }
-    where
-      module Δ = Category (⟦ Δ ⟧Δ)
+  ⟦_⟧Δ : S.Ctx → Set
+  ⟦ [] ⟧Δ = ⊤
+  ⟦ Δ ∙ n ⟧Δ = Σ[ δ ∈ ⟦ Δ ⟧Δ ] (Size< (⟦ n ⟧n δ))
 
 
-  π₂ : ∀ n → Functor ⟦ Δ ∙ n ⟧Δ Sizes
-  π₂ n = record
-    { fobj = λ { (δ , m , m<n) → m }
-    ; fmap = λ { (f , p) → p }
-    }
+  ⟦_⟧x : S.Var Δ → ⟦ Δ ⟧Δ → Size
+  ⟦ zero ⟧x (δ , n , _) = n
+  ⟦ suc x ⟧x (δ , _ , _) = ⟦ x ⟧x δ
 
 
-  ⟦_⟧x : S.Var Δ → Functor ⟦ Δ ⟧Δ Sizes
-  ⟦ zero ⟧x = π₂ _
-  ⟦ suc x ⟧x = record
-    { fobj = λ { (δ , m , m<n) → fobj ⟦ x ⟧x δ }
-    ; fmap = λ { (f , p) → fmap ⟦ x ⟧x f }
-    }
-    -- This is ⟦ x ⟧x Cat.∘ π₁, but the termination checker doesn't like that.
-
-
-  ⟦_⟧n : S.Size Δ → Functor ⟦ Δ ⟧Δ Sizes
+  ⟦_⟧n : S.Size Δ → ⟦ Δ ⟧Δ → Size
   ⟦ var x ⟧n = ⟦ x ⟧x
-  ⟦ ∞ ⟧n = Const _ ∞
-  ⟦ ⋆ ⟧n = Const _ ⋆
-  ⟦ zero ⟧n = Const _ szero
-  ⟦ suc n ⟧n = ssucF Cat.∘ ⟦ n ⟧n
-
+  ⟦ ∞ ⟧n _ = ∞
+  ⟦ ⋆ ⟧n _ = ⋆
+  ⟦ zero ⟧n _ = szero
+  ⟦ suc n ⟧n = ssuc ∘ ⟦ n ⟧n
 
 
 abstract
-  ⟦Δ⟧-StronglyThin : ∀ Δ → StronglyThin ⟦ Δ ⟧Δ
-  ⟦Δ⟧-StronglyThin [] {f = lift tt} {lift tt} = refl
-  ⟦Δ⟧-StronglyThin (Δ ∙ n) {f = f , p} {g , q}
-    = cong₂ _,_ (⟦Δ⟧-StronglyThin Δ) (≤-prop p q)
-
-
-  ⟦Δ⟧-Thin : ∀ Δ → Thin ⟦ Δ ⟧Δ
-  ⟦Δ⟧-Thin Δ = StronglyThin→Thin {C = ⟦ Δ ⟧Δ} (⟦Δ⟧-StronglyThin Δ)
-
-
-  ⟦Δ⟧-IsSet : ∀ Δ → IsSet (⟦ Δ ⟧Δ .Category.Obj)
-  ⟦Δ⟧-IsSet [] = Lift-IsSet ⊤-IsSet
+  ⟦Δ⟧-IsSet : ∀ Δ → IsSet ⟦ Δ ⟧Δ
+  ⟦Δ⟧-IsSet [] = ⊤-IsSet
   ⟦Δ⟧-IsSet (Δ ∙ n) = Σ-IsSet (⟦Δ⟧-IsSet Δ) λ _ → Size<-IsSet
 
 
 ⟦Δ⟧-HSet : S.Ctx → HSet 0ℓ
-⟦Δ⟧-HSet Δ = HLevel⁺ (⟦ Δ ⟧Δ .Category.Obj) (⟦Δ⟧-IsSet Δ)
+⟦Δ⟧-HSet Δ = HLevel⁺ _ (⟦Δ⟧-IsSet Δ)
 
 
 abstract
-  ⟦Δ∙n⟧-≡⁺ : ∀ Δ (n : S.Size Δ) {δ δ′ : ⟦ Δ ⟧Δ .Category.Obj} {m m′ : Size}
-    → (m<n : m < ⟦ n ⟧n .fobj δ)
-    → (m′<n : m′ < ⟦ n ⟧n .fobj δ′)
+  ⟦Δ∙n⟧-≡⁺ : ∀ Δ (n : S.Size Δ) {δ δ′ : ⟦ Δ ⟧Δ} {m m′ : Size}
+    → (m<n : m < ⟦ n ⟧n δ)
+    → (m′<n : m′ < ⟦ n ⟧n δ′)
     → δ ≡ δ′
     → m ≡ m′
     → (δ , m , m<n) ≡ (δ′ , m′ , m′<n)
@@ -485,54 +333,23 @@ abstract
     = cong (δ ,_) (Size<-≡⁺ _ _ eq₂)
 
 
-π₁ : ∀ n → Functor ⟦ Δ ∙ n ⟧Δ ⟦ Δ ⟧Δ
-π₁ {Δ} n = record
-  { fobj = proj₁
-  ; fmap = proj₁
-  ; fmap-resp = λ _ → ⟦Δ⟧-Thin Δ
-  ; fmap-id = ⟦Δ⟧-Thin Δ
-  ; fmap-∘ = ⟦Δ⟧-Thin Δ
-  }
-
-
-_<F_ : ∀ {lo la l≈} {C : Category lo la l≈} → Rel (Functor C Sizes) lo
-F <F G = ∀ {δ} → fobj F δ < fobj G δ
-
-
-_≤F_ : ∀ {lo la l≈} {C : Category lo la l≈} → Rel (Functor C Sizes) lo
-F ≤F G = ∀ {δ} → fobj F δ ≤ fobj G δ
-
-
-⟦wk⟧≅π₁ : (n m : S.Size Δ) → ⟦ S.wk {n = n} m ⟧n Fun.≅ ⟦ m ⟧n Cat.∘ π₁ n
-⟦wk⟧≅π₁ n (var x) = ≅F⁺ refl
-⟦wk⟧≅π₁ n ∞ = ≅F⁺ refl
-⟦wk⟧≅π₁ n ⋆ = ≅F⁺ refl
-⟦wk⟧≅π₁ n zero = ≅F⁺ refl
-⟦wk⟧≅π₁ n (suc m) = ≈→≅
-  let open Cat.≈-Reasoning in
-  begin
-    ssucF Cat.∘ ⟦ S.wk m ⟧n
-  ≈⟨ Cat.∘-resp-r {f = ssucF} (≅→≈ (⟦wk⟧≅π₁ n m)) ⟩
-    ssucF Cat.∘ ⟦ m ⟧n Cat.∘ π₁ n
-  ≈⟨ Cat.unassoc {f = ssucF} {⟦ m ⟧n} {π₁ n} ⟩
-    (ssucF Cat.∘ ⟦ m ⟧n) Cat.∘ π₁ n
-  ∎
-
-
-⟦suc⟧≅π₁ : {n : S.Size Δ} {x : S.Var Δ}
-  → ⟦ suc {n = n} x ⟧x Fun.≅ ⟦ x ⟧x Cat.∘ π₁ n
-⟦suc⟧≅π₁ = ≅F⁺ refl
-
-
 abstract
-  ⟦<⟧ₓ : (x : S.Var Δ) → ⟦ x ⟧x <F ⟦ S.bound x ⟧n
+  ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n δ ≡ ⟦ m ⟧n (proj₁ δ)
+  ⟦wk⟧ n (var x) = refl
+  ⟦wk⟧ n ∞ = refl
+  ⟦wk⟧ n ⋆ = refl
+  ⟦wk⟧ n zero = refl
+  ⟦wk⟧ n (suc m) = cong ssuc (⟦wk⟧ n m)
+
+
+  ⟦<⟧ₓ : ∀ (x : S.Var Δ) {δ} → ⟦ x ⟧x δ < ⟦ S.bound x ⟧n δ
   ⟦<⟧ₓ (zero {n = n}) {δ , m , m<n}
-    = subst (m <_) (sym (≅F⁻ (⟦wk⟧≅π₁ _ n))) m<n
+    = subst (m <_) (sym (⟦wk⟧ _ n)) m<n
   ⟦<⟧ₓ (suc x) {δ , m , m<n}
-    = subst (fobj ⟦ x ⟧x δ <_) (sym (≅F⁻ (⟦wk⟧≅π₁ _ (S.bound x)))) (⟦<⟧ₓ x)
+    = subst (⟦ x ⟧x δ <_) (sym (⟦wk⟧ _ (S.bound x))) (⟦<⟧ₓ x)
 
 
-  ⟦<⟧ : {n m : S.Size Δ} → n S.< m → ⟦ n ⟧n <F ⟦ m ⟧n
+  ⟦<⟧ : ∀ {n m : S.Size Δ} {δ} → n S.< m → ⟦ n ⟧n δ < ⟦ m ⟧n δ
   ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
   ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
   ⟦<⟧ zero<∞ = nat<∞
@@ -542,41 +359,27 @@ abstract
 
 
 mutual
-  ⟦_⟧σ : ∀ {σ} → σ ∶ Δ ⇒ᵤ Ω → Functor ⟦ Δ ⟧Δ ⟦ Ω ⟧Δ
-  ⟦ Id ⟧σ = Cat.id
-  ⟦ comp σ τ ⟧σ = ⟦ τ ⟧σ Cat.∘ ⟦ σ ⟧σ
-  ⟦ Wk {n = n} ⟧σ = π₁ n
-  ⟦ Fill {n = n} n<m ⟧σ = record
-    { fobj = λ δ → δ , ⟦ n ⟧n .fobj δ , ⟦<⟧ n<m
-    ; fmap = λ δ≤δ′ → δ≤δ′ , ⟦ n ⟧n .fmap δ≤δ′
-    }
-  ⟦ Keep {σ = σ} {n = n} ⊢σ refl ⟧σ = record
-    { fobj = λ where
-        (δ , m , m<n)
-          → ⟦ ⊢σ ⟧σ .fobj δ , m
-          , subst (m <_) (⟦sub⟧ ⊢σ n) m<n
-    ; fmap = λ { (δ≤δ′ , m≤m′)
-        → ⟦ ⊢σ ⟧σ .fmap δ≤δ′ , m≤m′ }
-    }
-  ⟦ Skip {n = n} ⟧σ = record
-    { fobj = λ { ((δ , m , m<n) , k , k<m)  → δ , k , <-trans k<m m<n }
-    ; fmap = λ { ((δ≤δ′ , m≤m′) , k≤k′) → δ≤δ′ , k≤k′ }
-    }
+  ⟦_⟧σ : ∀ {σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧Δ → ⟦ Ω ⟧Δ
+  ⟦ Id ⟧σ δ = δ
+  ⟦ comp σ τ ⟧σ δ = ⟦ τ ⟧σ (⟦ σ ⟧σ δ)
+  ⟦ Wk ⟧σ (δ , m) = δ
+  ⟦ Keep {n = n} σ refl ⟧σ (δ , m , m<n)
+    = ⟦ σ ⟧σ δ , m , subst (m <_) (⟦sub⟧ σ n) m<n
+  ⟦ Fill {n = n} n<m ⟧σ δ = δ , ⟦ n ⟧n δ , ⟦<⟧ n<m
+  ⟦ Skip ⟧σ ((δ , m , m<n) , k , k<m) = δ , k , <-trans k<m m<n
 
 
   abstract
     ⟦subV′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (x : S.Var Ω) {δ}
-      → ⟦ S.subV′ σ x ⟧n .fobj δ ≡ ⟦ x ⟧x .fobj (⟦ ⊢σ ⟧σ .fobj δ)
+      → ⟦ S.subV′ σ x ⟧n δ ≡ ⟦ x ⟧x (⟦ ⊢σ ⟧σ δ)
     ⟦subV′⟧ Id x = refl
     ⟦subV′⟧ (comp {σ = σ} {τ = τ} ⊢σ ⊢τ) x
       = trans (⟦sub′⟧ ⊢σ (S.subV′ τ x)) (⟦subV′⟧ ⊢τ x)
     ⟦subV′⟧ Wk x = refl
-    ⟦subV′⟧ (Keep {σ = σ} ⊢σ refl) zero = refl
-    ⟦subV′⟧ (Keep {σ = σ} {n = n} ⊢σ refl) (suc x) {δ}
-      rewrite ≅F⁻ (⟦wk⟧≅π₁ (S.sub σ n) (S.subV′ σ x)) {δ}
+    ⟦subV′⟧ (Keep ⊢σ refl) zero {δ , m} = refl
+    ⟦subV′⟧ (Keep {σ = σ} {n = n} ⊢σ refl) (suc x) {δ , m}
+      rewrite ⟦wk⟧ (S.sub σ n) (S.subV′ σ x) {δ , m}
       = ⟦subV′⟧ ⊢σ x
-      -- If we write `trans ? ?` instead of the rewrite, the termination checker
-      -- complains.
     ⟦subV′⟧ (Fill n<m) zero = refl
     ⟦subV′⟧ (Fill n<m) (suc x) = refl
     ⟦subV′⟧ Skip zero = refl
@@ -584,7 +387,7 @@ mutual
 
 
     ⟦sub′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
-      → ⟦ S.sub′ σ n ⟧n .fobj δ ≡ ⟦ n ⟧n .fobj (⟦ ⊢σ ⟧σ .fobj δ)
+      → ⟦ S.sub′ σ n ⟧n δ ≡ ⟦ n ⟧n (⟦ ⊢σ ⟧σ δ)
     ⟦sub′⟧ σ (var x) = ⟦subV′⟧ σ x
     ⟦sub′⟧ σ ∞ = refl
     ⟦sub′⟧ σ ⋆ = refl
@@ -593,23 +396,23 @@ mutual
 
 
     ⟦sub⟧ :  ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
-      → ⟦ S.sub σ n ⟧n .fobj δ ≡ ⟦ n ⟧n .fobj (⟦ ⊢σ ⟧σ .fobj δ)
+      → ⟦ S.sub σ n ⟧n δ ≡ ⟦ n ⟧n (⟦ ⊢σ ⟧σ δ)
     ⟦sub⟧ {σ = σ} ⊢σ n {δ}
-      = trans (cong (λ k → ⟦ k ⟧n .fobj δ) (sym (S.sub′≡sub σ n))) (⟦sub′⟧ ⊢σ n)
+      = trans (cong (λ k → ⟦ k ⟧n δ) (sym (S.sub′≡sub σ n))) (⟦sub′⟧ ⊢σ n)
 
 
 abstract
   ⟦subV⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (x : S.Var Ω) {δ}
-    → ⟦ S.subV σ x ⟧n .fobj δ ≡ ⟦ x ⟧x .fobj (⟦ ⊢σ ⟧σ .fobj δ)
+    → ⟦ S.subV σ x ⟧n δ ≡ ⟦ x ⟧x (⟦ ⊢σ ⟧σ δ)
   ⟦subV⟧ {σ = σ} ⊢σ x {δ}
-    = trans (cong (λ k → ⟦ k ⟧n .fobj δ) (sym (S.subV′≡subV σ x))) (⟦subV′⟧ ⊢σ x)
+    = trans (cong (λ k → ⟦ k ⟧n δ) (sym (S.subV′≡subV σ x))) (⟦subV′⟧ ⊢σ x)
 
 
   ⟦⟧σ-param : ∀ {σ} (p q : σ ∶ Δ ⇒ᵤ Ω) {δ}
-    → ⟦ p ⟧σ .fobj δ ≡ ⟦ q ⟧σ .fobj δ
+    → ⟦ p ⟧σ δ ≡ ⟦ q ⟧σ δ
   ⟦⟧σ-param Id Id = refl
   ⟦⟧σ-param (comp p p′) (comp q q′)
-    = trans (⟦⟧σ-param p′ q′) (cong (⟦ q′ ⟧σ .fobj) (⟦⟧σ-param p q))
+    = trans (⟦⟧σ-param p′ q′) (cong (⟦ q′ ⟧σ) (⟦⟧σ-param p q))
   ⟦⟧σ-param Wk Wk = refl
   ⟦⟧σ-param {Ω = Ω ∙ m} (Keep p refl) (Keep q m≡n[σ]₁)
     rewrite S.Size-IsSet m≡n[σ]₁ refl
@@ -635,11 +438,11 @@ SizesRG = record
 
 ⟦_⟧nRG : ∀ {Δ} (n : S.Size Δ) → ⟦ Δ ⟧ΔRG RG.⇒ SizesRG
 ⟦ n ⟧nRG = record
-  { fobj = ⟦ n ⟧n .fobj
+  { fobj = ⟦ n ⟧n
   }
 
 
 ⟦_⟧σRG : ∀ {Δ Ω σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧ΔRG RG.⇒ ⟦ Ω ⟧ΔRG
 ⟦ σ ⟧σRG = record
-  { fobj = ⟦ σ ⟧σ .fobj
+  { fobj = ⟦ σ ⟧σ
   }
