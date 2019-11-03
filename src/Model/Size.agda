@@ -216,10 +216,6 @@ abstract
   ssuc-resp-≤ (<→≤ n<m) = <→≤ (ssuc-resp-< n<m)
 
 
-  szero<ssuc : n < ∞ → szero < ssuc n
-  szero<ssuc nat<∞ = nat (ℕ.s≤s ℕ.z≤n)
-
-
   n<ssucn : n < ∞ → n < ssuc n
   n<ssucn nat<∞ = nat (ℕ.s≤s ℕ.≤-refl)
 
