@@ -294,26 +294,26 @@ abstract
 
 
 mutual
-  ⟦_⟧Δ : S.Ctx → Set
-  ⟦ [] ⟧Δ = ⊤
-  ⟦ Δ ∙ n ⟧Δ = Σ[ δ ∈ ⟦ Δ ⟧Δ ] (Size< (⟦ n ⟧n δ))
+  ⟦_⟧Δ′ : S.Ctx → Set
+  ⟦ [] ⟧Δ′ = ⊤
+  ⟦ Δ ∙ n ⟧Δ′ = Σ[ δ ∈ ⟦ Δ ⟧Δ′ ] (Size< (⟦ n ⟧n′ δ))
 
 
-  ⟦_⟧x : S.Var Δ → ⟦ Δ ⟧Δ → Size
-  ⟦ zero ⟧x (δ , n , _) = n
-  ⟦ suc x ⟧x (δ , _ , _) = ⟦ x ⟧x δ
+  ⟦_⟧x′ : S.Var Δ → ⟦ Δ ⟧Δ′ → Size
+  ⟦ zero ⟧x′ (δ , n , _) = n
+  ⟦ suc x ⟧x′ (δ , _ , _) = ⟦ x ⟧x′ δ
 
 
-  ⟦_⟧n : S.Size Δ → ⟦ Δ ⟧Δ → Size
-  ⟦ var x ⟧n = ⟦ x ⟧x
-  ⟦ ∞ ⟧n _ = ∞
-  ⟦ ⋆ ⟧n _ = ⋆
-  ⟦ zero ⟧n _ = szero
-  ⟦ suc n ⟧n = ssuc ∘ ⟦ n ⟧n
+  ⟦_⟧n′ : S.Size Δ → ⟦ Δ ⟧Δ′ → Size
+  ⟦ var x ⟧n′ = ⟦ x ⟧x′
+  ⟦ ∞ ⟧n′ _ = ∞
+  ⟦ ⋆ ⟧n′ _ = ⋆
+  ⟦ zero ⟧n′ _ = szero
+  ⟦ suc n ⟧n′ = ssuc ∘ ⟦ n ⟧n′
 
 
 abstract
-  ⟦Δ⟧-IsSet : ∀ Δ → IsSet ⟦ Δ ⟧Δ
+  ⟦Δ⟧-IsSet : ∀ Δ → IsSet ⟦ Δ ⟧Δ′
   ⟦Δ⟧-IsSet [] = ⊤-IsSet
   ⟦Δ⟧-IsSet (Δ ∙ n) = Σ-IsSet (⟦Δ⟧-IsSet Δ) λ _ → Size<-IsSet
 
@@ -323,9 +323,9 @@ abstract
 
 
 abstract
-  ⟦Δ∙n⟧-≡⁺ : ∀ Δ (n : S.Size Δ) {δ δ′ : ⟦ Δ ⟧Δ} {m m′ : Size}
-    → (m<n : m < ⟦ n ⟧n δ)
-    → (m′<n : m′ < ⟦ n ⟧n δ′)
+  ⟦Δ∙n⟧-≡⁺ : ∀ Δ (n : S.Size Δ) {δ δ′ : ⟦ Δ ⟧Δ′} {m m′ : Size}
+    → (m<n : m < ⟦ n ⟧n′ δ)
+    → (m′<n : m′ < ⟦ n ⟧n′ δ′)
     → δ ≡ δ′
     → m ≡ m′
     → (δ , m , m<n) ≡ (δ′ , m′ , m′<n)
@@ -334,7 +334,7 @@ abstract
 
 
 abstract
-  ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n δ ≡ ⟦ m ⟧n (proj₁ δ)
+  ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n′ δ ≡ ⟦ m ⟧n′ (proj₁ δ)
   ⟦wk⟧ n (var x) = refl
   ⟦wk⟧ n ∞ = refl
   ⟦wk⟧ n ⋆ = refl
@@ -342,14 +342,14 @@ abstract
   ⟦wk⟧ n (suc m) = cong ssuc (⟦wk⟧ n m)
 
 
-  ⟦<⟧ₓ : ∀ (x : S.Var Δ) {δ} → ⟦ x ⟧x δ < ⟦ S.bound x ⟧n δ
+  ⟦<⟧ₓ : ∀ (x : S.Var Δ) {δ} → ⟦ x ⟧x′ δ < ⟦ S.bound x ⟧n′ δ
   ⟦<⟧ₓ (zero {n = n}) {δ , m , m<n}
     = subst (m <_) (sym (⟦wk⟧ _ n)) m<n
   ⟦<⟧ₓ (suc x) {δ , m , m<n}
-    = subst (⟦ x ⟧x δ <_) (sym (⟦wk⟧ _ (S.bound x))) (⟦<⟧ₓ x)
+    = subst (⟦ x ⟧x′ δ <_) (sym (⟦wk⟧ _ (S.bound x))) (⟦<⟧ₓ x)
 
 
-  ⟦<⟧ : ∀ {n m : S.Size Δ} {δ} → n S.< m → ⟦ n ⟧n δ < ⟦ m ⟧n δ
+  ⟦<⟧ : ∀ {n m : S.Size Δ} {δ} → n S.< m → ⟦ n ⟧n′ δ < ⟦ m ⟧n′ δ
   ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
   ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
   ⟦<⟧ zero<∞ = nat<∞
@@ -359,19 +359,19 @@ abstract
 
 
 mutual
-  ⟦_⟧σ : ∀ {σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧Δ → ⟦ Ω ⟧Δ
-  ⟦ Id ⟧σ δ = δ
-  ⟦ comp σ τ ⟧σ δ = ⟦ τ ⟧σ (⟦ σ ⟧σ δ)
-  ⟦ Wk ⟧σ (δ , m) = δ
-  ⟦ Keep {n = n} σ refl ⟧σ (δ , m , m<n)
-    = ⟦ σ ⟧σ δ , m , subst (m <_) (⟦sub⟧ σ n) m<n
-  ⟦ Fill {n = n} n<m ⟧σ δ = δ , ⟦ n ⟧n δ , ⟦<⟧ n<m
-  ⟦ Skip ⟧σ ((δ , m , m<n) , k , k<m) = δ , k , <-trans k<m m<n
+  ⟦_⟧σ′ : ∀ {σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧Δ′ → ⟦ Ω ⟧Δ′
+  ⟦ Id ⟧σ′ δ = δ
+  ⟦ comp σ τ ⟧σ′ δ = ⟦ τ ⟧σ′ (⟦ σ ⟧σ′ δ)
+  ⟦ Wk ⟧σ′ (δ , m) = δ
+  ⟦ Keep {n = n} σ refl ⟧σ′ (δ , m , m<n)
+    = ⟦ σ ⟧σ′ δ , m , subst (m <_) (⟦sub⟧ σ n) m<n
+  ⟦ Fill {n = n} n<m ⟧σ′ δ = δ , ⟦ n ⟧n′ δ , ⟦<⟧ n<m
+  ⟦ Skip ⟧σ′ ((δ , m , m<n) , k , k<m) = δ , k , <-trans k<m m<n
 
 
   abstract
     ⟦subV′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (x : S.Var Ω) {δ}
-      → ⟦ S.subV′ σ x ⟧n δ ≡ ⟦ x ⟧x (⟦ ⊢σ ⟧σ δ)
+      → ⟦ S.subV′ σ x ⟧n′ δ ≡ ⟦ x ⟧x′ (⟦ ⊢σ ⟧σ′ δ)
     ⟦subV′⟧ Id x = refl
     ⟦subV′⟧ (comp {σ = σ} {τ = τ} ⊢σ ⊢τ) x
       = trans (⟦sub′⟧ ⊢σ (S.subV′ τ x)) (⟦subV′⟧ ⊢τ x)
@@ -387,7 +387,7 @@ mutual
 
 
     ⟦sub′⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
-      → ⟦ S.sub′ σ n ⟧n δ ≡ ⟦ n ⟧n (⟦ ⊢σ ⟧σ δ)
+      → ⟦ S.sub′ σ n ⟧n′ δ ≡ ⟦ n ⟧n′ (⟦ ⊢σ ⟧σ′ δ)
     ⟦sub′⟧ σ (var x) = ⟦subV′⟧ σ x
     ⟦sub′⟧ σ ∞ = refl
     ⟦sub′⟧ σ ⋆ = refl
@@ -396,23 +396,23 @@ mutual
 
 
     ⟦sub⟧ :  ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
-      → ⟦ S.sub σ n ⟧n δ ≡ ⟦ n ⟧n (⟦ ⊢σ ⟧σ δ)
+      → ⟦ S.sub σ n ⟧n′ δ ≡ ⟦ n ⟧n′ (⟦ ⊢σ ⟧σ′ δ)
     ⟦sub⟧ {σ = σ} ⊢σ n {δ}
-      = trans (cong (λ k → ⟦ k ⟧n δ) (sym (S.sub′≡sub σ n))) (⟦sub′⟧ ⊢σ n)
+      = trans (cong (λ k → ⟦ k ⟧n′ δ) (sym (S.sub′≡sub σ n))) (⟦sub′⟧ ⊢σ n)
 
 
 abstract
   ⟦subV⟧ : ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (x : S.Var Ω) {δ}
-    → ⟦ S.subV σ x ⟧n δ ≡ ⟦ x ⟧x (⟦ ⊢σ ⟧σ δ)
+    → ⟦ S.subV σ x ⟧n′ δ ≡ ⟦ x ⟧x′ (⟦ ⊢σ ⟧σ′ δ)
   ⟦subV⟧ {σ = σ} ⊢σ x {δ}
-    = trans (cong (λ k → ⟦ k ⟧n δ) (sym (S.subV′≡subV σ x))) (⟦subV′⟧ ⊢σ x)
+    = trans (cong (λ k → ⟦ k ⟧n′ δ) (sym (S.subV′≡subV σ x))) (⟦subV′⟧ ⊢σ x)
 
 
   ⟦⟧σ-param : ∀ {σ} (p q : σ ∶ Δ ⇒ᵤ Ω) {δ}
-    → ⟦ p ⟧σ δ ≡ ⟦ q ⟧σ δ
+    → ⟦ p ⟧σ′ δ ≡ ⟦ q ⟧σ′ δ
   ⟦⟧σ-param Id Id = refl
   ⟦⟧σ-param (comp p p′) (comp q q′)
-    = trans (⟦⟧σ-param p′ q′) (cong (⟦ q′ ⟧σ) (⟦⟧σ-param p q))
+    = trans (⟦⟧σ-param p′ q′) (cong (⟦ q′ ⟧σ′) (⟦⟧σ-param p q))
   ⟦⟧σ-param Wk Wk = refl
   ⟦⟧σ-param {Ω = Ω ∙ m} (Keep p refl) (Keep q m≡n[σ]₁)
     rewrite S.Size-IsSet m≡n[σ]₁ refl
@@ -422,27 +422,27 @@ abstract
   ⟦⟧σ-param Skip Skip = refl
 
 
-⟦_⟧ΔRG : S.Ctx → RGraph
-⟦ Δ ⟧ΔRG = record
+⟦_⟧Δ : S.Ctx → RGraph
+⟦ Δ ⟧Δ = record
   { ObjHSet = ⟦Δ⟧-HSet Δ
   ; eqHProp = λ _ _ → ⊤-HProp
   }
 
 
-SizesRG : RGraph
-SizesRG = record
+Sizes : RGraph
+Sizes = record
   { ObjHSet = HLevel⁺ Size Size-IsSet
   ; eqHProp = λ _ _ → ⊤-HProp
   }
 
 
-⟦_⟧nRG : ∀ {Δ} (n : S.Size Δ) → ⟦ Δ ⟧ΔRG RG.⇒ SizesRG
-⟦ n ⟧nRG = record
-  { fobj = ⟦ n ⟧n
+⟦_⟧n : ∀ {Δ} (n : S.Size Δ) → ⟦ Δ ⟧Δ RG.⇒ Sizes
+⟦ n ⟧n = record
+  { fobj = ⟦ n ⟧n′
   }
 
 
-⟦_⟧σRG : ∀ {Δ Ω σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧ΔRG RG.⇒ ⟦ Ω ⟧ΔRG
-⟦ σ ⟧σRG = record
-  { fobj = ⟦ σ ⟧σ
+⟦_⟧σ : ∀ {Δ Ω σ} → σ ∶ Δ ⇒ᵤ Ω → ⟦ Δ ⟧Δ RG.⇒ ⟦ Ω ⟧Δ
+⟦ σ ⟧σ = record
+  { fobj = ⟦ σ ⟧σ′
   }

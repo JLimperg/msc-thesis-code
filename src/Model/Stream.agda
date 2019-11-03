@@ -2,8 +2,7 @@
 module Model.Stream where
 
 open import Model.Size as MS using
-  ( Size ; _≤_ ; _<_ ; ≤-IsProp ; ≤-trans ) renaming
-  ( SizesRG to Sizes )
+  ( Size ; Sizes ; _≤_ ; _<_ ; ≤-IsProp ; ≤-trans )
 open import Model.Type.Core
 open import Util.HoTT.HLevel
 open import Util.HoTT.Univalence

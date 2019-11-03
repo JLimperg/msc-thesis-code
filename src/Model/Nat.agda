@@ -2,8 +2,7 @@
 module Model.Nat where
 
 open import Model.Size as MS using
-  ( Size ; _≤_ ; _<_ ; ≤-IsProp ) renaming
-  ( SizesRG to Sizes )
+  ( Size ; Sizes ; _≤_ ; _<_ ; ≤-IsProp )
 open import Model.Type.Core
 open import Util.HoTT.HLevel
 open import Util.Prelude

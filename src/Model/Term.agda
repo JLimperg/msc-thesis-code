@@ -3,8 +3,7 @@ module Model.Term where
 
 open import Cats.Category
 
-open import Model.Size as MS using (_<_) renaming
-  (⟦_⟧ΔRG to ⟦_⟧Δ ; ⟦_⟧nRG to ⟦_⟧n ; ⟦_⟧σRG to ⟦_⟧σ)
+open import Model.Size as MS using (_<_ ; ⟦_⟧Δ ; ⟦_⟧n ; ⟦_⟧σ)
 open import Model.Type as MT
 open import Util.HoTT.Equiv
 open import Util.Relation.Binary.PropositionalEquality using (happly)

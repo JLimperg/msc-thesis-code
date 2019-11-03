@@ -2,8 +2,7 @@
 module Model.Quantification where
 
 open import Model.RGraph as RG using (RGraph)
-open import Model.Size as MS using (_<_) renaming
-  ( ⟦_⟧ΔRG to ⟦_⟧Δ ; ⟦_⟧nRG to ⟦_⟧n ; ⟦_⟧σRG to ⟦_⟧σ)
+open import Model.Size as MS using (_<_ ; ⟦_⟧Δ ; ⟦_⟧n ; ⟦_⟧σ)
 open import Model.Type.Core
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SS using (Sub⊢ᵤ)
