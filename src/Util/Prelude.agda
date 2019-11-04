@@ -24,7 +24,7 @@ open import Data.Vec public using
 open import Function public using
   (id ; _∘_ ; _∘′_ ; _$_ ; _on_)
 open import Level public using
-  (Level ; 0ℓ; Lift ; lift ; lower) renaming
+  (Level ; 0ℓ) renaming
   (zero to lzero ; suc to lsuc ; _⊔_ to _⊔ℓ_)
 open import Relation.Nullary public using
   (¬_ ; Dec ; yes ; no)

@@ -67,7 +67,7 @@ data _,_⊢_⟶_∶_ Δ (Γ : Ctx Δ) : (t u : Term Δ) (T : Type Δ) → Set wh
     → (n<⋆ : n < ⋆)
     → Δ , Γ
         ⊢ fix T t n
-        ⟶ t ·ₛ n · (Λₛ n , fix (T [ SC.Keep SC.Wk ]) (t [ SC.Wk ]ₛ) v0)
+        ⟶ t ·ₛ n · (Λₛ n , fix (T [ SC.Lift SC.Wk ]) (t [ SC.Wk ]ₛ) v0)
         ∶ T [ SC.Fill n ]
   cong-abs
     : ∀ T t t′

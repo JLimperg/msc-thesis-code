@@ -148,7 +148,7 @@ appₛ∘absₛ {Δ} {n} {Γ} {T} m m<n t .≈⁻ γ x = refl
 
 subT-⟦∀⟧ : ∀ {Δ Ω n σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (T : ⟦Type⟧ ⟦ Ω ∙ n ⟧Δ)
   → ⟦∀⟧ (n [ σ ]ᵤ)
-      (subT (⟦_⟧σ {Ω = Ω ∙ n} (Keep ⊢σ refl)) T)
+      (subT (⟦_⟧σ {Ω = Ω ∙ n} (Lift ⊢σ refl)) T)
   ≈⟦Type⟧ subT ⟦ ⊢σ ⟧σ (⟦∀⟧ n T)
 subT-⟦∀⟧ {Δ} {Ω} {n} {σ} ⊢σ T = record
   { forth = record

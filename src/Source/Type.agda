@@ -47,7 +47,7 @@ sub : SC.Sub Δ Ω → Type Ω → Type Δ
 sub σ (Nat n) = Nat (SC.sub σ n)
 sub σ (Stream n) = Stream (SC.sub σ n)
 sub σ (T ⇒ U) = sub σ T ⇒ sub σ U
-sub σ (Π n , T) = Π SC.sub σ n , sub (SC.Keep σ) T
+sub σ (Π n , T) = Π SC.sub σ n , sub (SC.Lift σ) T
 
 
 abstract
@@ -59,8 +59,8 @@ abstract
   sub->> σ τ (Π n , T)
     rewrite SC.sub->> {σ = σ} {τ} n refl
     = cong (λ T → Π SC.sub σ (SC.sub τ n) , T)
-        (trans (cong (λ σ → sub σ T) (sym SC.Keep>>Keep))
-          (sub->> (SC.Keep σ) (SC.Keep τ) T))
+        (trans (cong (λ σ → sub σ T) (sym SC.Lift>>Lift))
+          (sub->> (SC.Lift σ) (SC.Lift τ) T))
 
 
   sub-Id : (T : Type Δ) → sub SC.Id T ≡ T

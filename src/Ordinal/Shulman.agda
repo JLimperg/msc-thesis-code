@@ -6,6 +6,7 @@ module Ordinal.Shulman where
 
 open import Data.Sum using ([_,_]′)
 open import Induction.WellFounded as WfRec using (Acc ; acc ; WellFounded)
+open import Level using (Lift ; lift ; lower)
 open import Relation.Binary using (IsEquivalence)
 open import Relation.Nullary using (¬_)
 

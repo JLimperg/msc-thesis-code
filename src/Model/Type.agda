@@ -71,7 +71,7 @@ open MS._≤_
   = ≈⟦Type⟧-trans (↝-resp-≈⟦Type⟧ _ _ _ _ (⟦subT⟧ ⊢σ T) (⟦subT⟧ ⊢σ U))
       (subT-↝ ⟦ ⊢σ ⟧σ ⟦ T ⟧T ⟦ U ⟧T)
 ⟦subT⟧ {Δ} {Ω} {σ} ⊢σ (ST.Π n , T)
-  = ≈⟦Type⟧-trans (⟦∀⟧-resp-≈⟦Type⟧ (n [ σ ]ᵤ) (⟦subT⟧ (SS.Keep ⊢σ refl) T))
+  = ≈⟦Type⟧-trans (⟦∀⟧-resp-≈⟦Type⟧ (n [ σ ]ᵤ) (⟦subT⟧ (SS.Lift ⊢σ refl) T))
       (subT-⟦∀⟧ ⊢σ ⟦ T ⟧T)
 
 

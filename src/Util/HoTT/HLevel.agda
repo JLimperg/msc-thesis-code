@@ -3,6 +3,8 @@ module Util.HoTT.HLevel where
 
 open import Util.HoTT.HLevel.Core public
 
+open import Level using (Lift ; lift ; lower)
+
 open import Util.HoTT.Equiv
 open import Util.HoTT.Univalence
 open import Util.Prelude

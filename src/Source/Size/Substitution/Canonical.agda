@@ -97,13 +97,13 @@ abstract
         (subst (wk n <_) (sym (sub-Weaken σ m)) (wk-resp-< n<m))
 
 
-Keep : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
-Keep σ = Snoc (Weaken σ) (var zero)
+Lift : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
+Lift σ = Snoc (Weaken σ) (var zero)
 
 
 abstract
-  Keep⊢ : σ ∶ Δ ⇒ Ω → m ≡ sub σ n → Keep σ ∶ Δ ∙ m ⇒ Ω ∙ n
-  Keep⊢ {Δ} {σ = σ} {n = n} ⊢σ refl
+  Lift⊢ : σ ∶ Δ ⇒ Ω → m ≡ sub σ n → Lift σ ∶ Δ ∙ m ⇒ Ω ∙ n
+  Lift⊢ {Δ} {σ = σ} {n = n} ⊢σ refl
     = Snoc (Weaken⊢ ⊢σ)
         (var (sub (Weaken σ) n) (sub-Weaken σ n))
 
@@ -111,7 +111,7 @@ abstract
 mutual
   Id : Sub Δ Δ
   Id {[]} = []
-  Id {Δ ∙ n} = Keep Id
+  Id {Δ ∙ n} = Lift Id
 
 
   abstract
@@ -131,7 +131,7 @@ mutual
 abstract
   Id⊢ : Id ∶ Δ ⇒ Δ
   Id⊢ {[]} = []
-  Id⊢ {Δ ∙ n} = Keep⊢ Id⊢ (sym (sub-Id _ refl))
+  Id⊢ {Δ ∙ n} = Lift⊢ Id⊢ (sym (sub-Id _ refl))
 
 
 Wk : Sub (Δ ∙ n) Δ
@@ -238,12 +238,12 @@ abstract
   Snoc>>Wk = trans Snoc>>Weaken id-r
 
 
-  Keep>>Weaken : Keep {m = m} {n} σ >> Weaken τ ≡ Weaken (σ >> τ)
-  Keep>>Weaken = trans Snoc>>Weaken Weaken>>
+  Lift>>Weaken : Lift {m = m} {n} σ >> Weaken τ ≡ Weaken (σ >> τ)
+  Lift>>Weaken = trans Snoc>>Weaken Weaken>>
 
 
-  Keep>>Wk : Keep {m = m} {n} σ >> Wk ≡ Wk >> σ
-  Keep>>Wk = trans Keep>>Weaken (trans (sym Wk>>) (cong (Wk >>_) id-r))
+  Lift>>Wk : Lift {m = m} {n} σ >> Wk ≡ Wk >> σ
+  Lift>>Wk = trans Lift>>Weaken (trans (sym Wk>>) (cong (Wk >>_) id-r))
 
 
   Fill>>Weaken : Fill {m = m} n >> Weaken σ ≡ σ
@@ -254,52 +254,52 @@ abstract
   Fill>>Wk = trans Snoc>>Weaken id-r
 
 
-  Fill>>Keep : ∀ n → Fill (sub σ n) >> Keep {m = m} {o} σ ≡ σ >> Fill n
-  Fill>>Keep n = cong₂ Snoc (trans Fill>>Weaken (sym id-r)) refl
+  Fill>>Lift : ∀ n → Fill (sub σ n) >> Lift {m = m} {o} σ ≡ σ >> Fill n
+  Fill>>Lift n = cong₂ Snoc (trans Fill>>Weaken (sym id-r)) refl
 
 
-  Keep>>Keep : Keep {m = m} {n} σ >> Keep {n = o} τ ≡ Keep (σ >> τ)
-  Keep>>Keep = cong₂ Snoc Keep>>Weaken refl
+  Lift>>Lift : Lift {m = m} {n} σ >> Lift {n = o} τ ≡ Lift (σ >> τ)
+  Lift>>Lift = cong₂ Snoc Lift>>Weaken refl
 
 
   Skip>>Weaken : Skip {n = n} >> Weaken σ ≡ Weaken (Weaken σ)
   Skip>>Weaken = trans Snoc>>Weaken (trans Weaken>> (cong Weaken Wk>>))
 
 
-  Skip>>Keep : Skip >> Keep {m = m} {n} σ ≡ Keep (Keep σ) >> Skip
-  Skip>>Keep
+  Skip>>Lift : Skip >> Lift {m = m} {n} σ ≡ Lift (Lift σ) >> Skip
+  Skip>>Lift
     = cong₂ Snoc
         (trans Skip>>Weaken
-          (sym (trans Keep>>Weaken (cong Weaken (trans Snoc>>Weaken id-r)))))
+          (sym (trans Lift>>Weaken (cong Weaken (trans Snoc>>Weaken id-r)))))
       refl
 
 
-  Keep-Id : Keep {m = m} Id ≡ Id
-  Keep-Id = refl
+  Lift-Id : Lift {m = m} Id ≡ Id
+  Lift-Id = refl
 
 
-  KeepFill>>Wk>>Wk : Keep {m = o} {m} (Fill n) >> (Wk >> Wk) ≡ Wk
-  KeepFill>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
+  LiftFill>>Wk>>Wk : Lift {m = o} {m} (Fill n) >> (Wk >> Wk) ≡ Wk
+  LiftFill>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
     begin
-      Keep (Fill n) >> (Wk >> Wk)
-    ≡⟨ cong (Keep (Fill n) >>_) Wk>> ⟩
-      Keep (Fill n) >> (Weaken Wk)
-    ≡⟨ Keep>>Weaken ⟩
+      Lift (Fill n) >> (Wk >> Wk)
+    ≡⟨ cong (Lift (Fill n) >>_) Wk>> ⟩
+      Lift (Fill n) >> (Weaken Wk)
+    ≡⟨ Lift>>Weaken ⟩
       Weaken (Fill n >> Weaken Id)
     ≡⟨ cong Weaken Fill>>Weaken ⟩
       Wk
     ∎
 
 
-  KeepFill>>Skip
-    : Keep {m = m} (Fill {m = m} n) >> Skip ≡ Fill {m = o} (var zero) >> Keep Wk
-  KeepFill>>Skip {n = n} = cong₂ Snoc go refl
+  LiftFill>>Skip
+    : Lift {m = m} (Fill {m = m} n) >> Skip ≡ Fill {m = o} (var zero) >> Lift Wk
+  LiftFill>>Skip {n = n} = cong₂ Snoc go refl
     where
-      go : Keep (Fill n) >> Weaken Wk ≡ Fill (var zero) >> Weaken Wk
+      go : Lift (Fill n) >> Weaken Wk ≡ Fill (var zero) >> Weaken Wk
       go = let open ≡-Reasoning in
         begin
-          Keep (Fill n) >> Weaken Wk
-        ≡⟨ Keep>>Weaken ⟩
+          Lift (Fill n) >> Weaken Wk
+        ≡⟨ Lift>>Weaken ⟩
           Weaken (Fill n >> Weaken Id)
         ≡⟨ cong Weaken Fill>>Wk ⟩
           Wk
@@ -308,7 +308,7 @@ abstract
         ∎
 
 
-  KeepKeep>>Skip : Keep (Keep {m = m} {n} σ) >> Skip ≡ Skip >> Keep σ
-  KeepKeep>>Skip
-    = cong₂ Snoc (trans Keep>>Weaken
+  LiftLift>>Skip : Lift (Lift {m = m} {n} σ) >> Skip ≡ Skip >> Lift σ
+  LiftLift>>Skip
+    = cong₂ Snoc (trans Lift>>Weaken
         (sym (trans Skip>>Weaken (cong Weaken (sym Snoc>>Wk))))) refl

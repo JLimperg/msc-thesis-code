@@ -123,7 +123,7 @@ subₛ : SC.Sub Δ Ω → Term Ω → Term Δ
 subₛ σ (var x) = var x
 subₛ σ (Λ T , t) = Λ T [ σ ] , subₛ σ t
 subₛ σ (t · u) = subₛ σ t · subₛ σ u
-subₛ σ (Λₛ n , t) = Λₛ n [ σ ] , subₛ (SC.Keep σ) t
+subₛ σ (Λₛ n , t) = Λₛ n [ σ ] , subₛ (SC.Lift σ) t
 subₛ σ (t ·ₛ m) = subₛ σ t ·ₛ (m [ σ ])
 subₛ σ (zero n) = zero (n [ σ ])
 subₛ σ (suc n m i) = suc (n [ σ ]) (m [ σ ]) (subₛ σ i)
@@ -132,7 +132,7 @@ subₛ σ (head n is) = head (n [ σ ]) (subₛ σ is)
 subₛ σ (tail n is m) = tail (n [ σ ]) (subₛ σ is) (m [ σ ])
 subₛ σ (caseNat T n i z s)
   = caseNat (T [ σ ]) (n [ σ ]) (subₛ σ i) (subₛ σ z) (subₛ σ s)
-subₛ σ (fix T t n) = fix (T [ SC.Keep σ ]) (subₛ σ t) (n [ σ ])
+subₛ σ (fix T t n) = fix (T [ SC.Lift σ ]) (subₛ σ t) (n [ σ ])
 
 
 sub-syntax-Termₛ = subₛ
@@ -157,17 +157,17 @@ abstract
   subₛ-resp-⊢ ⊢σ (abs ⊢t) = abs (subₛ-resp-⊢ ⊢σ ⊢t)
   subₛ-resp-⊢ ⊢σ (app ⊢t ⊢u) = app (subₛ-resp-⊢ ⊢σ ⊢t) (subₛ-resp-⊢ ⊢σ ⊢u)
   subₛ-resp-⊢ {Δ} {Γ = Γ} {σ = σ} ⊢σ (absₛ {Ψ = Ψ} ⊢t p)
-    = absₛ (subₛ-resp-⊢ (SC.Keep⊢ ⊢σ refl) ⊢t) eq
+    = absₛ (subₛ-resp-⊢ (SC.Lift⊢ ⊢σ refl) ⊢t) eq
     where
-      eq : Ψ [ SC.Keep σ ] ≡ Γ [ σ ] [ SC.Wk ]
-      eq = trans (cong (λ Ψ → Ψ [ SC.Keep σ ]) p)
-        ([>>]″ (SC.Keep σ) SC.Wk SC.Wk σ Γ SC.Keep>>Wk)
+      eq : Ψ [ SC.Lift σ ] ≡ Γ [ σ ] [ SC.Wk ]
+      eq = trans (cong (λ Ψ → Ψ [ SC.Lift σ ]) p)
+        ([>>]″ (SC.Lift σ) SC.Wk SC.Wk σ Γ SC.Lift>>Wk)
   subₛ-resp-⊢ {σ = σ} ⊢σ (appₛ {m = m} {T = T} {U = U} m<n ⊢t p)
     = appₛ (SC.sub-resp-< ⊢σ m<n) (subₛ-resp-⊢ ⊢σ ⊢t) eq
     where
-      eq : U [ σ ] ≡ T [ SC.Keep σ ] [ SC.Fill (m [ σ ]) ]
+      eq : U [ σ ] ≡ T [ SC.Lift σ ] [ SC.Fill (m [ σ ]) ]
       eq = trans (cong (λ U → U [ σ ]) p)
-        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Keep m)))
+        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Lift m)))
   subₛ-resp-⊢ ⊢σ (zero n<⋆)
     = zero (SC.sub-resp-< ⊢σ n<⋆)
   subₛ-resp-⊢ ⊢σ (suc n<⋆ m<n ⊢i)
@@ -182,19 +182,19 @@ abstract
     = caseNat (SC.sub-resp-< ⊢σ n<⋆) (subₛ-resp-⊢ ⊢σ ⊢i) (subₛ-resp-⊢ ⊢σ ⊢z)
         (subₛ-resp-⊢ ⊢σ ⊢s) eq
     where
-      eq : U [ SC.Keep σ ] ≡ T [ σ ] [ SC.Wk ]
-      eq = trans (cong (λ U → U [ SC.Keep σ ]) p)
-        ([>>]″ _ _ _ _ _ SC.Keep>>Wk)
+      eq : U [ SC.Lift σ ] ≡ T [ σ ] [ SC.Wk ]
+      eq = trans (cong (λ U → U [ SC.Lift σ ]) p)
+        ([>>]″ _ _ _ _ _ SC.Lift>>Wk)
   subₛ-resp-⊢ {σ = σ} ⊢σ (fix {n = n} {U = U} {T = T} {V = V} n<⋆ ⊢t p q)
     = fix (SC.sub-resp-< ⊢σ n<⋆) (subₛ-resp-⊢ ⊢σ ⊢t) eq₀ eq₁
     where
-      eq₀ : U [ SC.Keep (SC.Keep σ) ] ≡ T [ SC.Keep σ ] [ SC.Skip ]
-      eq₀ = trans (cong (λ U → U [ SC.Keep (SC.Keep σ) ]) p)
-        ([>>]″ _ _ _ _ _ SC.KeepKeep>>Skip)
+      eq₀ : U [ SC.Lift (SC.Lift σ) ] ≡ T [ SC.Lift σ ] [ SC.Skip ]
+      eq₀ = trans (cong (λ U → U [ SC.Lift (SC.Lift σ) ]) p)
+        ([>>]″ _ _ _ _ _ SC.LiftLift>>Skip)
 
-      eq₁ : V [ σ ] ≡ T [ SC.Keep σ ] [ SC.Fill (n [ σ ]) ]
+      eq₁ : V [ σ ] ≡ T [ SC.Lift σ ] [ SC.Fill (n [ σ ]) ]
       eq₁ = trans (cong (λ V → V [ σ ]) q)
-        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Keep n)))
+        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Lift n)))
 
 
   subₛ-Id : (t : Term Δ) → subₛ SC.Id t ≡ t
@@ -232,8 +232,8 @@ abstract
   subₛ->> σ τ (Λₛ n , t)
     rewrite [>>] σ τ n
     = cong (λ t → Λₛ SC.sub σ (SC.sub τ n) , t)
-        (trans (cong (λ σ → subₛ σ t) (sym (SC.Keep>>Keep {n = n [ τ ]})))
-          (subₛ->> (SC.Keep σ) (SC.Keep τ) t))
+        (trans (cong (λ σ → subₛ σ t) (sym (SC.Lift>>Lift {n = n [ τ ]})))
+          (subₛ->> (SC.Lift σ) (SC.Lift τ) t))
   subₛ->> σ τ (t ·ₛ m)
     = cong₂ _·ₛ_ (subₛ->> σ τ t) ([>>] σ τ m)
   subₛ->> σ τ (zero n) = cong zero ([>>] σ τ n)
@@ -256,7 +256,7 @@ abstract
   subₛ->> σ τ (fix T t n)
     rewrite subₛ->> σ τ t | [>>] σ τ n
     = cong (λ T → fix T (subₛ σ (subₛ τ t)) (n [ τ ] [ σ ]))
-        ([>>]′ _ _ _ _ (sym SC.Keep>>Keep))
+        ([>>]′ _ _ _ _ (sym SC.Lift>>Lift))
 
 
 subₛᵤ : SU.Sub Δ Ω → Term Ω → Term Δ
@@ -391,18 +391,18 @@ abstract
     = Snoc (Weaken⊢ ⊢ν) (ren-resp-⊢ (Wk⊇ _ _) ⊢t)
 
 
-Keep : Sub Γ Ψ → ∀ T → Sub (Γ ∙ T) (Ψ ∙ T)
-Keep σ T = Snoc (Weaken σ) (var zero)
+Lift : Sub Γ Ψ → ∀ T → Sub (Γ ∙ T) (Ψ ∙ T)
+Lift σ T = Snoc (Weaken σ) (var zero)
 
 
 abstract
-  Keep⊢ : ν ∶ Γ ⇛ Ψ → Keep ν T ∶ Γ ∙ T ⇛ Ψ ∙ T
-  Keep⊢ ⊢ν = Snoc (Weaken⊢ ⊢ν) (var zero)
+  Lift⊢ : ν ∶ Γ ⇛ Ψ → Lift ν T ∶ Γ ∙ T ⇛ Ψ ∙ T
+  Lift⊢ ⊢ν = Snoc (Weaken⊢ ⊢ν) (var zero)
 
 
 Id : Sub Γ Γ
 Id {Γ = []} = []
-Id {Γ = Γ ∙ T} = Keep Id T
+Id {Γ = Γ ∙ T} = Lift Id T
 
 
 abstract
@@ -453,7 +453,7 @@ subV (Snoc ν t) (suc x) = subV ν x
 
 sub : Sub {Δ} Γ Ψ → Term Δ → Term Δ
 sub ν (var x) = subV ν x
-sub ν (Λ T , t) = Λ T , sub (Keep ν T) t
+sub ν (Λ T , t) = Λ T , sub (Lift ν T) t
 sub ν (t · u) = sub ν t · sub ν u
 sub ν (Λₛ n , t) = Λₛ n , sub (ν [ SC.Wk ]ν) t
 sub ν (t ·ₛ m) = sub ν t ·ₛ m
@@ -487,7 +487,7 @@ abstract
   sub-resp-⊢ ⊢ν (var ⊢x)
     = subV-resp-⊢ ⊢ν ⊢x
   sub-resp-⊢ ⊢ν (abs ⊢t)
-    = abs (sub-resp-⊢ (Keep⊢ ⊢ν) ⊢t)
+    = abs (sub-resp-⊢ (Lift⊢ ⊢ν) ⊢t)
   sub-resp-⊢ ⊢ν (app ⊢t ⊢u)
     = app (sub-resp-⊢ ⊢ν ⊢t) (sub-resp-⊢ ⊢ν ⊢u)
   sub-resp-⊢ ⊢ν (absₛ ⊢t refl)

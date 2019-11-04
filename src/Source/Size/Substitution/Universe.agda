@@ -24,7 +24,7 @@ data Sub : (Δ Ω : Ctx) → Set where
   Id : Sub Δ Δ
   _>>_ : (σ : Sub Δ Δ′) (τ : Sub Δ′ Ω) → Sub Δ Ω
   Wk : Sub (Δ ∙ n) Δ
-  Keep : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
+  Lift : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
   Fill : (n : Size Δ) → Sub Δ (Δ ∙ m)
   Skip : Sub (Δ ∙ n ∙ v0) (Δ ∙ n)
 
@@ -33,7 +33,7 @@ data Sub : (Δ Ω : Ctx) → Set where
 ⟨ Id ⟩ = Can.Id
 ⟨ σ >> τ ⟩ = ⟨ σ ⟩ Can.>> ⟨ τ ⟩
 ⟨ Wk ⟩ = Can.Wk
-⟨ Keep σ ⟩ = Can.Keep ⟨ σ ⟩
+⟨ Lift σ ⟩ = Can.Lift ⟨ σ ⟩
 ⟨ Fill n ⟩ = Can.Fill n
 ⟨ Skip ⟩ = Can.Skip
 
@@ -46,7 +46,7 @@ sub : (σ : Sub Δ Ω) (n : Size Ω) → Size Δ
 sub σ = Can.sub ⟨ σ ⟩
 
 
-pattern Keep′ σ ⊢n = Keep σ ⊢n refl
+pattern Lift′ σ ⊢n = Lift σ ⊢n refl
 
 
 variable σ τ ι : Sub Δ Ω
@@ -56,8 +56,8 @@ data Sub⊢ᵤ : ∀ Δ Ω → Sub Δ Ω → Set where
   Id : Sub⊢ᵤ Δ Δ Id
   comp : (⊢σ : Sub⊢ᵤ Δ Δ′ σ) (⊢τ : Sub⊢ᵤ Δ′ Δ″ τ) → Sub⊢ᵤ Δ Δ″ (σ >> τ)
   Wk : Sub⊢ᵤ (Δ ∙ n) Δ Wk
-  Keep : (⊢σ : Sub⊢ᵤ Δ Ω σ) (m≡n[σ] : m ≡ sub σ n)
-    → Sub⊢ᵤ (Δ ∙ m) (Ω ∙ n) (Keep σ)
+  Lift : (⊢σ : Sub⊢ᵤ Δ Ω σ) (m≡n[σ] : m ≡ sub σ n)
+    → Sub⊢ᵤ (Δ ∙ m) (Ω ∙ n) (Lift σ)
   Fill : (n<m : n < m) → Sub⊢ᵤ Δ (Δ ∙ m) (Fill n)
   Skip : Sub⊢ᵤ (Δ ∙ n ∙ v0) (Δ ∙ n) Skip
 
@@ -69,7 +69,7 @@ syntax Sub⊢ᵤ Δ Ω σ = σ ∶ Δ ⇒ᵤ Ω
 ⟨⟩-resp-⊢ Id = Can.Id⊢
 ⟨⟩-resp-⊢ (comp ⊢σ ⊢τ) = Can.>>⊢ (⟨⟩-resp-⊢ ⊢σ) (⟨⟩-resp-⊢ ⊢τ)
 ⟨⟩-resp-⊢ Wk = Can.Wk⊢
-⟨⟩-resp-⊢ (Keep ⊢σ m≡n[σ]) = Can.Keep⊢ (⟨⟩-resp-⊢ ⊢σ) m≡n[σ]
+⟨⟩-resp-⊢ (Lift ⊢σ m≡n[σ]) = Can.Lift⊢ (⟨⟩-resp-⊢ ⊢σ) m≡n[σ]
 ⟨⟩-resp-⊢ (Fill n<m) = Can.Fill⊢ n<m
 ⟨⟩-resp-⊢ Skip = Can.Skip⊢
 
@@ -114,8 +114,8 @@ abstract
   >>-resp-≈ (≈⁺ p) (≈⁺ q) = ≈⁺ (cong₂ Can._>>_ p q)
 
 
-  Keep-resp-≈ : σ ≈ τ → Keep {m = m} {n} σ ≈ Keep τ
-  Keep-resp-≈ (≈⁺ p) = ≈⁺ (cong Can.Keep p)
+  Lift-resp-≈ : σ ≈ τ → Lift {m = m} {n} σ ≈ Lift τ
+  Lift-resp-≈ (≈⁺ p) = ≈⁺ (cong Can.Lift p)
 
 
   sub-resp-< : σ ∶ Δ ⇒ᵤ Ω → n < m → sub σ n < sub σ m
@@ -127,8 +127,8 @@ mutual
   subV′ Id x = var x
   subV′ (σ >> τ) x = sub′ σ (subV′ τ x)
   subV′ Wk x = var (suc x)
-  subV′ (Keep σ) zero = var zero
-  subV′ (Keep σ) (suc x) = wk (subV′ σ x)
+  subV′ (Lift σ) zero = var zero
+  subV′ (Lift σ) (suc x) = wk (subV′ σ x)
   subV′ (Fill n) zero = n
   subV′ (Fill n) (suc x) = var x
   subV′ Skip zero = var zero
@@ -151,8 +151,8 @@ mutual
           (trans (cong (sub σ) (subV′≡subV τ x))
             (sym (Can.subV->> ⟨ σ ⟩ ⟨ τ ⟩ x)))
     subV′≡subV Wk x = sym (Can.sub-Wk (var x))
-    subV′≡subV (Keep σ) zero = refl
-    subV′≡subV (Keep σ) (suc x)
+    subV′≡subV (Lift σ) zero = refl
+    subV′≡subV (Lift σ) (suc x)
       = trans (cong wk (subV′≡subV σ x)) (sym (Can.subV-Weaken ⟨ σ ⟩ x))
     subV′≡subV (Fill n) zero = refl
     subV′≡subV (Fill n) (suc x) = sym (Can.subV-Id x)
