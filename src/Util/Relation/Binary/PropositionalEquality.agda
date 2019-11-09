@@ -17,6 +17,14 @@ private
 happly = cong-app
 
 
+happly∙ : {A : Set α} {B : A → Set β}
+  → (f g : ∀ {a} → B a)
+  → (λ {a} → f {a}) ≡ (λ {a} → g {a})
+  → ∀ a
+  → f {a} ≡ g {a}
+happly∙ f g refl a = refl
+
+
 trans-unassoc : {a b c d : A} (p : a ≡ b) {q : b ≡ c} {r : c ≡ d}
   → trans p (trans q r) ≡ trans (trans p q) r
 trans-unassoc p = sym (trans-assoc p)

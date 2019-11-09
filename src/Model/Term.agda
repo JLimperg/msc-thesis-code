@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --allow-unsolved-metas #-} -- TODO
+{-# OPTIONS --without-K #-}
 module Model.Term where
 
 open import Cats.Category
@@ -73,7 +73,13 @@ open ST.Ctx
       λ m m<n i
         → ⟦subT⟧ SU.Wk T .forth .fobj
             (⟦ ⊢s ⟧t .fobj γ .arr m m<n .fobj i)
-  ; feq = λ δ≈δ′ γ≈γ′ → {!!}
+  ; feq = λ {δ δ′} δ≈δ′ {γ γ′} γ≈γ′
+      → caseℕ≤-pres (⟦ T ⟧T .eq δ≈δ′) (⟦ ⊢i ⟧t .fobj γ) (⟦ ⊢i ⟧t .fobj γ′)
+          (⟦ ⊢z ⟧t .fobj γ) (⟦ ⊢z ⟧t .fobj γ′) _ _ (⟦ ⊢i ⟧t .feq _ γ≈γ′)
+          (⟦ ⊢z ⟧t .feq _ γ≈γ′)
+          λ m m<n m′ m′<n′ j j′ j≡j′
+            → ⟦subT⟧ SU.Wk T .forth .feq _
+                (⟦ ⊢s ⟧t .feq _ γ≈γ′ m m<n m′ m′<n′ j≡j′)
   }
 ⟦ fix {Δ} {n} {Γ} {T = T} n<⋆ ⊢t refl refl ⟧t
   = ⟦subT⟧ (SU.Fill n<⋆) T .back ∘ term⇒
@@ -139,11 +145,11 @@ open ST.Ctx
 ⟦ Snoc ⊢ν ⊢t ⟧ν = ⟨ ⟦ ⊢ν ⟧ν , ⟦ ⊢t ⟧t ⟩
 
 
-⟦sub⟧ : ∀ {Δ Γ Ψ ν t T}
-  → (⊢ν : ν ∶ Γ ⇛ Ψ)
-  → (⊢t : Δ , Ψ ⊢ t ∶ T)
-  → ⟦ sub-resp-⊢ ⊢ν ⊢t ⟧t ≈ ⟦ ⊢t ⟧t ∘ ⟦ ⊢ν ⟧ν
-⟦sub⟧ ⊢ν ⊢t = {!!}
+-- ⟦sub⟧ : ∀ {Δ Γ Ψ ν t T}
+--   → (⊢ν : ν ∶ Γ ⇛ Ψ)
+--   → (⊢t : Δ , Ψ ⊢ t ∶ T)
+--   → ⟦ sub-resp-⊢ ⊢ν ⊢t ⟧t ≈ ⟦ ⊢t ⟧t ∘ ⟦ ⊢ν ⟧ν
+-- ⟦sub⟧ ⊢ν ⊢t = {!!}
 
 
 {-

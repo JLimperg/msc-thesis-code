@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --allow-unsolved-metas #-} -- TODO
+{-# OPTIONS --without-K #-}
 module Model.Type.Core where
 
 open import Cats.Category
@@ -248,24 +248,112 @@ module ≈-Reasoning = ⟦Types⟧.≈-Reasoning
   }
 
 
+proj₁∘subst : ∀ {α β γ} {A : Set α} (B : A → Set β) (C : ∀ a → B a → Set γ)
+  → ∀ {a a′} (p : a ≡ a′) (x : Σ (B a) (C a))
+  → proj₁ (subst (λ a → Σ (B a) (C a)) p x) ≡ subst B p (proj₁ x)
+proj₁∘subst B C refl x = refl
+
+
 ≈⟦Type⟧→≡Canon
   : T ≈⟦Type⟧ U
   → ⟦Type⟧≅⟦Type⟧Canon .forth T ≡ ⟦Type⟧≅⟦Type⟧Canon .forth U
-≈⟦Type⟧→≡Canon {U = U} T≈U = Σ-≡⁺
-  ( (funext λ δ → HLevel-≡⁺ _ _ (≅→≡ (record
+≈⟦Type⟧→≡Canon {Δ} {T} {U} T≈U
+  = Σ-≡⁺ (T≡U , Σ-≡⁺ (T≈≡U≈ , funext∙ (funext (λ x → U .eq-IsProp _ _))))
+  where
+    T≅U : ∀ δ → T .Obj δ ≅ U .Obj δ
+    T≅U δ = record
       { forth = T≈U .forth .fobj
       ; isIso = record
         { back = T≈U .back .fobj
         ; back∘forth = λ x → T≈U .back-forth .≈⁻ _ _
         ; forth∘back = λ x → T≈U .forth-back .≈⁻ _ _
         }
-      })))
-  , Σ-≡⁺
-    ( funext∙ (funext∙ (funext λ δ≈δ′ → funext λ x → funext λ y
-        → {!!}))
-    , funext∙ (funext (λ x → U .eq-IsProp _ _))
-    )
-  )
+      }
+
+
+    T≡U : T .ObjHSet ≡ U .ObjHSet
+    T≡U = funext λ δ → HLevel-≡⁺ _ _ (≅→≡ (T≅U δ))
+
+
+    -- "HoTT makes everything so much nicer", they said. "It's all automatic",
+    -- they said.
+    abstract
+      subst-funext : ∀ {α β γ} {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
+        → (P : ∀ a → B a → Set γ)
+        → (f≡g : ∀ x → f x ≡ g x)
+        → ∀ {a} (Pf : P a (f a))
+        → subst (λ f → P a (f a)) (funext f≡g) Pf ≡ subst (P a) (f≡g a) Pf
+      subst-funext P f≡g {a} Pf = sym
+        (trans
+          (cong (λ p → subst (P a) (p a) Pf) (sym (happly∘funext f≡g)))
+          go)
+        where
+          go : subst (P a) (happly (funext f≡g) a) Pf
+             ≡ subst (λ f → P a (f a)) (funext f≡g) Pf
+          go with funext f≡g
+          ... | refl = refl
+
+
+      subst-type : ∀ {α n} (A B : HLevel n α)
+        → (p : A .type ≡ B .type)
+        → (x : A .type)
+        → subst type (HLevel-≡⁺ A B p) x ≡ cast p x
+      subst-type A B refl x with IsOfHLevel-IsProp _ (A .level) (B .level)
+      ... | refl = refl
+
+
+      -- I believe this equation would be definitional in Cubical TT.
+      subst-T≡U : ∀ {δ} x
+        → subst (λ T → T δ .type) T≡U x ≡ T≈U .forth .fobj x
+      subst-T≡U {δ} x
+        = trans (subst-funext (λ δ T → T .type) _ x)
+          (trans (subst-type (T .ObjHSet δ) (U .ObjHSet δ) (≅→≡ (T≅U δ)) x)
+            (≅→≡-β (T≅U δ)))
+
+
+      go : (Δ : Set) (T U : Δ → HSet 0ℓ) (eqΔ : Δ → Δ → Set)
+        → (eqT : ∀ δ δ′ → eqΔ δ δ′ → T δ .type → T δ′ .type → HProp 0ℓ)
+        → (eqU : ∀ δ δ′ → eqΔ δ δ′ → U δ .type → U δ′ .type → HProp 0ℓ)
+        → (T≡U : T ≡ U)
+        → (∀ δ δ′ (δ≈δ′ : eqΔ δ δ′) (x : T δ .type) (y : T δ′ .type)
+            → eqT _ _ δ≈δ′ x y .type
+            ↔ eqU _ _ δ≈δ′
+                (subst (λ T → T δ .type) T≡U x)
+                (subst (λ T → T δ′ .type) T≡U y)
+                .type)
+        → _≡_ {A = ∀ {δ δ′} → eqΔ δ δ′ → U δ .type → U δ′ .type → HProp 0ℓ}
+            (subst (λ T → ∀ {δ δ′} → eqΔ δ δ′ → T δ .type → T δ′ .type → HProp 0ℓ)
+              T≡U (λ {δ δ′} → eqT δ δ′))
+            (λ {δ δ′} → eqU δ δ′)
+      go Δ T U eqΔ eqT eqU refl eq = funext∙ λ {δ} → funext∙ λ {δ′}
+        → funext λ δ≈δ′ → funext λ x → funext λ y
+        → HProp-ext _ _ (eq δ δ′ δ≈δ′ x y)
+
+
+      T≈≡U≈ : _
+      T≈≡U≈
+        = trans
+            (proj₁∘subst
+              (λ T → ∀ {δ δ′} → Δ .eq δ δ′ → T δ .type → T δ′ .type → HProp 0ℓ)
+              (λ T eq → ∀ {δ} (x : T δ .type) → eq (Δ .eq-refl δ) x x .type)
+              T≡U
+              ((λ {δ δ′} → T .eqHProp {δ} {δ′}), (λ {δ} x → T .eq-refl {δ} x)))
+            (go (Δ .Obj) (T .ObjHSet) (U .ObjHSet) (Δ .eq)
+              (λ δ δ′ → T .eqHProp {δ} {δ′})
+              (λ δ δ′ → U .eqHProp {δ} {δ′})
+              T≡U
+              λ δ δ′ δ≈δ′ x y → record
+                { forth = λ x≈y
+                    → subst₂ (λ x y → U .eq δ≈δ′ x y) (sym (subst-T≡U x))
+                        (sym (subst-T≡U y)) (T≈U .forth .feq δ≈δ′ x≈y)
+                ; back = λ x≈y
+                    → subst₂ (λ x y → T .eq δ≈δ′ x y)
+                        (trans (cong (T≈U .back .fobj) (subst-T≡U x))
+                          (T≈U .back-forth .≈⁻ δ x))
+                        (trans (cong (T≈U .back .fobj) (subst-T≡U y))
+                          (T≈U .back-forth .≈⁻ δ′ y))
+                        (T≈U .back .feq δ≈δ′ x≈y)
+                })
 
 
 ≈⟦Type⟧→≡ : T ≈⟦Type⟧ U → T ≡ U

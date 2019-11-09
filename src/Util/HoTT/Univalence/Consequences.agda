@@ -1,5 +1,5 @@
-{-# OPTIONS --without-K #-}
--- TODO this module can be --safe when Equiv is.
+{-# OPTIONS --without-K --allow-unsolved-metas #-}
+-- TODO can be safe when we've proven funext from univalence
 open import Util.HoTT.Equiv
 
 module Util.HoTT.Univalence.Consequences
@@ -10,7 +10,8 @@ open import Axiom.Extensionality.Propositional using
   (ExtensionalityImplicit ; implicit-extensionality)
 
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁻ ; happly)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( Σ-≡⁻ ; happly ; cast )
 
 
 private
@@ -27,15 +28,27 @@ private
 ≡→≃∘≃→≡ p = univalence p .proj₁ .proj₂
 
 
--- what does this actually mean?
-≃→≡∘≡→≃ : {A B : Set α} (p : A ≃ B)
-  → (q : A ≡ B) (r : ≡→≃ q ≡ p)
-  → Σ[ s ∈ ≃→≡ p ≡ q ] (subst (λ a → ≡→≃ a ≡ p) s (≡→≃∘≃→≡ p) ≡ r)
-≃→≡∘≡→≃ p q r = Σ-≡⁻ (univalence p .proj₂ (q , r))
+≃→≡∘≡→≃ : (p : A ≡ B) → ≃→≡ (≡→≃ p) ≡ p
+≃→≡∘≡→≃ p = Σ-≡⁻ (univalence (≡→≃ p) .proj₂ (p , refl)) .proj₁
+
+
+≃→≡-≡→≃-coh : (p : A ≡ B)
+  → subst (λ q → ≡→≃ q ≡ ≡→≃ p) (≃→≡∘≡→≃ p) (≡→≃∘≃→≡ (≡→≃ p)) ≡ refl
+≃→≡-≡→≃-coh p = Σ-≡⁻ (univalence (≡→≃ p) .proj₂ (p , refl)) .proj₂
+
+
+≃→≡-β : ∀ (p : A ≃ B) {x}
+  → cast (≃→≡ p) x ≡ p .forth x
+≃→≡-β p = {!!}
 
 
 ≅→≡ : A ≅ B → A ≡ B
 ≅→≡ = ≃→≡ ∘ ≅→≃
+
+
+≅→≡-β : ∀ (p : A ≅ B) {x}
+  → cast (≅→≡ p) x ≡ p .forth x
+≅→≡-β p = ≃→≡-β (≅→≃ p)
 
 
 module _ {A : Set α} {B : A → Set β} where
@@ -50,7 +63,7 @@ module _ {A : Set α} {B : A → Set β} where
   funext {f = f} {g} eq = happly-IsEquiv f g eq .proj₁ .proj₁
 
 
-  happly∘funext : ∀ {f g} eq
+  happly∘funext : ∀ {f g} (eq : ∀ a → f a ≡ g a)
     → happly (funext eq) ≡ eq
   happly∘funext {f} {g} eq = happly-IsEquiv f g eq .proj₁ .proj₂
 
@@ -74,5 +87,3 @@ module _ {A : Set α} {B : A → Set β} where
 
 funext∙ : ExtensionalityImplicit α β
 funext∙ = implicit-extensionality funext
-
-

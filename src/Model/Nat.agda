@@ -56,3 +56,19 @@ caseℕ≤ : ∀ {α} {A : Set α} {n}
   → A
 caseℕ≤ (zero , _) z s = z
 caseℕ≤ (suc x , Sx≤n) z s = s (nat x) (MS.Sn≤m→n<m Sx≤n) (x , MS.≤-refl)
+
+
+caseℕ≤-pres : ∀ {α β γ} {A : Set α} {A′ : Set β} {n n′}
+  → (R : A → A′ → Set γ)
+  → (i : ℕ≤ n) (i′ : ℕ≤ n′)
+  → (z : A) (z′ : A′)
+  → (s : ∀ m → m < n → ℕ≤ m → A) (s′ : ∀ m → m < n′ → ℕ≤ m → A′)
+  → proj₁ i ≡ proj₁ i′
+  → R z z′
+  → (∀ m m<n m′ m′<n′ j j′
+      → proj₁ j ≡ proj₁ j′
+      → R (s m m<n j) (s′ m′ m′<n′ j′))
+  → R (caseℕ≤ i z s) (caseℕ≤ i′ z′ s′)
+caseℕ≤-pres R (zero , _) (_ , _) z z′ s s′ refl zRz′ sRs′ = zRz′
+caseℕ≤-pres R (suc i , _) (_ , _) z z′ s s′ refl zRz′ sRs′
+  = sRs′ _ _ _ _ _ _ refl
