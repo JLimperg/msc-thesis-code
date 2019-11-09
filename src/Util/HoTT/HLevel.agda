@@ -135,11 +135,11 @@ IsSet-IsProp = IsOfHLevel-IsProp 2
 ∀-IsSet B-set {f} {g} p q = let open ≡-Reasoning in
   begin
     p
-  ≡⟨ ∀-≡-canon p ⟩
+  ≡˘⟨ funext∘happly p ⟩
     funext (happly p)
   ≡⟨ cong funext (funext λ a → B-set a (happly p a) (happly q a)) ⟩
     funext (happly q)
-  ≡˘⟨ ∀-≡-canon q ⟩
+  ≡⟨ funext∘happly q ⟩
     q
   ∎
 

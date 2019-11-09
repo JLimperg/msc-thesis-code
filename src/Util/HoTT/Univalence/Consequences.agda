@@ -67,11 +67,12 @@ module _ {A : Set α} {B : A → Set β} where
   funext-unique eq p q = proj₁ (Σ-≡⁻ (funext-unique′ eq (p , q)))
 
 
+  funext∘happly : ∀ {f g} (eq : f ≡ g)
+    → funext (happly eq) ≡ eq
+  funext∘happly eq = funext-unique (happly eq) eq refl
+
+
 funext∙ : ExtensionalityImplicit α β
 funext∙ = implicit-extensionality funext
 
 
-∀-≡-canon : {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
-  → (p : f ≡ g)
-  → p ≡ funext (happly p)
-∀-≡-canon p = sym (funext-unique (happly p) p refl)
