@@ -106,7 +106,6 @@ mutual
 ≅-sym : ∀ {ℓ} {a b : Ord ℓ} (p : a ≅ b) → b ≅ a
 ≅-sym (p , p′) = p′ , p
 
-
 -- ≅ is an equivalence relation.
 
 ≅-equiv : ∀ {ℓ} → IsEquivalence (_≅_ {ℓ})
@@ -246,59 +245,73 @@ a ⊔ b = limSuc (_ ⊎ _) λ where
 ⊔-≤-introʳ′ a = ⊔-≤-introʳ _ ≤-refl
 
 ⊔-elim : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → (c < a) ⊎ (c < b)
-⊔-elim {a = limSuc _ f}               (inj₁ i , e) = inj₁ (i , e)
+⊔-elim {a = limSuc _ f}                  (inj₁ i , e) = inj₁ (i , e)
 ⊔-elim {a = limSuc _ _} {b = limSuc _ g} (inj₂ i , e) = inj₂ (i , e)
 
-⊔-case : ∀ {ℓ} {a b c : Ord ℓ} → c < (a ⊔ b) → ∀ {q} {Q : Set q} → (c < a → Q) → (c < b → Q) → Q
+⊔-case : ∀ {ℓ} {a b c : Ord ℓ}
+  → c < (a ⊔ b)
+  → ∀ {q} {Q : Set q}
+  → (c < a → Q)
+  → (c < b → Q) → Q
 ⊔-case p left right = [ left , right ]′ (⊔-elim p)
 
-⊔-split : ∀ {ℓ q} {Q : Set q} {a b c : Ord ℓ} → (c < a → Q) → (c < b → Q) → c < (a ⊔ b) → Q
+⊔-split : ∀ {ℓ q} {Q : Set q} {a b c : Ord ℓ}
+  → (c < a → Q)
+  → (c < b → Q)
+  → c < (a ⊔ b) → Q
 ⊔-split left right p = ⊔-case p left right
 
 ⊔-mon : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≤ a′ → b ≤ b′ → (a ⊔ b) ≤ (a′ ⊔ b′)
-⊔-mon a≤a′ b≤b′ = ≤-intro′ (⊔-split (λ c<a → ⊔-introˡ _ (≤-elim′ a≤a′ c<a))
-                                   (λ c<b → ⊔-introʳ _ (≤-elim′ b≤b′ c<b)))
+⊔-mon a≤a′ b≤b′ = ≤-intro′
+  (⊔-split
+    (λ c<a → ⊔-introˡ _ (≤-elim′ a≤a′ c<a))
+    (λ c<b → ⊔-introʳ _ (≤-elim′ b≤b′ c<b)))
 
 ⊔-cong : ∀ {ℓ} {a a′ b b′ : Ord ℓ} → a ≅ a′ → b ≅ b′ → (a ⊔ b) ≅ (a′ ⊔ b′)
 ⊔-cong (a≤a′ , a′≤a) (b≤b′ , b′≤b) = ⊔-mon a≤a′ b≤b′ , ⊔-mon a′≤a b′≤b
 
-meh : ({α α′ β : Ord lzero} → α < β → α′ < β → (α ⊔ α′) < β)
-  → (A : Set) → A ⊎ ¬ A
-meh p A
+⊔-<→LEM : ∀ {ℓ}
+  → ({α α′ β : Ord ℓ} → α < β → α′ < β → (α ⊔ α′) < β)
+  → (A : Set ℓ) → A ⊎ ¬ A
+⊔-<→LEM {ℓ} p A
   = let α<β : α < β
-        α<β = true , ≤-refl
+        α<β = lift true , ≤-refl
         α′<β : α′ < β
-        α′<β = false , ≤-refl in
+        α′<β = lift false , ≤-refl in
     go (p α<β α′<β)
   where
     oone = osuc ozero
     α = limSuc A λ _ → oone
     α′ = oone
-    β = limSuc Bool λ { true → α ; false → α′ }
+    β = limSuc (Lift ℓ Bool) λ { (lift true) → α ; (lift false) → α′ }
 
     go : (α ⊔ α′) < β → A ⊎ ¬ A
-    go (true , α⊔α′≤α) = inj₁ (proj₁ (α⊔α′≤α (inj₂ _)))
-    go (false , α⊔α′≤α′) = inj₂ λ a → lower (proj₁ (proj₂ (α⊔α′≤α′ (inj₁ a)) _))
+    go (lift true , α⊔α′≤α) = inj₁ (proj₁ (α⊔α′≤α (inj₂ _)))
+    go (lift false , α⊔α′≤α′) = inj₂ λ a → lower (proj₁ (proj₂ (α⊔α′≤α′ (inj₁ a)) _))
 
 -- Supremum of a family of ordinals
 
 ⨆ᶠ : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) → Ord ℓ
 ⨆ᶠ {ℓ} {I} f = limSuc (∃[ i ] Br (f i)) λ { (i , j) → f i ` j }
 
-⨆ᶠ-intro : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I} → c < f i → c < ⨆ᶠ f
+⨆ᶠ-intro : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} {i : I}
+  → c < f i → c < ⨆ᶠ f
 ⨆ᶠ-intro f {c} {i} c<fi
   = let j , c≤ = <-elim c<fi in
     (i , j) , c≤
 
-⨆ᶠ-elim : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ} → c < ⨆ᶠ f → ∃[ i ] (c < f i)
+⨆ᶠ-elim : ∀ {ℓ} {I : Set ℓ} (f : I → Ord ℓ) {c : Ord ℓ}
+  → c < ⨆ᶠ f → ∃[ i ] (c < f i)
 ⨆ᶠ-elim _ ((i , j) , e) = i , <-intro (j , e)
 
-⨆ᶠ-mon : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≤ f′ i) → ⨆ᶠ f ≤ ⨆ᶠ f′
+⨆ᶠ-mon : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ}
+  → (∀ i → f i ≤ f′ i) → ⨆ᶠ f ≤ ⨆ᶠ f′
 ⨆ᶠ-mon {f = f} {f′} p = ≤-intro′ λ c<⨆ᶠf →
   let i , q = ⨆ᶠ-elim f c<⨆ᶠf in
   ⨆ᶠ-intro f′ (≤-elim′ (p i) q)
 
-⨆ᶠ-cong : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ} → (∀ i → f i ≅ f′ i) → ⨆ᶠ f ≅ ⨆ᶠ f′
+⨆ᶠ-cong : ∀ {ℓ} {I : Set ℓ} {f f′ : I → Ord ℓ}
+  → (∀ i → f i ≅ f′ i) → ⨆ᶠ f ≅ ⨆ᶠ f′
 ⨆ᶠ-cong p = ⨆ᶠ-mon (λ i → proj₁ (p i))
           , ⨆ᶠ-mon (λ i → proj₂ (p i))
 
