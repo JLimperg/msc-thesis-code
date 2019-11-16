@@ -11,7 +11,7 @@ open import Util.HoTT.Homotopy
 open import Util.HoTT.Univalence
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
-  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ ; happly )
+  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ )
 open import Util.Relation.Binary.LogicalEquivalence
 
 

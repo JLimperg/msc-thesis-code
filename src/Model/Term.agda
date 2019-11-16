@@ -6,7 +6,6 @@ open import Cats.Category
 open import Model.Size as MS using (_<_ ; ⟦_⟧Δ ; ⟦_⟧n ; ⟦_⟧σ)
 open import Model.Type as MT
 open import Util.HoTT.Equiv
-open import Util.Relation.Binary.PropositionalEquality using (happly)
 open import Util.Prelude hiding (id ; _∘_ ; _×_)
 open import Source.Size as SS using (v0 ; v1)
 open import Source.Size.Substitution.Theory

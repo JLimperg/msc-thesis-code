@@ -4,7 +4,7 @@ module Util.HoTT.Homotopy where
 open import Relation.Binary using (IsEquivalence)
 
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using (happly)
+open import Util.Relation.Binary.PropositionalEquality using (cong-app)
 
 
 module _ {α β} {A : Set α} {B : A → Set β} where
@@ -30,4 +30,4 @@ module _ {α β} {A : Set α} {B : A → Set β} where
 
 
   ≡→~ : ∀ {f g} → f ≡ g → f ~ g
-  ≡→~ = happly
+  ≡→~ = cong-app
