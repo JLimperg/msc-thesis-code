@@ -23,12 +23,12 @@ import Source.Size.Substitution.Universe
 import Source.Term
 import Source.Type
 import Util.HoTT.Equiv
+import Util.HoTT.FunctionalExtensionality
 import Util.HoTT.HLevel
 import Util.HoTT.HLevel.Core
 import Util.HoTT.Homotopy
 import Util.HoTT.Section
 import Util.HoTT.Univalence
-import Util.HoTT.Univalence.Consequences
 import Util.Induction.WellFounded
 import Util.Prelude
 import Util.Relation.Binary.Closure.SymmetricTransitive

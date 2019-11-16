@@ -6,6 +6,8 @@ open import Util.HoTT.HLevel.Core public
 open import Level using (Lift ; lift ; lower)
 
 open import Util.HoTT.Equiv
+open import Util.HoTT.FunctionalExtensionality
+open import Util.HoTT.Homotopy
 open import Util.HoTT.Univalence
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
@@ -135,11 +137,11 @@ IsSet-IsProp = IsOfHLevel-IsProp 2
 ∀-IsSet B-set {f} {g} p q = let open ≡-Reasoning in
   begin
     p
-  ≡˘⟨ funext∘happly p ⟩
-    funext (happly p)
-  ≡⟨ cong funext (funext λ a → B-set a (happly p a) (happly q a)) ⟩
-    funext (happly q)
-  ≡⟨ funext∘happly q ⟩
+  ≡˘⟨ funext∘≡→~ p ⟩
+    funext (≡→~ p)
+  ≡⟨ cong funext (funext λ a → B-set a (≡→~ p a) (≡→~ q a)) ⟩
+    funext (≡→~ q)
+  ≡⟨ funext∘≡→~ q ⟩
     q
   ∎
 

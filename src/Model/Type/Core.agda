@@ -6,12 +6,15 @@ open import Relation.Binary using (IsEquivalence)
 
 open import Model.RGraph as RG using (RGraph)
 open import Util.HoTT.Equiv
+open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.HLevel
+open import Util.HoTT.Homotopy
 open import Util.HoTT.Univalence
 open import Util.Prelude hiding (id) renaming (_∘_ to _∘F_)
 open import Util.Relation.Binary.LogicalEquivalence using
   ( _↔_ ; forth ; back ; ↔-reflexive )
-open import Util.Relation.Binary.PropositionalEquality
+open import Util.Relation.Binary.PropositionalEquality using
+  ( Σ-≡⁺ ; Σ-≡⁻ ; cast ; subst-subst ; subst-sym-subst ; subst-subst-sym )
 
 open Category._≅_ public
 open RG._⇒_
@@ -299,10 +302,10 @@ proj₁∘subst B C refl x = refl
         → subst (λ f → P a (f a)) (funext f≡g) Pf ≡ subst (P a) (f≡g a) Pf
       subst-funext P f≡g {a} Pf = sym
         (trans
-          (cong (λ p → subst (P a) (p a) Pf) (sym (happly∘funext f≡g)))
+          (cong (λ p → subst (P a) (p a) Pf) (sym (≡→~∘funext f≡g)))
           go)
         where
-          go : subst (P a) (happly (funext f≡g) a) Pf
+          go : subst (P a) (≡→~ (funext f≡g) a) Pf
              ≡ subst (λ f → P a (f a)) (funext f≡g) Pf
           go with funext f≡g
           ... | refl = refl

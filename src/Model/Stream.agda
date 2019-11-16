@@ -4,8 +4,8 @@ module Model.Stream where
 open import Model.Size as MS using
   ( Size ; Sizes ; _≤_ ; _<_ ; ≤-IsProp ; ≤-trans )
 open import Model.Type.Core
+open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.HLevel
-open import Util.HoTT.Univalence
 open import Util.Prelude
 
 import Data.Nat.Properties as ℕ

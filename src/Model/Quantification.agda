@@ -7,8 +7,8 @@ open import Model.Type.Core
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SS using (Sub⊢ᵤ)
 open import Util.HoTT.Equiv
+open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.HLevel
-open import Util.HoTT.Univalence
 open import Util.Prelude hiding (_∘_)
 open import Util.Relation.Binary.PropositionalEquality using
   ( Σ-≡⁺ ; subst-sym-subst ; subst-subst-sym )

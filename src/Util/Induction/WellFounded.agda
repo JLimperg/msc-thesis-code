@@ -7,8 +7,8 @@ open import Induction.WellFounded public using
 
 open import Relation.Binary using (Rel)
 
+open import Util.HoTT.FunctionalExtensionality using (funext)
 open import Util.HoTT.HLevel using (IsProp ; ∀-IsProp)
-open import Util.HoTT.Univalence using (funext)
 open import Util.Prelude
 
 

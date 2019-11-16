@@ -12,7 +12,6 @@ open import Model.RGraph as RG using (RGraph)
 open import Source.Size as S using (Δ ; Ω)
 open import Source.Size.Substitution.Universe using (⟨_⟩ ; Sub⊢ᵤ)
 open import Util.HoTT.HLevel
-open import Util.HoTT.Univalence
 open import Util.Induction.WellFounded as WFInd using (Acc ; acc ; WellFounded)
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality as ≡ using (cong₂-dep)

@@ -5,8 +5,8 @@ open import Cats.Category
 open import Relation.Binary using (IsEquivalence)
 
 open import Util.HoTT.Equiv
+open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.HLevel
-open import Util.HoTT.Univalence
 open import Util.Prelude hiding (id) renaming (_∘_ to _∘F_)
 open import Util.Relation.Binary.PropositionalEquality
 
