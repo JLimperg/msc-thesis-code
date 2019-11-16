@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --allow-unsolved-metas #-} -- TODO
+{-# OPTIONS --without-K #-}
 module Model.Quantification where
 
 open import Model.RGraph as RG using (RGraph)
@@ -10,7 +10,8 @@ open import Util.HoTT.Equiv
 open import Util.HoTT.HLevel
 open import Util.HoTT.Univalence
 open import Util.Prelude hiding (_∘_)
-open import Util.Relation.Binary.PropositionalEquality using (Σ-≡⁺)
+open import Util.Relation.Binary.PropositionalEquality using
+  ( Σ-≡⁺ ; subst-sym-subst ; subst-subst-sym )
 
 import Source.Size as SS
 import Source.Type as ST
@@ -135,17 +136,6 @@ appₛ {m = m} {T = T} m<n f = record
   }
 
 
-{-
-appₛ∘absₛ : ∀ {Δ n Γ T}
-  → (⊢Fill : SS.Fill n ∶ Δ ⇒ᵤ (Δ ∙ n))
-  → (⊢Wk : SS.Wk ∶ Δ ∙ n ⇒ᵤ Δ)
-  → ∀ t
-  → appₛ {Δ} {n} {Γ} {T} ⊢Fill (absₛ ⊢Wk t)
-  ≈ subt ⟦ {!!} ⟧σ t
-appₛ∘absₛ {Δ} {n} {Γ} {T} m m<n t .≈⁻ γ x = refl
--}
-
-
 subT-⟦∀⟧ : ∀ {Δ Ω n σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (T : ⟦Type⟧ ⟦ Ω ∙ n ⟧Δ)
   → ⟦∀⟧ (n [ σ ]ᵤ)
       (subT (⟦_⟧σ {Ω = Ω ∙ n} (Lift ⊢σ refl)) T)
@@ -174,6 +164,37 @@ subT-⟦∀⟧ {Δ} {Ω} {n} {σ} ⊢σ T = record
     ; feq = λ γ≈γ′ f≈g a a₁ a₂ a₃ → transportObj-resp-eq T _ _ (f≈g _ _ _ _)
     }
   ; back-forth = ≈⁺ λ γ f → ⟦∀⟧′-≡⁺ _ _ λ m m<n
-      → {!!}
-  ; forth-back = {!!}
+      → trans
+          (transportObj∘transportObj T
+            (MS.⟦Δ∙n⟧-≡⁺ Ω n _ _ refl refl)
+            (MS.⟦Δ∙n⟧-≡⁺ Ω n _ _ refl refl))
+          (trans
+            (cong
+              (λ p → transportObj T
+                (trans
+                  (MS.⟦Δ∙n⟧-≡⁺ Ω n
+                    (subst (m <_) (MS.⟦sub⟧ ⊢σ n) p)
+                    (subst (m <_) (MS.⟦sub⟧ ⊢σ n) m<n)
+                    refl refl)
+                  (MS.⟦Δ∙n⟧-≡⁺ Ω n
+                    (subst (m <_) (MS.⟦sub⟧ ⊢σ n) m<n)
+                    (subst (m <_) (MS.⟦sub⟧ ⊢σ n) m<n)
+                    refl refl))
+                (f .arr m p))
+              (subst-sym-subst (MS.⟦sub⟧ ⊢σ n)))
+            (transportObj-refl T _))
+  ; forth-back = ≈⁺ λ γ f → ⟦∀⟧′-≡⁺ _ _ λ m m<n
+      → trans
+          (transportObj∘transportObj T
+            (MS.⟦Δ∙n⟧-≡⁺ Ω n _ _ refl refl)
+            (MS.⟦Δ∙n⟧-≡⁺ Ω n _ _ refl refl))
+          (trans
+            (cong
+              (λ p → transportObj T
+                (trans
+                  (MS.⟦Δ∙n⟧-≡⁺ Ω n p p refl refl)
+                  (MS.⟦Δ∙n⟧-≡⁺ Ω n p m<n refl refl))
+                (f .arr m p))
+              (subst-subst-sym (MS.⟦sub⟧ ⊢σ n)))
+            (transportObj-refl T _))
   }

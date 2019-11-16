@@ -78,13 +78,14 @@ transportObj : ∀ (T : ⟦Type⟧ Δ) {δ γ}
 transportObj T = subst (T .Obj)
 
 
-transportObj-resp : ∀ (T : ⟦Type⟧ Δ) {δ γ}
-  → (δ≡γ₀ δ≡γ₁ : δ ≡ γ)
-  → ∀ {x y}
-  → x ≡ y
-  → transportObj T δ≡γ₀ x ≡ transportObj T δ≡γ₁ y
-transportObj-resp {Δ} T refl δ≡γ₁ x≡y
-  rewrite Δ .Obj-IsSet δ≡γ₁ refl = x≡y
+abstract
+  transportObj-resp : ∀ (T : ⟦Type⟧ Δ) {δ γ}
+    → (δ≡γ₀ δ≡γ₁ : δ ≡ γ)
+    → ∀ {x y}
+    → x ≡ y
+    → transportObj T δ≡γ₀ x ≡ transportObj T δ≡γ₁ y
+  transportObj-resp {Δ} T refl δ≡γ₁ x≡y
+    rewrite Δ .Obj-IsSet δ≡γ₁ refl = x≡y
 
 
 transportObj-resp-eq : ∀ (T : ⟦Type⟧ Δ) {δ₀ γ₀ δ₁ γ₁}
@@ -94,6 +95,19 @@ transportObj-resp-eq : ∀ (T : ⟦Type⟧ Δ) {δ₀ γ₀ δ₁ γ₁}
   → T .eq γ₀≈γ₁ (transportObj T δ₀≡γ₀ x) (transportObj T δ₁≡γ₁ y)
 transportObj-resp-eq {Δ} T refl refl {δ₀≈δ₁ = δ₀≈δ₁} {γ₀≈γ₁} x≈y
   = transportEq T x≈y
+
+
+abstract
+  transportObj∘transportObj : ∀ (T : ⟦Type⟧ Δ) {δ δ′ δ″}
+    → (p : δ ≡ δ′) (q : δ′ ≡ δ″) {x : T .Obj δ}
+    → transportObj T q (transportObj T p x) ≡ transportObj T (trans p q) x
+  transportObj∘transportObj T p q = subst-subst p
+
+
+  transportObj-refl : ∀ (T : ⟦Type⟧ Δ) {δ}
+    → (p : δ ≡ δ) {x : T .Obj δ}
+    → transportObj T p x ≡ x
+  transportObj-refl {Δ} T p rewrite Δ .Obj-IsSet p refl = refl
 
 
 record _⇒_ (T U : ⟦Type⟧ Δ) : Set where
