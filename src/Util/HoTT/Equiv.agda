@@ -4,8 +4,9 @@ module Util.HoTT.Equiv where
 open import Level using (Level ; _⊔_)
 open import Relation.Binary using (Setoid ; IsEquivalence)
 
-open import Util.HoTT.HLevel.Core using (IsContr ; IsContr-Singleton)
+open import Util.HoTT.HLevel.Core using (IsContr)
 open import Util.HoTT.Section
+open import Util.HoTT.Singleton using (IsContr-Singleton)
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
   ( Σ-≡⁻ ; Σ-≡⁺ ; sym-cancel-r ; trans-unassoc )

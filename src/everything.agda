@@ -28,6 +28,7 @@ import Util.HoTT.HLevel
 import Util.HoTT.HLevel.Core
 import Util.HoTT.Homotopy
 import Util.HoTT.Section
+import Util.HoTT.Singleton
 import Util.HoTT.Univalence
 import Util.Induction.WellFounded
 import Util.Prelude
