@@ -1,6 +1,8 @@
 {-# OPTIONS --without-K --safe #-}
 module Util.HoTT.HLevel.Core where
 
+open import Data.Nat using (_+_)
+
 open import Util.Prelude
 open import Util.Relation.Binary.LogicalEquivalence using (_↔_ ; forth ; back)
 open import Util.Relation.Binary.PropositionalEquality using
@@ -88,8 +90,18 @@ IsOfHLevel-suc 1 A-prop = IsOfHLevel-suc 0 (IsProp→IsProp′ A-prop _ _)
 IsOfHLevel-suc (suc (suc n)) A-level-n = IsOfHLevel-suc (suc n) A-level-n
 
 
+IsOfHLevel-suc-n : ∀ n m → IsOfHLevel n A → IsOfHLevel (m + n) A
+IsOfHLevel-suc-n {A = A} n zero A-level = A-level
+IsOfHLevel-suc-n n (suc m) A-level
+  = IsOfHLevel-suc (m + n) (IsOfHLevel-suc-n n m A-level)
+
+
 IsProp→IsSet : IsProp A → IsSet A
 IsProp→IsSet = IsOfHLevel-suc 1
+
+
+IsContr→IsSet : IsContr A → IsSet A
+IsContr→IsSet = IsOfHLevel-suc-n 0 2
 
 
 record HLevel α n : Set (lsuc α) where

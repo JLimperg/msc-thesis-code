@@ -52,3 +52,20 @@ module _ {A : Set α} {B : A → Set β} where
 
 funext∙ : ExtensionalityImplicit α β
 funext∙ = implicit-extensionality funext
+
+
+abstract
+  subst-funext : ∀ {α β γ} {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
+    → (P : ∀ a → B a → Set γ)
+    → (f≡g : ∀ x → f x ≡ g x)
+    → ∀ {a} (Pf : P a (f a))
+    → subst (λ f → P a (f a)) (funext f≡g) Pf ≡ subst (P a) (f≡g a) Pf
+  subst-funext P f≡g {a} Pf = sym
+    (trans
+      (cong (λ p → subst (P a) (p a) Pf) (sym (≡→~∘funext f≡g)))
+      go)
+    where
+      go : subst (P a) (≡→~ (funext f≡g) a) Pf
+          ≡ subst (λ f → P a (f a)) (funext f≡g) Pf
+      go with funext f≡g
+      ... | refl = refl

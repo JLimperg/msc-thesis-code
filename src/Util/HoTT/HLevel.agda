@@ -8,7 +8,7 @@ open import Level using (Lift ; lift ; lower)
 open import Util.HoTT.Equiv
 open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.Homotopy
-open import Util.HoTT.Univalence
+open import Util.HoTT.Univalence.Axiom
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
   ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ )
@@ -229,8 +229,30 @@ Lift-HSet : ∀ α → HSet β → HSet (α ⊔ℓ β)
 Lift-HSet α (HLevel⁺ B B-set) = HLevel⁺ (Lift α B) (Lift-IsSet B-set)
 
 
-IsProp-ext : IsProp A → IsProp B → A ↔ B → A ≡ B
-IsProp-ext A-prop B-prop A↔B = ≅→≡ record
+HLevel-≡⁺ : ∀ {n} (A B : HLevel α n)
+  → A .type ≡ B .type
+  → A ≡ B
+HLevel-≡⁺ (HLevel⁺ A A-level) (HLevel⁺ B B-level) refl
+  = cong (HLevel⁺ A) (IsOfHLevel-IsProp _ _ _)
+
+
+IsContr-≅⁺ : IsContr A → IsContr B → A ≅ B
+IsContr-≅⁺ (a , a-uniq) (b , b-uniq) = record
+  { forth = λ _ → b
+  ; isIso = record
+    { back = λ _ → a
+    ; back∘forth = λ _ → a-uniq _
+    ; forth∘back = λ _ → b-uniq _
+    }
+  }
+
+
+HContr-≡⁺ : (A B : HContr α) → A ≡ B
+HContr-≡⁺ A B = HLevel-≡⁺ A B (≅→≡ (IsContr-≅⁺ (A .level) (B .level)))
+
+
+IsProp-≅⁺ : IsProp A → IsProp B → A ↔ B → A ≅ B
+IsProp-≅⁺ A-prop B-prop A↔B = record
   { forth = A↔B .forth
   ; isIso = record
     { back = A↔B .back
@@ -240,34 +262,22 @@ IsProp-ext A-prop B-prop A↔B = ≅→≡ record
   }
 
 
-HLevel-≡⁺ : ∀ {n} (A B : HLevel α n)
-  → A .type ≡ B .type
-  → A ≡ B
-HLevel-≡⁺ (HLevel⁺ A A-level) (HLevel⁺ B B-level) refl
-  = cong (HLevel⁺ A) (IsOfHLevel-IsProp _ _ _)
+HProp-≡⁺ : (A B : HProp α) → A .type ↔ B .type → A ≡ B
+HProp-≡⁺ A B A↔B = HLevel-≡⁺ A B (≅→≡ (IsProp-≅⁺ (A .level) (B .level) A↔B))
 
 
-HProp-ext : (A B : HProp α) → A .type ↔ B .type → A ≡ B
-HProp-ext A B A↔B = HLevel-≡⁺ A B (IsProp-ext (A .level) (B .level) A↔B)
+IsContr→IsIso : IsContr A → IsContr B → (f : A → B) → IsIso f
+IsContr→IsIso (a , a-uniq) (b , b-uniq) f = record
+  { back = λ _ → a
+  ; back∘forth = λ _ → a-uniq _
+  ; forth∘back = λ b′ → trans (sym (b-uniq (f a))) (b-uniq b′)
+  }
 
 
--- Special cases of ≃-pres-IsOfHLevel, but proven directly. Not sure if that
--- makes a difference; after all, IsOfHLevel is irrelevant anyway.
-
-≅-pres-IsContr : A ≅ B → IsContr A → IsContr B
-≅-pres-IsContr A≅B (a , canon) = A≅B .forth a , λ a′
-  → trans (cong (A≅B .forth) (canon (A≅B .back a′))) (A≅B .forth∘back _)
+IsContr→IsEquiv : IsContr A → IsContr B → (f : A → B) → IsEquiv f
+IsContr→IsEquiv A-contr B-contr f
+  = IsIso→IsEquiv (IsContr→IsIso A-contr B-contr f)
 
 
-≃-pres-IsContr : A ≃ B → IsContr A → IsContr B
-≃-pres-IsContr A≃B = ≅-pres-IsContr (≃→≅ A≃B)
-
-
-≅-pres-IsProp : A ≅ B → IsProp A → IsProp B
-≅-pres-IsProp A≅B A-prop x y
-  = trans (sym (A≅B .forth∘back x))
-      (sym (trans (sym (A≅B .forth∘back y)) (cong (A≅B .forth) (A-prop _ _))))
-
-
-≃-pres-IsProp : A ≃ B → IsProp A → IsProp B
-≃-pres-IsProp A≃B = ≅-pres-IsProp (≃→≅ A≃B)
+IsProp∧Pointed→IsContr : IsProp A → (a : A) → IsContr A
+IsProp∧Pointed→IsContr A-prop a = a , λ b → A-prop a b

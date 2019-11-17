@@ -4,7 +4,8 @@ module Util.HoTT.Equiv where
 open import Level using (Level ; _⊔_)
 open import Relation.Binary using (Setoid ; IsEquivalence)
 
-open import Util.HoTT.HLevel.Core using (IsContr)
+open import Util.Data.Product using (map₂)
+open import Util.HoTT.HLevel.Core using (IsContr ; IsProp)
 open import Util.HoTT.Section
 open import Util.HoTT.Singleton using (IsContr-Singleton)
 open import Util.Prelude
@@ -163,6 +164,13 @@ open _≅_ public
 ≅-setoid α .Setoid.isEquivalence = ≅-isEquivalence
 
 
+≅-reflexive : A ≡ B → A ≅ B
+≅-reflexive refl = ≅-refl
+
+
+≡→≅ = ≅-reflexive
+
+
 ≅-Injective : (i : A ≅ B) → Injective (i .forth)
 ≅-Injective i = IsIso→Injective (i .isIso)
 
@@ -217,3 +225,80 @@ open _≃_ public
 ≃-setoid α .Setoid.Carrier = Set α
 ≃-setoid α .Setoid._≈_ = _≃_
 ≃-setoid α .Setoid.isEquivalence = ≃-isEquivalence
+
+
+-- Special cases of ≃-pres-IsOfHLevel, but proven directly. This avoids the
+-- level issue mentioned above.
+≅-pres-IsContr : A ≅ B → IsContr A → IsContr B
+≅-pres-IsContr A≅B (a , canon) = A≅B .forth a , λ a′
+  → trans (cong (A≅B .forth) (canon (A≅B .back a′))) (A≅B .forth∘back _)
+
+
+≃-pres-IsContr : A ≃ B → IsContr A → IsContr B
+≃-pres-IsContr A≃B = ≅-pres-IsContr (≃→≅ A≃B)
+
+
+≅-pres-IsProp : A ≅ B → IsProp A → IsProp B
+≅-pres-IsProp A≅B A-prop x y
+  = trans (sym (A≅B .forth∘back x))
+      (sym (trans (sym (A≅B .forth∘back y)) (cong (A≅B .forth) (A-prop _ _))))
+
+
+≃-pres-IsProp : A ≃ B → IsProp A → IsProp B
+≃-pres-IsProp A≃B = ≅-pres-IsProp (≃→≅ A≃B)
+
+
+Σ-≅⁺ : {A : Set α} {B : A → Set β} {C : A → Set γ}
+  → (∀ a → B a ≅ C a)
+  → Σ A B ≅ Σ A C
+Σ-≅⁺ eq = record
+  { forth = λ { (a , b) → a , eq a .forth b }
+  ; isIso = record
+    { back = λ { (a , c) → a , eq a .back c }
+    ; back∘forth = λ { (a , b) → Σ-≡⁺ (refl , eq a .back∘forth b) }
+    ; forth∘back = λ { (a , c) → Σ-≡⁺ (refl , eq a .forth∘back c) }
+    }
+  }
+
+
+Σ-≃⁺ : {A : Set α} {B : A → Set β} {C : A → Set γ}
+  → (∀ a → B a ≃ C a)
+  → Σ A B ≃ Σ A C
+Σ-≃⁺ eq = ≅→≃ (Σ-≅⁺ λ a → ≃→≅ (eq a))
+
+
+map₂-fiber-≃ : {A : Set α} {B : A → Set β} {C : A → Set γ}
+  → (f : ∀ a → B a → C a)
+  → ∀ a (c : C a)
+  → ∃[ b ] (f a b ≡ c) ≃ ∃[ p ] (map₂ f p ≡ (a , c))
+map₂-fiber-≃ f a c = ≅→≃ record
+  { forth = λ { (b , refl) → (a , b) , refl }
+  ; isIso = record
+    { back = λ { ((.a , b) , refl) → b , refl }
+    ; back∘forth = λ { (b , refl) → refl }
+    ; forth∘back = λ { ((.a , b) , refl) → refl }
+    }
+  }
+
+
+IsEquiv-map₂-f→IsEquiv-f : {A : Set α} {B : A → Set β} {C : A → Set γ}
+  → (f : ∀ a → B a → C a)
+  → IsEquiv (map₂ f)
+  → ∀ a → IsEquiv (f a)
+IsEquiv-map₂-f→IsEquiv-f {A = A} {B} {C} f equiv a c
+  = ≃-pres-IsContr (≃-sym (map₂-fiber-≃ f a c)) (equiv (a , c))
+
+
+sym-≅ : {x y : A} → (x ≡ y) ≅ (y ≡ x)
+sym-≅ = record
+  { forth = sym
+  ; isIso = record
+    { back = sym
+    ; back∘forth = λ { refl → refl }
+    ; forth∘back = λ { refl → refl }
+    }
+  }
+
+
+sym-≃ : {x y : A} → (x ≡ y) ≃ (y ≡ x)
+sym-≃ = ≅→≃ sym-≅

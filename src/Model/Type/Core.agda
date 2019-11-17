@@ -295,22 +295,6 @@ proj₁∘subst B C refl x = refl
     -- "HoTT makes everything so much nicer", they said. "It's all automatic",
     -- they said.
     abstract
-      subst-funext : ∀ {α β γ} {A : Set α} {B : A → Set β} {f g : ∀ a → B a}
-        → (P : ∀ a → B a → Set γ)
-        → (f≡g : ∀ x → f x ≡ g x)
-        → ∀ {a} (Pf : P a (f a))
-        → subst (λ f → P a (f a)) (funext f≡g) Pf ≡ subst (P a) (f≡g a) Pf
-      subst-funext P f≡g {a} Pf = sym
-        (trans
-          (cong (λ p → subst (P a) (p a) Pf) (sym (≡→~∘funext f≡g)))
-          go)
-        where
-          go : subst (P a) (≡→~ (funext f≡g) a) Pf
-             ≡ subst (λ f → P a (f a)) (funext f≡g) Pf
-          go with funext f≡g
-          ... | refl = refl
-
-
       subst-type : ∀ {α n} (A B : HLevel n α)
         → (p : A .type ≡ B .type)
         → (x : A .type)
@@ -325,7 +309,7 @@ proj₁∘subst B C refl x = refl
       subst-T≡U {δ} x
         = trans (subst-funext (λ δ T → T .type) _ x)
           (trans (subst-type (T .ObjHSet δ) (U .ObjHSet δ) (≅→≡ (T≅U δ)) x)
-            (≅→≡-β (T≅U δ)))
+            (cast-≅→≡ (T≅U δ)))
 
 
       go : (Δ : Set) (T U : Δ → HSet 0ℓ) (eqΔ : Δ → Δ → Set)
@@ -344,7 +328,7 @@ proj₁∘subst B C refl x = refl
             (λ {δ δ′} → eqU δ δ′)
       go Δ T U eqΔ eqT eqU refl eq = funext∙ λ {δ} → funext∙ λ {δ′}
         → funext λ δ≈δ′ → funext λ x → funext λ y
-        → HProp-ext _ _ (eq δ δ′ δ≈δ′ x y)
+        → HProp-≡⁺ _ _ (eq δ δ′ δ≈δ′ x y)
 
 
       T≈≡U≈ : _

@@ -22,7 +22,9 @@ import Source.Size.Substitution.Theory
 import Source.Size.Substitution.Universe
 import Source.Term
 import Source.Type
+import Util.Data.Product
 import Util.HoTT.Equiv
+import Util.HoTT.Equiv.Induction
 import Util.HoTT.FunctionalExtensionality
 import Util.HoTT.HLevel
 import Util.HoTT.HLevel.Core
@@ -30,6 +32,10 @@ import Util.HoTT.Homotopy
 import Util.HoTT.Section
 import Util.HoTT.Singleton
 import Util.HoTT.Univalence
+import Util.HoTT.Univalence.Axiom
+import Util.HoTT.Univalence.Beta
+import Util.HoTT.Univalence.ContrFormulation
+import Util.HoTT.Univalence.Statement
 import Util.Induction.WellFounded
 import Util.Prelude
 import Util.Relation.Binary.Closure.SymmetricTransitive

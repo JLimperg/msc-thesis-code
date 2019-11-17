@@ -299,5 +299,4 @@ open ST.Ctx
 -- ⟦subₛ-resp-⊢⟧ σ (caseNat T) = {!!}
 -- ⟦subₛ-resp-⊢⟧ σ (fix T) = {!!}
 -- ⟦subₛ-resp-⊢⟧ σ (cast⊢ x x₁ ⊢t) = {!!}
-
--- -} -- TODO
+-}

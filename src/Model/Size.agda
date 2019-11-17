@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K #-} --TODO
+{-# OPTIONS --without-K #-}
 module Model.Size where
 
 open import Relation.Binary using (Rel ; Preorder ; IsPreorder)
