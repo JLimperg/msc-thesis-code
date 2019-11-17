@@ -6,7 +6,7 @@ module Util.HoTT.Univalence.ContrFormulation where
 open import Util.Data.Product using (map₂)
 open import Util.Prelude
 open import Util.HoTT.Equiv
-open import Util.HoTT.HLevel
+open import Util.HoTT.HLevel.Core
 open import Util.HoTT.Singleton
 open import Util.HoTT.Univalence.Axiom
 open import Util.HoTT.Univalence.Statement

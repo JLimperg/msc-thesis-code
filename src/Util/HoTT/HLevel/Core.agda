@@ -2,28 +2,29 @@
 module Util.HoTT.HLevel.Core where
 
 open import Data.Nat using (_+_)
+open import Level using (Lift ; lift ; lower)
 
 open import Util.Prelude
 open import Util.Relation.Binary.LogicalEquivalence using (_↔_ ; forth ; back)
 open import Util.Relation.Binary.PropositionalEquality using
-  ( trans-injectiveˡ )
+  ( Σ-≡⁺ ; Σ-≡⁻ ; Σ-≡⁺∘Σ-≡⁻ ; trans-injectiveˡ )
 
 
 private
   variable
-    a b c : Level
-    A B C : Set a
+    α β γ : Level
+    A B C : Set α
 
 
-IsContr : Set a → Set a
+IsContr : Set α → Set α
 IsContr A = Σ[ x ∈ A ] (∀ y → x ≡ y)
 
 
-IsProp : Set a → Set a
+IsProp : Set α → Set α
 IsProp A = (x y : A) → x ≡ y
 
 
-IsProp′ : Set a → Set a
+IsProp′ : Set α → Set α
 IsProp′ A = (x y : A) → IsContr (x ≡ y)
 
 
@@ -46,17 +47,17 @@ IsProp↔IsProp′ .forth = IsProp→IsProp′
 IsProp↔IsProp′ .back = IsProp′→IsProp
 
 
-IsSet : Set a → Set a
+IsSet : Set α → Set α
 IsSet A = {x y : A} → IsProp (x ≡ y)
 
 
-IsOfHLevel : ℕ → Set a → Set a
+IsOfHLevel : ℕ → Set α → Set α
 IsOfHLevel 0 A = IsContr A
 IsOfHLevel 1 A = IsProp A
 IsOfHLevel (suc (suc n)) A = {x y : A} → IsOfHLevel (suc n) (x ≡ y)
 
 
-IsOfHLevel′ : ℕ → Set a → Set a
+IsOfHLevel′ : ℕ → Set α → Set α
 IsOfHLevel′ zero A = IsContr A
 IsOfHLevel′ (suc n) A = ∀ {x y : A} → IsOfHLevel′ n (x ≡ y)
 
@@ -127,3 +128,106 @@ HSet α = HLevel α 2
 
 HLevel-suc : ∀ {α n} → HLevel α n → HLevel α (suc n)
 HLevel-suc (HLevel⁺ A A-level) = HLevel⁺ A (IsOfHLevel-suc _ A-level)
+
+
+⊤-IsContr : IsContr ⊤
+⊤-IsContr = ⊤.tt , λ { ⊤.tt → refl }
+
+
+⊤-IsProp : IsProp ⊤
+⊤-IsProp = IsOfHLevel-suc 0 ⊤-IsContr
+
+
+⊥-IsProp : IsProp ⊥
+⊥-IsProp ()
+
+
+×-IsProp : IsProp A → IsProp B → IsProp (A × B)
+×-IsProp A-prop B-prop (x , y) (x′ , y′) = cong₂ _,_ (A-prop _ _) (B-prop _ _)
+
+
+Lift-IsProp : IsProp A → IsProp (Lift α A)
+Lift-IsProp A-prop (lift x) (lift y) = cong lift (A-prop _ _)
+
+
+⊤-HProp : HProp 0ℓ
+⊤-HProp = HLevel⁺ ⊤ ⊤-IsProp
+
+
+⊥-HProp : HProp 0ℓ
+⊥-HProp = HLevel⁺ ⊥ ⊥-IsProp
+
+
+_×-HProp_ : HProp α → HProp β → HProp (α ⊔ℓ β)
+A ×-HProp B = HLevel⁺ (A .type × B .type) (×-IsProp (A .level) (B .level))
+
+
+Lift-HProp : ∀ α → HProp β → HProp (α ⊔ℓ β)
+Lift-HProp α (HLevel⁺ A A-prop) = HLevel⁺ (Lift α A) (Lift-IsProp A-prop)
+
+
+⊤-IsSet : IsSet ⊤
+⊤-IsSet = IsOfHLevel-suc 1 ⊤-IsProp
+
+
+⊥-IsSet : IsSet ⊥
+⊥-IsSet = IsOfHLevel-suc 1 ⊥-IsProp
+
+
+Σ-IsSet : {A : Set α} {B : A → Set β}
+  → IsSet A
+  → (∀ a → IsSet (B a))
+  → IsSet (Σ A B)
+Σ-IsSet A-set B-set p q
+  = trans (sym (Σ-≡⁺∘Σ-≡⁻ p))
+      (sym (trans (sym (Σ-≡⁺∘Σ-≡⁻ q))
+      (cong Σ-≡⁺ (Σ-≡⁺ (A-set _ _ , B-set _ _ _)))))
+
+
+×-IsSet : IsSet A → IsSet B → IsSet (A × B)
+×-IsSet A-set B-set = Σ-IsSet A-set (λ _ → B-set)
+
+
+Lift-IsSet : IsSet A → IsSet (Lift α A)
+Lift-IsSet A-set p q
+  = trans (sym (Lift-≡⁺∘Lift-≡⁻ p))
+      (sym (trans (sym (Lift-≡⁺∘Lift-≡⁻ q)) (cong Lift-≡⁺ (A-set _ _))))
+  where
+    Lift-≡⁻ : {x y : Lift α A} → x ≡ y → lower x ≡ lower y
+    Lift-≡⁻ refl = refl
+
+    Lift-≡⁺ : {x y : Lift α A} → lower x ≡ lower y → x ≡ y
+    Lift-≡⁺ refl = refl
+
+    Lift-≡⁻∘Lift-≡⁺ : {x y : Lift α A} (p : lower x ≡ lower y)
+      → Lift-≡⁻ {α = α} (Lift-≡⁺ p) ≡ p
+    Lift-≡⁻∘Lift-≡⁺ refl = refl
+
+    Lift-≡⁺∘Lift-≡⁻ : {x y : Lift α A} (p : x ≡ y)
+      → Lift-≡⁺ {α = α} (Lift-≡⁻ p) ≡ p
+    Lift-≡⁺∘Lift-≡⁻ refl = refl
+
+
+⊤-HSet : HSet 0ℓ
+⊤-HSet = HLevel⁺ ⊤ ⊤-IsSet
+
+
+⊥-HSet : HSet 0ℓ
+⊥-HSet = HLevel⁺ ⊥ ⊥-IsSet
+
+
+Σ-HSet : (A : HSet α) (B : A .type → HSet β) → HSet (α ⊔ℓ β)
+Σ-HSet A B
+  = HLevel⁺ (Σ (A .type) λ a → B a .type) (Σ-IsSet (A .level) (λ a → B a .level))
+
+
+_×-HSet_ : HSet α → HSet β → HSet (α ⊔ℓ β)
+A ×-HSet B = HLevel⁺ (A .type × B .type) (×-IsSet (A .level) (B .level))
+
+
+Lift-HSet : ∀ α → HSet β → HSet (α ⊔ℓ β)
+Lift-HSet α (HLevel⁺ B B-set) = HLevel⁺ (Lift α B) (Lift-IsSet B-set)
+
+
+IsProp∧Pointed→IsContr : IsProp A → (a : A) → IsContr A
+IsProp∧Pointed→IsContr A-prop a = a , λ b → A-prop a b

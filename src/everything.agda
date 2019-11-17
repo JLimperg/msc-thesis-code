@@ -24,6 +24,7 @@ import Source.Term
 import Source.Type
 import Util.Data.Product
 import Util.HoTT.Equiv
+import Util.HoTT.Equiv.Core
 import Util.HoTT.Equiv.Induction
 import Util.HoTT.FunctionalExtensionality
 import Util.HoTT.HLevel

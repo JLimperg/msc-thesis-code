@@ -3,7 +3,7 @@
 {-# OPTIONS --without-K #-}
 module Util.HoTT.Equiv.Induction where
 
-open import Util.HoTT.HLevel
+open import Util.HoTT.HLevel.Core
 open import Util.HoTT.Equiv
 open import Util.HoTT.Univalence.ContrFormulation
 open import Util.Prelude
@@ -58,3 +58,23 @@ abstract
     → ∀ {A}
     → J-≃ P p ≃-refl ≡ p A
   J-≃-β P p {A} = H-≃-β (λ B A≃B → P A B A≃B) (p A)
+
+
+H-IsEquiv : {A : Set α} (P : (B : Set α) → (A → B) → Set β)
+  → P A id
+  → ∀ {B} (f : A → B)
+  → IsEquiv f
+  → P B f
+H-IsEquiv P p f f-equiv
+  = H-≃ (λ B A≃B → P B (A≃B .forth)) p
+      (record { forth = f ; isEquiv = f-equiv })
+
+
+J-IsEquiv : (P : (A B : Set α) → (A → B) → Set β)
+  → (∀ A → P A A id)
+  → ∀ {A B} (f : A → B)
+  → IsEquiv f
+  → P A B f
+J-IsEquiv P p f f-equiv
+  = J-≃ (λ A B A≃B → P A B (A≃B .forth)) p
+      (record { forth = f ; isEquiv = f-equiv })

@@ -3,8 +3,6 @@ module Util.HoTT.HLevel where
 
 open import Util.HoTT.HLevel.Core public
 
-open import Level using (Lift ; lift ; lower)
-
 open import Util.HoTT.Equiv
 open import Util.HoTT.FunctionalExtensionality
 open import Util.HoTT.Homotopy
@@ -22,7 +20,6 @@ private
 
 
 infixr 0 _→-HProp_
-infixr 2 _×-HProp_
 
 
 -- Note that A and B must be at the same level. A more direct proof could
@@ -35,18 +32,6 @@ infixr 2 _×-HProp_
 ≅-pres-IsOfHLevel n A≅B = ≃-pres-IsOfHLevel n (≅→≃ A≅B)
 
 
-⊤-IsContr : IsContr ⊤
-⊤-IsContr = ⊤.tt , λ { ⊤.tt → refl }
-
-
-⊤-IsProp : IsProp ⊤
-⊤-IsProp = IsOfHLevel-suc 0 ⊤-IsContr
-
-
-⊥-IsProp : IsProp ⊥
-⊥-IsProp ()
-
-
 ∀-IsProp : {B : A → Set β} → (∀ a → IsProp (B a)) → IsProp (∀ a → B a)
 ∀-IsProp B-prop f g = funext λ a → B-prop _ _ _
 
@@ -57,26 +42,6 @@ infixr 2 _×-HProp_
 
 →-IsProp : IsProp B → IsProp (A → B)
 →-IsProp B-prop = ∀-IsProp λ _ → B-prop
-
-
-×-IsProp : IsProp A → IsProp B → IsProp (A × B)
-×-IsProp A-prop B-prop (x , y) (x′ , y′) = cong₂ _,_ (A-prop _ _) (B-prop _ _)
-
-
-Lift-IsProp : IsProp A → IsProp (Lift α A)
-Lift-IsProp A-prop (lift x) (lift y) = cong lift (A-prop _ _)
-
-
-⊤-HProp : HProp 0ℓ
-⊤-HProp = HLevel⁺ ⊤ ⊤-IsProp
-
-
-⊥-HProp : HProp 0ℓ
-⊥-HProp = HLevel⁺ ⊥ ⊥-IsProp
-
-
-_×-HProp_ : HProp α → HProp β → HProp (α ⊔ℓ β)
-A ×-HProp B = HLevel⁺ (A .type × B .type) (×-IsProp (A .level) (B .level))
 
 
 ∀-HProp : (A : Set α) → ((a : A) → HProp β) → HProp (α ⊔ℓ β)
@@ -93,10 +58,6 @@ A →-HProp B = HLevel⁺ (A → B .type) (→-IsProp (B .level))
 
 _→-HProp′_ : HProp α → HProp β → HProp (α ⊔ℓ β)
 A →-HProp′ B = A .type →-HProp B
-
-
-Lift-HProp : ∀ α → HProp β → HProp (α ⊔ℓ β)
-Lift-HProp α (HLevel⁺ A A-prop) = HLevel⁺ (Lift α A) (Lift-IsProp A-prop)
 
 
 IsContr-IsProp : IsProp (IsContr A)
@@ -121,14 +82,6 @@ IsOfHLevel-IsProp (suc (suc n))
 
 IsSet-IsProp : IsProp (IsSet A)
 IsSet-IsProp = IsOfHLevel-IsProp 2
-
-
-⊤-IsSet : IsSet ⊤
-⊤-IsSet = IsOfHLevel-suc 1 ⊤-IsProp
-
-
-⊥-IsSet : IsSet ⊥
-⊥-IsSet = IsOfHLevel-suc 1 ⊥-IsProp
 
 
 ∀-IsSet : {A : Set α} {B : A → Set β}
@@ -166,67 +119,12 @@ IsSet-IsProp = IsOfHLevel-IsProp 2
 →-IsSet B-set = ∀-IsSet (λ _ → B-set)
 
 
-Σ-IsSet : {A : Set α} {B : A → Set β}
-  → IsSet A
-  → (∀ a → IsSet (B a))
-  → IsSet (Σ A B)
-Σ-IsSet A-set B-set p q
-  = trans (sym (Σ-≡⁺∘Σ-≡⁻ p))
-      (sym (trans (sym (Σ-≡⁺∘Σ-≡⁻ q))
-      (cong Σ-≡⁺ (Σ-≡⁺ (A-set _ _ , B-set _ _ _)))))
-
-
-×-IsSet : IsSet A → IsSet B → IsSet (A × B)
-×-IsSet A-set B-set = Σ-IsSet A-set (λ _ → B-set)
-
-
-Lift-IsSet : IsSet A → IsSet (Lift α A)
-Lift-IsSet A-set p q
-  = trans (sym (Lift-≡⁺∘Lift-≡⁻ p))
-      (sym (trans (sym (Lift-≡⁺∘Lift-≡⁻ q)) (cong Lift-≡⁺ (A-set _ _))))
-  where
-    Lift-≡⁻ : {x y : Lift α A} → x ≡ y → lower x ≡ lower y
-    Lift-≡⁻ refl = refl
-
-    Lift-≡⁺ : {x y : Lift α A} → lower x ≡ lower y → x ≡ y
-    Lift-≡⁺ refl = refl
-
-    Lift-≡⁻∘Lift-≡⁺ : {x y : Lift α A} (p : lower x ≡ lower y)
-      → Lift-≡⁻ {α = α} (Lift-≡⁺ p) ≡ p
-    Lift-≡⁻∘Lift-≡⁺ refl = refl
-
-    Lift-≡⁺∘Lift-≡⁻ : {x y : Lift α A} (p : x ≡ y)
-      → Lift-≡⁺ {α = α} (Lift-≡⁻ p) ≡ p
-    Lift-≡⁺∘Lift-≡⁻ refl = refl
-
-
-⊤-HSet : HSet 0ℓ
-⊤-HSet = HLevel⁺ ⊤ ⊤-IsSet
-
-
-⊥-HSet : HSet 0ℓ
-⊥-HSet = HLevel⁺ ⊥ ⊥-IsSet
-
-
 ∀-HSet : (A : Set α) → (A → HSet β) → HSet (α ⊔ℓ β)
 ∀-HSet A B = HLevel⁺ (∀ a → B a .type) (∀-IsSet (λ a → B a .level))
 
 
 ∀∙-HSet : {A : Set α} → (A → HSet β) → HSet (α ⊔ℓ β)
 ∀∙-HSet B = HLevel⁺ (∀ {a} → B a .type) (∀∙-IsSet (λ a → B a .level))
-
-
-Σ-HSet : (A : HSet α) (B : A .type → HSet β) → HSet (α ⊔ℓ β)
-Σ-HSet A B
-  = HLevel⁺ (Σ (A .type) λ a → B a .type) (Σ-IsSet (A .level) (λ a → B a .level))
-
-
-_×-HSet_ : HSet α → HSet β → HSet (α ⊔ℓ β)
-A ×-HSet B = HLevel⁺ (A .type × B .type) (×-IsSet (A .level) (B .level))
-
-
-Lift-HSet : ∀ α → HSet β → HSet (α ⊔ℓ β)
-Lift-HSet α (HLevel⁺ B B-set) = HLevel⁺ (Lift α B) (Lift-IsSet B-set)
 
 
 HLevel-≡⁺ : ∀ {n} (A B : HLevel α n)
@@ -264,20 +162,3 @@ IsProp-≅⁺ A-prop B-prop A↔B = record
 
 HProp-≡⁺ : (A B : HProp α) → A .type ↔ B .type → A ≡ B
 HProp-≡⁺ A B A↔B = HLevel-≡⁺ A B (≅→≡ (IsProp-≅⁺ (A .level) (B .level) A↔B))
-
-
-IsContr→IsIso : IsContr A → IsContr B → (f : A → B) → IsIso f
-IsContr→IsIso (a , a-uniq) (b , b-uniq) f = record
-  { back = λ _ → a
-  ; back∘forth = λ _ → a-uniq _
-  ; forth∘back = λ b′ → trans (sym (b-uniq (f a))) (b-uniq b′)
-  }
-
-
-IsContr→IsEquiv : IsContr A → IsContr B → (f : A → B) → IsEquiv f
-IsContr→IsEquiv A-contr B-contr f
-  = IsIso→IsEquiv (IsContr→IsIso A-contr B-contr f)
-
-
-IsProp∧Pointed→IsContr : IsProp A → (a : A) → IsContr A
-IsProp∧Pointed→IsContr A-prop a = a , λ b → A-prop a b

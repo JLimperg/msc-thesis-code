@@ -1,7 +1,8 @@
 {-# OPTIONS --without-K --safe #-}
 module Util.HoTT.Equiv where
 
-open import Level using (Level ; _⊔_)
+open import Util.HoTT.Equiv.Core public
+
 open import Relation.Binary using (Setoid ; IsEquivalence)
 
 open import Util.Data.Product using (map₂)
@@ -13,25 +14,10 @@ open import Util.Relation.Binary.PropositionalEquality using
   ( Σ-≡⁻ ; Σ-≡⁺ ; sym-cancel-r ; trans-unassoc )
 
 
-infix 4 _≅_ _≃_
-
-
 private
   variable
     α β γ : Level
     A B C : Set α
-
-
-Injective : (f : A → B) → Set _
-Injective f = ∀ {x y} → f x ≡ f y → x ≡ y
-
-
-record IsIso {A : Set α} {B : Set β} (forth : A → B) : Set (α ⊔ β)
-  where
-  field
-    back : B → A
-    back∘forth : ∀ x → back (forth x) ≡ x
-    forth∘back : ∀ x → forth (back x) ≡ x
 
 
 IsIso→HasSection-forth : {f : A → B} → IsIso f → HasSection f
@@ -55,27 +41,25 @@ IsIso→Injective f-iso fx≡fy
         (f-iso .IsIso.back∘forth _))
 
 
-IsEquiv : {A : Set α} {B : Set β} (forth : A → B)
-  → Set (α ⊔ β)
-IsEquiv {A = A} {B} forth
-  = ∀ b → IsContr (Σ[ a ∈ A ] forth a ≡ b)
-
-
 IsEquiv→IsIso : {f : A → B} → IsEquiv f → IsIso f
 IsEquiv→IsIso {A = A} {B = B} {forth} equiv = record
-  { back = back ; back∘forth = back∘forth ; forth∘back = forth∘back }
+  { back = back′ ; back∘forth = back∘forth′ ; forth∘back = forth∘back′ }
   where
-  back : B → A
-  back b with equiv b
+  back′ : B → A
+  back′ b with equiv b
   ... | (a , _) , _ = a
 
-  back∘forth : ∀ x → back (forth x) ≡ x
-  back∘forth a with equiv (forth a)
+  back∘forth′ : ∀ x → back′ (forth x) ≡ x
+  back∘forth′ a with equiv (forth a)
   ... | (a′ , fortha′≡fortha) , unique = proj₁ (Σ-≡⁻ (unique (a , refl)))
 
-  forth∘back : ∀ x → forth (back x) ≡ x
-  forth∘back b with equiv b
+  forth∘back′ : ∀ x → forth (back′ x) ≡ x
+  forth∘back′ b with equiv b
   ... | (a , fortha≡b) , _ = fortha≡b
+
+
+IsEquiv→Injective : {f : A → B} → IsEquiv f → Injective f
+IsEquiv→Injective = IsIso→Injective ∘ IsEquiv→IsIso
 
 
 -- This proof follows Martin Escardó's lecture notes
@@ -84,49 +68,39 @@ IsIso→IsEquiv : {f : A → B} → IsIso f → IsEquiv f
 IsIso→IsEquiv {A = A} {B = B} {forth} iso b
   = ◁-pres-IsContr (◁-trans ii iii) IsContr-Singleton
   where
-    open IsIso iso
+    module I = IsIso iso
 
     A◁B : A ◁ B
     A◁B = record
-      { retraction = back
+      { retraction = I.back
       ; hasSection = IsIso→HasSection-back iso
       }
 
 
-    i : ∀ b′ → (forth (back b′) ≡ b) ◁ (b′ ≡ b)
+    i : ∀ b′ → (forth (I.back b′) ≡ b) ◁ (b′ ≡ b)
     i b′ = record
-      { retraction = λ b′≡b → trans (forth∘back b′) b′≡b
+      { retraction = λ b′≡b → trans (I.forth∘back b′) b′≡b
       ; hasSection = record
-        { section = λ eq → trans (sym (forth∘back b′)) eq
+        { section = λ eq → trans (sym (I.forth∘back b′)) eq
         ; isSection = λ x → let open ≡-Reasoning in
           begin
-            trans (forth∘back b′) (trans (sym (forth∘back b′)) x)
-          ≡⟨ trans-unassoc (forth∘back b′) ⟩
-            trans (trans (forth∘back b′) (sym (forth∘back b′))) x
-          ≡⟨ cong (λ p → trans p x) (sym-cancel-r (forth∘back b′)) ⟩
+            trans (I.forth∘back b′) (trans (sym (I.forth∘back b′)) x)
+          ≡⟨ trans-unassoc (I.forth∘back b′) ⟩
+            trans (trans (I.forth∘back b′) (sym (I.forth∘back b′))) x
+          ≡⟨ cong (λ p → trans p x) (sym-cancel-r (I.forth∘back b′)) ⟩
             x
           ∎
         }
       }
 
 
-    ii : ∃[ a ] (forth a ≡ b) ◁ ∃[ b′ ] (forth (back b′) ≡ b)
+    ii : ∃[ a ] (forth a ≡ b) ◁ ∃[ b′ ] (forth (I.back b′) ≡ b)
     ii = Σ-◁-reindexing A◁B
 
 
-    iii : ∃[ b′ ] (forth (back b′) ≡ b) ◁ ∃[ b′ ] (b′ ≡ b)
+    iii : ∃[ b′ ] (forth (I.back b′) ≡ b) ◁ ∃[ b′ ] (b′ ≡ b)
     --                                   aka Singleton b
     iii = Σ-◁ i
-
-
-record _≅_ (A : Set α) (B : Set β) : Set (α ⊔ β) where
-  field
-    forth : A → B
-    isIso : IsIso forth
-
-  open IsIso isIso public
-
-open _≅_ public
 
 
 ≅-refl : A ≅ A
@@ -175,12 +149,17 @@ open _≅_ public
 ≅-Injective i = IsIso→Injective (i .isIso)
 
 
-record _≃_ (A : Set α) (B : Set β) : Set (α ⊔ β) where
-  field
-    forth : A → B
-    isEquiv : IsEquiv forth
+≅→◁ : A ≅ B → A ◁ B
+≅→◁ A≅B = record
+  { retraction = A≅B .back
+  ; hasSection = IsIso→HasSection-back (A≅B .isIso)
+  }
 
-open _≃_ public
+≅→▷ : A ≅ B → B ◁ A
+≅→▷ A≅B = record
+  { retraction = A≅B .forth
+  ; hasSection = IsIso→HasSection-forth (A≅B .isIso)
+  }
 
 
 ≃→≅ : A ≃ B → A ≅ B
@@ -193,11 +172,12 @@ open _≃_ public
 ≅→≃ A≅B .isEquiv = IsIso→IsEquiv (A≅B .isIso)
 
 
+id-IsEquiv : IsEquiv (id {A = A})
+id-IsEquiv a = (a , refl) , λ { (b , refl) → refl }
+
+
 ≃-refl : A ≃ A
-≃-refl = record
-  { forth = λ x → x
-  ; isEquiv = λ a → (a , refl) , λ { (b , refl) → refl }
-  }
+≃-refl = record { forth = id ; isEquiv = id-IsEquiv }
 
 
 ≃-reflexive : A ≡ B → A ≃ B
@@ -227,8 +207,20 @@ open _≃_ public
 ≃-setoid α .Setoid.isEquivalence = ≃-isEquivalence
 
 
--- Special cases of ≃-pres-IsOfHLevel, but proven directly. This avoids the
--- level issue mentioned above.
+≃-Injective : (e : A ≃ B) → Injective (e .forth)
+≃-Injective = ≅-Injective ∘ ≃→≅
+
+
+≃→◁ : A ≃ B → A ◁ B
+≃→◁ = ≅→◁ ∘ ≃→≅
+
+
+≃→▷ : A ≃ B → B ◁ A
+≃→▷ = ≅→▷ ∘ ≃→≅
+
+
+-- Special cases of ≃-pres-IsOfHLevel (in Util.HoTT.HLevel), but proven
+-- directly. This means that A and B can be at different levels.
 ≅-pres-IsContr : A ≅ B → IsContr A → IsContr B
 ≅-pres-IsContr A≅B (a , canon) = A≅B .forth a , λ a′
   → trans (cong (A≅B .forth) (canon (A≅B .back a′))) (A≅B .forth∘back _)
@@ -302,3 +294,45 @@ sym-≅ = record
 
 sym-≃ : {x y : A} → (x ≡ y) ≃ (y ≡ x)
 sym-≃ = ≅→≃ sym-≅
+
+
+IsContr→IsIso : IsContr A → IsContr B → (f : A → B) → IsIso f
+IsContr→IsIso (a , a-uniq) (b , b-uniq) f = record
+  { back = λ _ → a
+  ; back∘forth = λ _ → a-uniq _
+  ; forth∘back = λ b′ → trans (sym (b-uniq (f a))) (b-uniq b′)
+  }
+
+
+IsContr→IsEquiv : IsContr A → IsContr B → (f : A → B) → IsEquiv f
+IsContr→IsEquiv A-contr B-contr f
+  = IsIso→IsEquiv (IsContr→IsIso A-contr B-contr f)
+
+
+proj₁-IsIso : {A : Set α} {B : A → Set β}
+  → (∀ a → IsContr (B a))
+  → IsIso (proj₁ {A = A} {B})
+proj₁-IsIso B-contr = record
+  { back = λ a → (a , B-contr a .proj₁)
+  ; back∘forth = λ { (a , b) → Σ-≡⁺ (refl , (B-contr a .proj₂ b)) }
+  ; forth∘back = λ _ → refl
+  }
+
+
+proj₁-IsEquiv : {A : Set α} {B : A → Set β}
+  → (∀ a → IsContr (B a))
+  → IsEquiv (proj₁ {A = A} {B})
+proj₁-IsEquiv B-contr = IsIso→IsEquiv (proj₁-IsIso B-contr)
+
+
+Π-distr-Σ-≅ : (A : Set α) (B : A → Set β) (C : ∀ a → B a → Set γ)
+  → (∀ a → Σ[ b ∈ B a ] (C a b))
+  ≅ (Σ[ f ∈ (∀ a → B a) ] (∀ a → C a (f a)))
+Π-distr-Σ-≅ A B C = record
+  { forth = λ f → (λ a → f a .proj₁) , (λ a → f a .proj₂)
+  ; isIso = record
+    { back = λ { (f , g) → λ a → f a , g a }
+    ; back∘forth = λ _ → refl
+    ; forth∘back = λ _ → refl
+    }
+  }
