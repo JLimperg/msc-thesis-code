@@ -10,11 +10,11 @@ import Source.Size.Substitution.Canonical as SC
 
 
 {-
-liftℕ : (n < ⋆) (m < n) → Nat m → Nat n
-liftℕ ≔ λ (n < ⋆) (m < n) (i : Nat m).
-  caseNat (Nat n) m i
+liftℕ : ∀ n < ⋆. ∀ m < n. Nat m → Nat n
+liftℕ ≔ Λ n < ⋆. Λ m < n. λ i : Nat m.
+  caseNat[Nat n] m i
     zero n
-    (λ (k < m) (i′ : Nat k). suc n k i′)
+    (Λ k < m. λ i′ : Nat k. suc n k i′)
 -}
 liftNat : ∀ {Δ} → Term Δ
 liftNat = Λₛ ⋆ , Λₛ v0 , Λ (Nat v0) ,
@@ -42,14 +42,14 @@ liftNat⊢
 
 
 {-
-half : (n < ⋆) → Nat n → Nat n
-half ≔ λ (n < ⋆). fix (λ (m < ⋆). Nat m → Nat m)
-  (λ (n < ⋆) (rec : (m < n) → Nat m → Nat m).
-    λ (i : Nat n). caseNat (Nat n) n i
+half : ∀ n < ⋆. Nat n → Nat n
+half ≔ λ n < ⋆. fix[Nat ∙ → Nat ∙]
+  (Λ n < ⋆. λ rec : (∀ m < n. Nat m → Nat m). λ i : Nat n.
+    caseNat[Nat n] n i
       (zero n)
-      (λ (m < n) (i′ : Nat m). caseNat (Nat n) m i′
+      (Λ m < n. λ i′ : Nat m. caseNat[Nat n] m i′
         (zero n)
-        (λ (k < m) (i″ : Nat k). liftNat n k (rec k i″)))
+        (Λ k < m. λ i″ : Nat k. liftNat n k (rec k i″)))
   n
 -}
 half : ∀ {Δ} → Term Δ
@@ -99,10 +99,10 @@ half⊢
 
 
 {-
-suc∞ : ℕ ∞ → ℕ ∞
-suc∞ ≔ λ i : ℕ ∞. caseℕ[ℕ ∞] ∞ i
+suc∞ : Nat ∞ → Nat ∞
+suc∞ ≔ λ i : Nat ∞. caseNat[Nat ∞] ∞ i
   (suc ∞ 0 (zero 0))
-  (Λ m < ∞. λ i′ : ℕ m. suc ∞ (↑ m) (suc (↑ m) m i′))
+  (Λ m < ∞. λ i′ : Nat m. suc ∞ (↑ m) (suc (↑ m) m i′))
 -}
 suc∞ : ∀ {Δ} → Term Δ
 suc∞ = Λ (Nat ∞) , caseNat (Nat ∞) ∞ (var 0)
@@ -123,14 +123,13 @@ suc∞⊢
         refl)
 
 
--- TODO decide on a consistent concrete syntax.
 {-
-plus : ∀ n < ⋆. ℕ n → ℕ ∞ → ℕ ∞
-plus ≔ Λ n < ⋆. fix[ℕ ∙ → ℕ ∞ → ℕ ∞]
-  (Λ n < ⋆. λ rec : (Λ m < n. ℕ m → ℕ ∞ → ℕ ∞).
-    λ i : ℕ n. λ j : ℕ ∞. caseℕ[ℕ ∞] n i
+plus : ∀ n < ⋆. Nat n → Nat ∞ → Nat ∞
+plus ≔ Λ n < ⋆. fix[Nat ∙ → Nat ∞ → Nat ∞]
+  (Λ n < ⋆. λ rec : (∀ m < n. Nat m → Nat ∞ → Nat ∞).
+    λ i : Nat n. λ j : Nat ∞. caseNat[Nat ∞] n i
       j
-      (Λ m < n. λ i′ : ℕ m. suc∞ (rec m i′ j)))
+      (Λ m < n. λ i′ : Nat m. suc∞ (rec m i′ j)))
   n
 -}
 plus : ∀ {Δ} → Term Δ
@@ -197,9 +196,9 @@ zeros⊢
 
 
 {-
-map : (ℕ ∞ → ℕ ∞) → ∀ n < ⋆. Stream n → Stream n
-map ≔ λ f : ℕ ∞ → ℕ ∞. Λ n < ⋆. fix[Stream ∙ → Stream ∙]
-  (Λ n < ⋆. λ rec : (Λ m < n. Stream m → Stream m). λ xs : Stream n.
+map : (Nat ∞ → Nat ∞) → ∀ n < ⋆. Stream n → Stream n
+map ≔ λ f : Nat ∞ → Nat ∞. Λ n < ⋆. fix[Stream ∙ → Stream ∙]
+  (Λ n < ⋆. λ rec : (∀ m < n. Stream m → Stream m). λ xs : Stream n.
     cons (f (head n xs)) n (Λ m < n. rec m (tail n xs m)))
   n
 -}
