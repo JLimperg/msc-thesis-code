@@ -84,18 +84,6 @@ subst-trans : ∀ {P : A → Set β} {x y z : A} {p : P x}
 subst-trans refl refl = refl
 
 
--- TODO remove
-sym-cancel-r : {x y : A} (x≡y : x ≡ y)
-  → trans x≡y (sym x≡y) ≡ refl
-sym-cancel-r = trans-symʳ
-
-
--- TODO remove
-sym-cancel-l : {x y : A} (x≡y : x ≡ y)
-  → trans (sym x≡y) x≡y ≡ refl
-sym-cancel-l = trans-symˡ
-
-
 subst₂-trans : (C : A → B → Set γ)
   → {a₀ a₁ a₂ : A} (p : a₀ ≡ a₁) (p′ : a₁ ≡ a₂)
   → {b₀ b₁ b₂ : B} (q : b₀ ≡ b₁) (q′ : b₁ ≡ b₂)

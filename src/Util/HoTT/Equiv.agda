@@ -11,7 +11,7 @@ open import Util.HoTT.Section
 open import Util.HoTT.Singleton using (IsContr-Singleton)
 open import Util.Prelude
 open import Util.Relation.Binary.PropositionalEquality using
-  ( Σ-≡⁻ ; Σ-≡⁺ ; sym-cancel-r ; trans-unassoc )
+  ( Σ-≡⁻ ; Σ-≡⁺ ; trans-symʳ ; trans-unassoc )
 
 
 private
@@ -87,7 +87,7 @@ IsIso→IsEquiv {A = A} {B = B} {forth} iso b
             trans (I.forth∘back b′) (trans (sym (I.forth∘back b′)) x)
           ≡⟨ trans-unassoc (I.forth∘back b′) ⟩
             trans (trans (I.forth∘back b′) (sym (I.forth∘back b′))) x
-          ≡⟨ cong (λ p → trans p x) (sym-cancel-r (I.forth∘back b′)) ⟩
+          ≡⟨ cong (λ p → trans p x) (trans-symʳ (I.forth∘back b′)) ⟩
             x
           ∎
         }
