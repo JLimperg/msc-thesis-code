@@ -8,7 +8,7 @@
 -}
 
 {-# OPTIONS --postfix-projections #-}
-module irreflexive-< where
+module irreflexive-lt where
 
 open import Size
 

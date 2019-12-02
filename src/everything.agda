@@ -1,6 +1,6 @@
 module everything where
 
-import irreflexive-<
+import irreflexive-lt
 import Model.Exponential
 import Model.Nat
 import Model.Product
