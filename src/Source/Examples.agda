@@ -49,7 +49,7 @@ half ≔ λ n < ⋆. fix[Nat ∙ → Nat ∙]
       (zero n)
       (Λ m < n. λ i′ : Nat m. caseNat[Nat n] m i′
         (zero n)
-        (Λ k < m. λ i″ : Nat k. liftNat n k (rec k i″)))
+        (Λ k < m. λ i″ : Nat k. suc n k (rec k i″))))
   n
 -}
 half : ∀ {Δ} → Term Δ
@@ -59,7 +59,7 @@ half = Λₛ ⋆ , fix (Nat v0 ⇒ Nat v0)
       (zero v0)
       (Λₛ v0 , Λ (Nat v0) , caseNat (Nat v1) v0 (var 0)
         (zero v1)
-        (Λₛ v0 , Λ (Nat v0) , liftNat ·ₛ v2 ·ₛ v0 · (var 3 ·ₛ v0 · var 0))))
+        (Λₛ v0 , Λ (Nat v0) , suc v2 v0 (var 3 ·ₛ v0 · var 0))))
   v0
 
 
@@ -78,13 +78,9 @@ half⊢
                       (zero (var _ refl))
                       (absₛ
                         (abs
-                          (app
-                            (appₛ (<-trans (var _ refl) (var _ refl))
-                              (appₛ (var _ refl) liftNat⊢ refl)
-                              refl)
+                          (suc (var ⋆ refl) (<-trans (var v1 refl) (var v2 refl))
                             (app
-                              (appₛ
-                                (<-trans (var _ refl) (var _ refl))
+                              (appₛ (<-trans (var v1 refl) (var v2 refl))
                                 (var (suc (suc (suc zero))))
                                 refl)
                               (var zero))))
