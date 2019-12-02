@@ -291,7 +291,7 @@ mutual
   ⟦ Wk ⟧σ′ (δ , m) = δ
   ⟦ Lift {n = n} σ refl ⟧σ′ (δ , m , m<n)
     = ⟦ σ ⟧σ′ δ , m , subst (m <_) (⟦sub⟧ σ n) m<n
-  ⟦ Fill {n = n} n<m ⟧σ′ δ = δ , ⟦ n ⟧n′ δ , ⟦<⟧ n<m
+  ⟦ Sing {n = n} n<m ⟧σ′ δ = δ , ⟦ n ⟧n′ δ , ⟦<⟧ n<m
   ⟦ Skip ⟧σ′ ((δ , m , m<n) , k , k<m) = δ , k , <-trans k<m m<n
 
 
@@ -306,8 +306,8 @@ mutual
     ⟦subV′⟧ (Lift {σ = σ} {n = n} ⊢σ refl) (suc x) {δ , m}
       rewrite ⟦wk⟧ (S.sub σ n) (S.subV′ σ x) {δ , m}
       = ⟦subV′⟧ ⊢σ x
-    ⟦subV′⟧ (Fill n<m) zero = refl
-    ⟦subV′⟧ (Fill n<m) (suc x) = refl
+    ⟦subV′⟧ (Sing n<m) zero = refl
+    ⟦subV′⟧ (Sing n<m) (suc x) = refl
     ⟦subV′⟧ Skip zero = refl
     ⟦subV′⟧ Skip (suc x) = refl
 
@@ -343,7 +343,7 @@ abstract
   ⟦⟧σ-param {Ω = Ω ∙ m} (Lift p refl) (Lift q m≡n[σ]₁)
     rewrite S.Size-IsSet m≡n[σ]₁ refl
     = ⟦Δ∙n⟧-≡⁺ Ω m _ _ (⟦⟧σ-param p q) refl
-  ⟦⟧σ-param {Δ = Δ} {σ = Fill {m = m} n} (Fill n<m) (Fill n<m₁)
+  ⟦⟧σ-param {Δ = Δ} {σ = Sing {m = m} n} (Sing n<m) (Sing n<m₁)
     = ⟦Δ∙n⟧-≡⁺ Δ m (⟦<⟧ n<m) (⟦<⟧ n<m₁) refl refl
   ⟦⟧σ-param Skip Skip = refl
 

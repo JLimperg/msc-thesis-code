@@ -129,7 +129,7 @@ absₛ {Δ} {n} {Γ} {T} f = record
 appₛ : ∀ {Δ n m} {Γ : ⟦Type⟧ ⟦ Δ ⟧Δ} {T : ⟦Type⟧ ⟦ Δ ∙ n ⟧Δ}
   → (m<n : m SS.< n)
   → Γ ⇒ ⟦∀⟧ n T
-  → Γ ⇒ subT ⟦ SS.Fill m<n ⟧σ T
+  → Γ ⇒ subT ⟦ SS.Sing m<n ⟧σ T
 appₛ {m = m} {T = T} m<n f = record
   { fobj = λ {δ} x → f .fobj x .arr (⟦ m ⟧n .fobj δ) (MS.⟦<⟧ m<n)
   ; feq = λ δ≈δ′ {x y} x≈y → f .feq _ x≈y _ _ _ _

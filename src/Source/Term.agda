@@ -80,7 +80,7 @@ data _,_⊢_∶_ : ∀ Δ (Γ : Ctx Δ) (t : Term Δ) (T : Type Δ) → Set wher
   appₛ
     : (m<n : m < n)
     → (⊢t : Δ , Γ ⊢ t ∶ (Π n , T))
-    → U ≡ T [ SC.Fill m ]
+    → U ≡ T [ SC.Sing m ]
     → Δ , Γ ⊢ t ·ₛ m ∶ U
   zero
     : (n<⋆ : n < ⋆)
@@ -115,7 +115,7 @@ data _,_⊢_∶_ : ∀ Δ (Γ : Ctx Δ) (t : Term Δ) (T : Type Δ) → Set wher
     : (n<⋆ : n < ⋆)
     → (⊢t : Δ , Γ ⊢ t ∶ Π ⋆ , (Π v0 , U) ⇒ T)
     → U ≡ T [ SC.Skip ]
-    → V ≡ T [ SC.Fill n ]
+    → V ≡ T [ SC.Sing n ]
     → Δ , Γ ⊢ fix T t n ∶ V
 
 
@@ -165,9 +165,9 @@ abstract
   subₛ-resp-⊢ {σ = σ} ⊢σ (appₛ {m = m} {T = T} {U = U} m<n ⊢t p)
     = appₛ (SC.sub-resp-< ⊢σ m<n) (subₛ-resp-⊢ ⊢σ ⊢t) eq
     where
-      eq : U [ σ ] ≡ T [ SC.Lift σ ] [ SC.Fill (m [ σ ]) ]
+      eq : U [ σ ] ≡ T [ SC.Lift σ ] [ SC.Sing (m [ σ ]) ]
       eq = trans (cong (λ U → U [ σ ]) p)
-        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Lift m)))
+        ([>>]″ _ _ _ _ _ (sym (SC.Sing>>Lift m)))
   subₛ-resp-⊢ ⊢σ (zero n<⋆)
     = zero (SC.sub-resp-< ⊢σ n<⋆)
   subₛ-resp-⊢ ⊢σ (suc n<⋆ m<n ⊢i)
@@ -192,9 +192,9 @@ abstract
       eq₀ = trans (cong (λ U → U [ SC.Lift (SC.Lift σ) ]) p)
         ([>>]″ _ _ _ _ _ SC.LiftLift>>Skip)
 
-      eq₁ : V [ σ ] ≡ T [ SC.Lift σ ] [ SC.Fill (n [ σ ]) ]
+      eq₁ : V [ σ ] ≡ T [ SC.Lift σ ] [ SC.Sing (n [ σ ]) ]
       eq₁ = trans (cong (λ V → V [ σ ]) q)
-        ([>>]″ _ _ _ _ _ (sym (SC.Fill>>Lift n)))
+        ([>>]″ _ _ _ _ _ (sym (SC.Sing>>Lift n)))
 
 
   subₛ-Id : (t : Term Δ) → subₛ SC.Id t ≡ t

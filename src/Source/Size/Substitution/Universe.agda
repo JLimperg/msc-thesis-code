@@ -25,7 +25,7 @@ data Sub : (Δ Ω : Ctx) → Set where
   _>>_ : (σ : Sub Δ Δ′) (τ : Sub Δ′ Ω) → Sub Δ Ω
   Wk : Sub (Δ ∙ n) Δ
   Lift : (σ : Sub Δ Ω) → Sub (Δ ∙ m) (Ω ∙ n)
-  Fill : (n : Size Δ) → Sub Δ (Δ ∙ m)
+  Sing : (n : Size Δ) → Sub Δ (Δ ∙ m)
   Skip : Sub (Δ ∙ n ∙ v0) (Δ ∙ n)
 
 
@@ -34,7 +34,7 @@ data Sub : (Δ Ω : Ctx) → Set where
 ⟨ σ >> τ ⟩ = ⟨ σ ⟩ Can.>> ⟨ τ ⟩
 ⟨ Wk ⟩ = Can.Wk
 ⟨ Lift σ ⟩ = Can.Lift ⟨ σ ⟩
-⟨ Fill n ⟩ = Can.Fill n
+⟨ Sing n ⟩ = Can.Sing n
 ⟨ Skip ⟩ = Can.Skip
 
 
@@ -58,7 +58,7 @@ data Sub⊢ᵤ : ∀ Δ Ω → Sub Δ Ω → Set where
   Wk : Sub⊢ᵤ (Δ ∙ n) Δ Wk
   Lift : (⊢σ : Sub⊢ᵤ Δ Ω σ) (m≡n[σ] : m ≡ sub σ n)
     → Sub⊢ᵤ (Δ ∙ m) (Ω ∙ n) (Lift σ)
-  Fill : (n<m : n < m) → Sub⊢ᵤ Δ (Δ ∙ m) (Fill n)
+  Sing : (n<m : n < m) → Sub⊢ᵤ Δ (Δ ∙ m) (Sing n)
   Skip : Sub⊢ᵤ (Δ ∙ n ∙ v0) (Δ ∙ n) Skip
 
 
@@ -70,7 +70,7 @@ syntax Sub⊢ᵤ Δ Ω σ = σ ∶ Δ ⇒ᵤ Ω
 ⟨⟩-resp-⊢ (comp ⊢σ ⊢τ) = Can.>>⊢ (⟨⟩-resp-⊢ ⊢σ) (⟨⟩-resp-⊢ ⊢τ)
 ⟨⟩-resp-⊢ Wk = Can.Wk⊢
 ⟨⟩-resp-⊢ (Lift ⊢σ m≡n[σ]) = Can.Lift⊢ (⟨⟩-resp-⊢ ⊢σ) m≡n[σ]
-⟨⟩-resp-⊢ (Fill n<m) = Can.Fill⊢ n<m
+⟨⟩-resp-⊢ (Sing n<m) = Can.Sing⊢ n<m
 ⟨⟩-resp-⊢ Skip = Can.Skip⊢
 
 
@@ -129,8 +129,8 @@ mutual
   subV′ Wk x = var (suc x)
   subV′ (Lift σ) zero = var zero
   subV′ (Lift σ) (suc x) = wk (subV′ σ x)
-  subV′ (Fill n) zero = n
-  subV′ (Fill n) (suc x) = var x
+  subV′ (Sing n) zero = n
+  subV′ (Sing n) (suc x) = var x
   subV′ Skip zero = var zero
   subV′ Skip (suc x) = var (suc (suc x))
 
@@ -154,8 +154,8 @@ mutual
     subV′≡subV (Lift σ) zero = refl
     subV′≡subV (Lift σ) (suc x)
       = trans (cong wk (subV′≡subV σ x)) (sym (Can.subV-Weaken ⟨ σ ⟩ x))
-    subV′≡subV (Fill n) zero = refl
-    subV′≡subV (Fill n) (suc x) = sym (Can.subV-Id x)
+    subV′≡subV (Sing n) zero = refl
+    subV′≡subV (Sing n) (suc x) = sym (Can.subV-Id x)
     subV′≡subV Skip zero = refl
     subV′≡subV Skip (suc x) = sym
       (trans (Can.subV-Weaken (Can.Weaken Can.Id) x) (cong wk (Can.sub-Wk (var x))))

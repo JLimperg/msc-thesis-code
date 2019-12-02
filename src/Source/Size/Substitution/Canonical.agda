@@ -147,13 +147,13 @@ abstract
   Wk⊢ = Weaken⊢ Id⊢
 
 
-Fill : Size Δ → Sub Δ (Δ ∙ m)
-Fill n = Snoc Id n
+Sing : Size Δ → Sub Δ (Δ ∙ m)
+Sing n = Snoc Id n
 
 
 abstract
-  Fill⊢ : n < m → Fill n ∶ Δ ⇒ Δ ∙ m
-  Fill⊢ {n = n} n<m
+  Sing⊢ : n < m → Sing n ∶ Δ ⇒ Δ ∙ m
+  Sing⊢ {n = n} n<m
     = Snoc Id⊢ (subst (n <_) (sym (sub-Id _ refl)) n<m)
 
 
@@ -246,16 +246,16 @@ abstract
   Lift>>Wk = trans Lift>>Weaken (trans (sym Wk>>) (cong (Wk >>_) id-r))
 
 
-  Fill>>Weaken : Fill {m = m} n >> Weaken σ ≡ σ
-  Fill>>Weaken = trans Snoc>>Weaken id-l
+  Sing>>Weaken : Sing {m = m} n >> Weaken σ ≡ σ
+  Sing>>Weaken = trans Snoc>>Weaken id-l
 
 
-  Fill>>Wk : Fill {m = m} n >> Wk ≡ Id
-  Fill>>Wk = trans Snoc>>Weaken id-r
+  Sing>>Wk : Sing {m = m} n >> Wk ≡ Id
+  Sing>>Wk = trans Snoc>>Weaken id-r
 
 
-  Fill>>Lift : ∀ n → Fill (sub σ n) >> Lift {m = m} {o} σ ≡ σ >> Fill n
-  Fill>>Lift n = cong₂ Snoc (trans Fill>>Weaken (sym id-r)) refl
+  Sing>>Lift : ∀ n → Sing (sub σ n) >> Lift {m = m} {o} σ ≡ σ >> Sing n
+  Sing>>Lift n = cong₂ Snoc (trans Sing>>Weaken (sym id-r)) refl
 
 
   Lift>>Lift : Lift {m = m} {n} σ >> Lift {n = o} τ ≡ Lift (σ >> τ)
@@ -278,33 +278,33 @@ abstract
   Lift-Id = refl
 
 
-  LiftFill>>Wk>>Wk : Lift {m = o} {m} (Fill n) >> (Wk >> Wk) ≡ Wk
-  LiftFill>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
+  LiftSing>>Wk>>Wk : Lift {m = o} {m} (Sing n) >> (Wk >> Wk) ≡ Wk
+  LiftSing>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
     begin
-      Lift (Fill n) >> (Wk >> Wk)
-    ≡⟨ cong (Lift (Fill n) >>_) Wk>> ⟩
-      Lift (Fill n) >> (Weaken Wk)
+      Lift (Sing n) >> (Wk >> Wk)
+    ≡⟨ cong (Lift (Sing n) >>_) Wk>> ⟩
+      Lift (Sing n) >> (Weaken Wk)
     ≡⟨ Lift>>Weaken ⟩
-      Weaken (Fill n >> Weaken Id)
-    ≡⟨ cong Weaken Fill>>Weaken ⟩
+      Weaken (Sing n >> Weaken Id)
+    ≡⟨ cong Weaken Sing>>Weaken ⟩
       Wk
     ∎
 
 
-  LiftFill>>Skip
-    : Lift {m = m} (Fill {m = m} n) >> Skip ≡ Fill {m = o} (var zero) >> Lift Wk
-  LiftFill>>Skip {n = n} = cong₂ Snoc go refl
+  LiftSing>>Skip
+    : Lift {m = m} (Sing {m = m} n) >> Skip ≡ Sing {m = o} (var zero) >> Lift Wk
+  LiftSing>>Skip {n = n} = cong₂ Snoc go refl
     where
-      go : Lift (Fill n) >> Weaken Wk ≡ Fill (var zero) >> Weaken Wk
+      go : Lift (Sing n) >> Weaken Wk ≡ Sing (var zero) >> Weaken Wk
       go = let open ≡-Reasoning in
         begin
-          Lift (Fill n) >> Weaken Wk
+          Lift (Sing n) >> Weaken Wk
         ≡⟨ Lift>>Weaken ⟩
-          Weaken (Fill n >> Weaken Id)
-        ≡⟨ cong Weaken Fill>>Wk ⟩
+          Weaken (Sing n >> Weaken Id)
+        ≡⟨ cong Weaken Sing>>Wk ⟩
           Wk
-        ≡⟨ sym Fill>>Weaken ⟩
-          Fill (var zero) >> Weaken Wk
+        ≡⟨ sym Sing>>Weaken ⟩
+          Sing (var zero) >> Weaken Wk
         ∎
 
 

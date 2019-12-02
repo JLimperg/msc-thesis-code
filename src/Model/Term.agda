@@ -54,8 +54,8 @@ open ST.Ctx
 ⟦appₛ⟧ : ∀ Δ m n (Γ : ST.Ctx Δ) T
   → ⟦ Γ ⟧Γ ⇒ ⟦ ST.Π n , T ⟧T
   → m SS.< n
-  → ⟦ Γ ⟧Γ ⇒ ⟦ T [ SU.Fill m ]ᵤ ⟧T
-⟦appₛ⟧ Δ m n Γ T t m<n = ⟦subT⟧ (SU.Fill m<n) T .back ∘ MT.appₛ m<n t
+  → ⟦ Γ ⟧Γ ⇒ ⟦ T [ SU.Sing m ]ᵤ ⟧T
+⟦appₛ⟧ Δ m n Γ T t m<n = ⟦subT⟧ (SU.Sing m<n) T .back ∘ MT.appₛ m<n t
 
 
 ⟦zero⟧ : ∀ Δ (Γ : ST.Ctx Δ) n
@@ -132,8 +132,8 @@ open ST.Ctx
 ⟦fix⟧ : ∀ Δ (Γ : ST.Ctx Δ) n T
   → n SS.< ⋆
   → ⟦ Γ ⟧Γ ⇒ ⟦ ST.Π ⋆ , (ST.Π v0 , T [ SU.Skip ]ᵤ) ST.⇒ T ⟧T
-  → ⟦ Γ ⟧Γ ⇒ ⟦ T [ SU.Fill n ]ᵤ ⟧T
-⟦fix⟧ Δ Γ n T n<⋆ t = ⟦subT⟧ (SU.Fill n<⋆) T .back ∘ term⇒
+  → ⟦ Γ ⟧Γ ⇒ ⟦ T [ SU.Sing n ]ᵤ ⟧T
+⟦fix⟧ Δ Γ n T n<⋆ t = ⟦subT⟧ (SU.Sing n<⋆) T .back ∘ term⇒
   module ⟦fix⟧ where
     go
       : Σ[ f ∈ (∀ n n<⋆ δ → ⟦ Γ ⟧Γ .Obj δ → ⟦ T ⟧T .Obj (δ , n , n<⋆)) ]
@@ -164,7 +164,7 @@ open ST.Ctx
       → ⟦ T ⟧T .eq _ (term n n<⋆ δ γ) (term n′ n′<⋆ δ′ γ′)
     term-param = go .proj₂ .proj₁
 
-    term⇒ : ⟦ Γ ⟧Γ ⇒ subT ⟦ SU.Fill n<⋆ ⟧σ ⟦ T ⟧T
+    term⇒ : ⟦ Γ ⟧Γ ⇒ subT ⟦ SU.Sing n<⋆ ⟧σ ⟦ T ⟧T
     term⇒ = record
       { fobj = term _ _ _
       ; feq = λ δ≈δ′ → term-param _ _ _ _ _ _ _ _
