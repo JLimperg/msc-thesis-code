@@ -1,12 +1,8 @@
 {-# OPTIONS --without-K --safe #-}
 module Source.Size where
 
-open import Relation.Binary using (Decidable)
-
 open import Util.HoTT.HLevel.Core
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality using
-  ( trans-injectiveˡ ; cong₂-dep )
 
 
 infix  4 _<_
@@ -50,13 +46,23 @@ bound (suc x) = wk (bound x)
 
 
 data _<_ {Δ} : (n m : Size Δ) → Set where
-  var : ∀ b (b≡bx : b ≡ bound x) → var x < b
-  <suc : ∀ n (n<∞ : n < ∞) → n < suc n
+  var : n ≡ bound x → var x < n
+  zero<suc : zero < suc n
   zero<∞ : zero < ∞
-  suc<∞ : ∀ n (n<∞ : n < ∞) → suc n < ∞
+  suc<suc : (n<m : n < m) → suc n < suc m
+  suc<∞ : (n<∞ : n < ∞) → suc n < ∞
+  suc<⋆ : (n<⋆ : n < ⋆) → suc n < ⋆
   ∞<⋆ : ∞ < ⋆
   <-trans : n < m → m < o → n < o
+  <suc : n < suc n
 
+
+data _≤_ {Δ} : (n m : Size Δ) → Set where
+  reflexive : n ≡ m → n ≤ m
+  <→≤ : n < m → n ≤ m
+
+
+pattern ≤-refl = reflexive refl
 
 pattern v0 = var zero
 pattern v1 = var (suc zero)
@@ -64,6 +70,39 @@ pattern v2 = var (suc (suc zero))
 
 
 abstract
+  n<m→n<Sm : n < m → n < suc m
+  n<m→n<Sm n<m = <-trans n<m <suc
+
+
+  n≤m→n<Sm : n ≤ m → n < suc m
+  n≤m→n<Sm ≤-refl = <suc
+  n≤m→n<Sm (<→≤ n<m) = n<m→n<Sm n<m
+
+
+  var<suc : var x ≤ n → var x < suc n
+  var<suc = n≤m→n<Sm
+
+
+  zero<⋆ : zero {Δ} < ⋆
+  zero<⋆ = <-trans zero<∞ ∞<⋆
+
+
+  ∞<suc : ∞ ≤ n → ∞ < suc n
+  ∞<suc = n≤m→n<Sm
+
+
+  ⋆<suc : ⋆ ≤ n → ⋆ < suc n
+  ⋆<suc = n≤m→n<Sm
+
+
+  Sn<m→n<m : suc n < m → n < m
+  Sn<m→n<m (suc<suc n<m) = <-trans n<m <suc
+  Sn<m→n<m (suc<∞ n<∞) = n<∞
+  Sn<m→n<m (suc<⋆ n<⋆) = n<⋆
+  Sn<m→n<m (<-trans Sn<o o<m) = <-trans (Sn<m→n<m Sn<o) o<m
+  Sn<m→n<m <suc = <-trans <suc (suc<suc <suc)
+
+
   suc-inj-Var : Var.suc {n = n} x ≡ suc y → x ≡ y
   suc-inj-Var refl = refl
 
@@ -105,9 +144,12 @@ abstract
 
 
   wk-resp-< : n < m → wk {n = o} n < wk m
-  wk-resp-< (var b b≡bx) = var (wk b) (cong wk b≡bx)
-  wk-resp-< (<suc n n<∞) = <suc (wk n) (wk-resp-< n<∞)
+  wk-resp-< (var p) = var (cong wk p)
+  wk-resp-< zero<suc = zero<suc
   wk-resp-< zero<∞ = zero<∞
-  wk-resp-< (suc<∞ n n<∞) = suc<∞ (wk n) (wk-resp-< n<∞)
+  wk-resp-< (suc<suc n<m) = suc<suc (wk-resp-< n<m)
+  wk-resp-< (suc<∞ n<∞) = suc<∞ (wk-resp-< n<∞)
+  wk-resp-< (suc<⋆ n<⋆) = suc<⋆ (wk-resp-< n<⋆)
   wk-resp-< ∞<⋆ = ∞<⋆
-  wk-resp-< (<-trans n<m m<o) = <-trans (wk-resp-< n<m) (wk-resp-< m<o)
+  wk-resp-< (<-trans n<o o<m) = <-trans (wk-resp-< n<o) (wk-resp-< o<m)
+  wk-resp-< <suc = <suc

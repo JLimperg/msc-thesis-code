@@ -51,24 +51,27 @@ abstract
 
   mutual
     subV-resp-< : σ ∶ Δ ⇒ Ω → var x < n → subV σ x < sub σ n
-    subV-resp-< {x = zero} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var _ refl)
+    subV-resp-< {x = zero} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var refl)
       = subst (n <_) (sym (sub-Snoc σ n m)) n<m
-    subV-resp-< {x = suc x} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var _ refl)
+    subV-resp-< {x = suc x} (Snoc {σ = σ} {n} {m} ⊢σ n<m) (var refl)
       = subst (subV σ x <_) (sym (sub-Snoc σ n (bound x)))
-          (subV-resp-< ⊢σ (var _ refl))
-    subV-resp-< ⊢σ (<suc .(var _) x<n) = <suc _ (sub-resp-< ⊢σ x<n)
+          (subV-resp-< ⊢σ (var refl))
+    subV-resp-< ⊢σ <suc = <suc
     subV-resp-< ⊢σ (<-trans x<m m<n)
       = <-trans (subV-resp-< ⊢σ x<m) (sub-resp-< ⊢σ m<n)
 
 
     sub-resp-< : σ ∶ Δ ⇒ Ω → n < m → sub σ n < sub σ m
-    sub-resp-< ⊢σ (var b b≡bx) = subV-resp-< ⊢σ (var b b≡bx)
-    sub-resp-< ⊢σ (<suc n n<∞) = <suc _ (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ (var p) = subV-resp-< ⊢σ (var p)
+    sub-resp-< ⊢σ zero<suc = zero<suc
     sub-resp-< ⊢σ zero<∞ = zero<∞
-    sub-resp-< ⊢σ (suc<∞ n n<∞) = suc<∞ _ (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ (suc<suc n<m) = suc<suc (sub-resp-< ⊢σ n<m)
+    sub-resp-< ⊢σ (suc<∞ n<∞) = suc<∞ (sub-resp-< ⊢σ n<∞)
+    sub-resp-< ⊢σ (suc<⋆ n<⋆) = suc<⋆ (sub-resp-< ⊢σ n<⋆)
     sub-resp-< ⊢σ ∞<⋆ = ∞<⋆
-    sub-resp-< ⊢σ (<-trans n<m m<o)
-      = <-trans (sub-resp-< ⊢σ n<m) (sub-resp-< ⊢σ m<o)
+    sub-resp-< ⊢σ (<-trans n<o o<m)
+      = <-trans (sub-resp-< ⊢σ n<o) (sub-resp-< ⊢σ o<m)
+    sub-resp-< ⊢σ <suc = <suc
 
 
 Weaken : Sub Δ Ω → Sub (Δ ∙ n) Ω
@@ -104,8 +107,7 @@ Lift σ = Snoc (Weaken σ) (var zero)
 abstract
   Lift⊢ : σ ∶ Δ ⇒ Ω → m ≡ sub σ n → Lift σ ∶ Δ ∙ m ⇒ Ω ∙ n
   Lift⊢ {Δ} {σ = σ} {n = n} ⊢σ refl
-    = Snoc (Weaken⊢ ⊢σ)
-        (var (sub (Weaken σ) n) (sub-Weaken σ n))
+    = Snoc (Weaken⊢ ⊢σ) (var (sub-Weaken σ n))
 
 
 mutual
@@ -175,7 +177,7 @@ abstract
   sub->> ∞ _ = refl
   sub->> ⋆ _ = refl
   sub->> zero _ = refl
-  sub->> {σ = σ} {τ} (suc n) p = cong suc (sub->> n p)
+  sub->> (suc n) p = cong suc (sub->> n p)
 
 
   sub->>′ : σ >> τ ≡ σ′ >> τ′ → sub σ (sub τ n) ≡ sub σ′ (sub τ′ n)
@@ -199,8 +201,8 @@ abstract
   Skip⊢ : Skip ∶ Δ ∙ n ∙ v0 ⇒ Δ ∙ n
   Skip⊢ {n = n}
     = Snoc (Weaken⊢ Wk⊢)
-        (<-trans (var v1 refl)
-          (var (sub (Weaken Wk) n) (trans (sub-Weaken Wk n) (cong wk (sub-Wk n)))))
+        (<-trans (var refl)
+          (var (trans (sub-Weaken Wk n) (cong wk (sub-Wk n)))))
 
 
   Weaken>> : Weaken σ >> τ ≡ Weaken {n = n} (σ >> τ)

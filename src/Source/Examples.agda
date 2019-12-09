@@ -29,12 +29,12 @@ liftNat⊢
   = absₛ
       (absₛ
         (abs
-          (caseNat (<-trans (var _ refl) (var _ refl))
+          (caseNat (<-trans (var refl) (var refl))
             (var zero)
-            (zero (var _ refl))
+            (zero (var refl))
             (absₛ
               (abs
-                (suc (var _ refl) (<-trans (var _ refl) (var _ refl)) (var zero)))
+                (suc (var refl) (<-trans (var refl) (var refl)) (var zero)))
               refl)
             refl))
         refl)
@@ -66,21 +66,21 @@ half = Λₛ ⋆ , fix (Nat v0 ⇒ Nat v0)
 half⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ half ∶ Π ⋆ , Nat v0 ⇒ Nat v0
 half⊢
   = absₛ
-      (fix (var _ refl)
+      (fix (var refl)
         (absₛ
           (abs
             (abs
-              (caseNat (var _ refl) (var zero) (zero (var _ refl))
+              (caseNat (var refl) (var zero) (zero (var refl))
                 (absₛ
                   (abs
-                    (caseNat (<-trans (var _ refl) (var _ refl))
+                    (caseNat (<-trans (var refl) (var refl))
                       (var zero)
-                      (zero (var _ refl))
+                      (zero (var refl))
                       (absₛ
                         (abs
-                          (suc (var ⋆ refl) (<-trans (var v1 refl) (var v2 refl))
+                          (suc (var refl) (<-trans (var refl) (var refl))
                             (app
-                              (appₛ (<-trans (var v1 refl) (var v2 refl))
+                              (appₛ (<-trans (var refl) (var refl))
                                 (var (suc (suc (suc zero))))
                                 refl)
                               (var zero))))
@@ -112,8 +112,8 @@ suc∞⊢
       (caseNat ∞<⋆ (var zero) (suc ∞<⋆ zero<∞ (zero (<-trans zero<∞ ∞<⋆)))
         (absₛ
           (abs
-            (suc ∞<⋆ (suc<∞ _ (var _ refl))
-              (suc (<-trans (suc<∞ _ (var _ refl)) ∞<⋆) (<suc v0 (var _ refl))
+            (suc ∞<⋆ (suc<∞ (var refl))
+              (suc (<-trans (suc<∞ (var refl)) ∞<⋆) <suc
                 (var zero))))
           refl)
         refl)
@@ -140,19 +140,19 @@ plus = Λₛ ⋆ , fix (Nat v0 ⇒ Nat ∞ ⇒ Nat ∞)
 plus⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ plus ∶ Π ⋆ , Nat v0 ⇒ Nat ∞ ⇒ Nat ∞
 plus⊢
   = absₛ
-      (fix (var _ refl)
+      (fix (var refl)
         (absₛ
           (abs
             (abs
               (abs
-                (caseNat (var _ refl) (var (suc zero)) (var zero)
+                (caseNat (var refl) (var (suc zero)) (var zero)
                   (absₛ
                     (abs
                       (app
                         suc∞⊢
                         (app
                           (app
-                            (appₛ (var _ refl)
+                            (appₛ (var refl)
                               (var (suc (suc (suc zero))))
                               refl)
                             (var zero))
@@ -181,10 +181,10 @@ zeros = Λₛ ⋆ , fix (Stream v0)
 zeros⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ zeros ∶ Π ⋆ , Stream v0
 zeros⊢
   = absₛ
-      (fix (var _ refl)
+      (fix (var refl)
         (absₛ
           (abs
-            (cons (var _ refl) (zero ∞<⋆) (var zero)))
+            (cons (var refl) (zero ∞<⋆) (var zero)))
           refl)
         refl
         refl)
@@ -210,15 +210,15 @@ map⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ map ∶ (Nat ∞ ⇒ Nat ∞) ⇒ (Π ⋆ ,
 map⊢
   = abs
       (absₛ
-        (fix (var _ refl)
+        (fix (var refl)
           (absₛ
             (abs
               (abs
                 (cons
-                  (var _ refl)
-                  (app (var (suc (suc zero))) (head (var _ refl) (var zero)))
-                  (absₛ (app (appₛ (var _ refl) (var (suc zero)) refl)
-                      (tail (var _ refl) (var _ refl) (var zero)))
+                  (var refl)
+                  (app (var (suc (suc zero))) (head (var refl) (var zero)))
+                  (absₛ (app (appₛ (var refl) (var (suc zero)) refl)
+                      (tail (var refl) (var refl) (var zero)))
                   refl))))
             refl)
           refl

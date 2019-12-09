@@ -14,7 +14,6 @@ open import Source.Size.Substitution.Universe using (⟨_⟩ ; Sub⊢ᵤ)
 open import Util.HoTT.HLevel
 open import Util.Induction.WellFounded as WFInd using (Acc ; acc ; WellFounded)
 open import Util.Prelude
-open import Util.Relation.Binary.PropositionalEquality as ≡ using (cong₂-dep)
 
 import Source.Size.Substitution.Canonical as SC
 import Source.Size.Substitution.Universe as S
@@ -30,38 +29,76 @@ open S._<_ hiding (<-trans)
 infix 4 _<_ _≤_
 
 
+private
+  variable
+    i j k : ℕ
+
+
+{-
+This is an encoding of the set of ordinals
+
+  { i ∈ ℕ } ∪ { ω + i | i ∈ ℕ } ∪ { ω*2 + i | i ∈ ℕ }
+
+i.e. of the ordinals below ω*3.
+-}
 data Size : Set where
-  nat : (n : ℕ) → Size
-  ∞ ⋆ : Size
+  zero+ : (i : ℕ) → Size
+  ∞+ : (i : ℕ) → Size
+  ⋆+ : (i : ℕ) → Size
 
 
-variable n m o : Size
+variable
+  n m o : Size
+
+
+nat : ℕ → Size
+nat = zero+
 
 
 abstract
-  nat-inj-Size : ∀ {n m} → nat n ≡ nat m → n ≡ m
-  nat-inj-Size refl = refl
+  zero+-inj : zero+ i ≡ zero+ j → i ≡ j
+  zero+-inj refl = refl
 
 
-  nat≡-prop-Size : ∀ {n m} (p : nat n ≡ nat m) → p ≡ cong nat (nat-inj-Size p)
-  nat≡-prop-Size refl = refl
+  zero+-≡-canon : (p : zero+ i ≡ zero+ j) → p ≡ cong zero+ (zero+-inj p)
+  zero+-≡-canon refl = refl
 
 
-Size-IsSet : IsSet Size
-Size-IsSet {nat n} {.(nat n)} p refl
-  = trans (nat≡-prop-Size p) (cong (cong nat) (ℕ.≡-irrelevant _ _))
-Size-IsSet {∞} {.∞} refl refl = refl
-Size-IsSet {⋆} {.⋆} refl refl = refl
+  ∞+-inj : ∞+ i ≡ ∞+ j → i ≡ j
+  ∞+-inj refl = refl
+
+
+  ∞+-≡-canon : (p : ∞+ i ≡ ∞+ j) → p ≡ cong ∞+ (∞+-inj p)
+  ∞+-≡-canon refl = refl
+
+
+  ⋆+-inj : ⋆+ i ≡ ⋆+ j → i ≡ j
+  ⋆+-inj refl = refl
+
+
+  ⋆+-≡-canon : (p : ⋆+ i ≡ ⋆+ j) → p ≡ cong ⋆+ (⋆+-inj p)
+  ⋆+-≡-canon refl = refl
+
+
+  Size-IsSet : IsSet Size
+  Size-IsSet {zero+ i} {zero+ j} p refl
+    = trans (zero+-≡-canon p) (cong (cong zero+) (ℕ.≡-irrelevant _ _))
+  Size-IsSet {∞+ i} {∞+ j} p refl
+    = trans (∞+-≡-canon p) (cong (cong ∞+) (ℕ.≡-irrelevant _ _))
+  Size-IsSet {⋆+ i} {⋆+ j} p refl
+    = trans (⋆+-≡-canon p) (cong (cong ⋆+) (ℕ.≡-irrelevant _ _))
 
 
 data _<_ : (n m : Size) → Set where
-  nat : ∀ {n m} → n ℕ.< m → nat n < nat m
-  nat<∞ : ∀ {n} → nat n < ∞
-  nat<⋆ : ∀ {n} → nat n < ⋆
-  ∞<⋆ : ∞ < ⋆
+  zero+ : (i<j : i ℕ.< j) → zero+ i < zero+ j
+  ∞+ : (i<j : i ℕ.< j) → ∞+ i < ∞+ j
+  ⋆+ : (i<j : i ℕ.< j) → ⋆+ i < ⋆+ j
+  zero<∞ : zero+ i < ∞+ j
+  zero<⋆ : zero+ i < ⋆+ j
+  ∞<⋆ : ∞+ i < ⋆+ j
 
 
-data _≤_ : (n m : Size) → Set where
+data _≤_ (n m : Size) : Set where
   reflexive : n ≡ m → n ≤ m
   <→≤ : n < m → n ≤ m
 
@@ -71,10 +108,16 @@ pattern ≤-refl = reflexive refl
 
 abstract
   <-trans : n < m → m < o → n < o
-  <-trans (nat n<m) (nat m<o) = nat (ℕ.<-trans n<m m<o)
-  <-trans (nat n<m) nat<∞ = nat<∞
-  <-trans (nat n<m) nat<⋆ = nat<⋆
-  <-trans nat<∞ ∞<⋆ = nat<⋆
+  <-trans (zero+ i<j) (zero+ j<k) = zero+ (ℕ.<-trans i<j j<k)
+  <-trans (zero+ i<j) zero<∞ = zero<∞
+  <-trans (zero+ i<j) zero<⋆ = zero<⋆
+  <-trans (∞+ i<j) (∞+ j<k) = ∞+ (ℕ.<-trans i<j j<k)
+  <-trans (∞+ i<j) ∞<⋆ = ∞<⋆
+  <-trans (⋆+ i<j) (⋆+ j<k) = ⋆+ (ℕ.<-trans i<j j<k)
+  <-trans zero<∞ (∞+ i<j) = zero<∞
+  <-trans zero<∞ ∞<⋆ = zero<⋆
+  <-trans zero<⋆ (⋆+ i<j) = zero<⋆
+  <-trans ∞<⋆ (⋆+ i<j) = ∞<⋆
 
 
   ≤→<→< : n ≤ m → m < o → n < o
@@ -92,131 +135,59 @@ abstract
   ≤-trans n≤m (<→≤ m<o) = <→≤ (≤→<→< n≤m m<o)
 
 
-  ≤-nat⁺ : ∀ {n m} → n ℕ.≤ m → nat n ≤ nat m
-  ≤-nat⁺ {m = zero} ℕ.z≤n = ≤-refl
-  ≤-nat⁺ {m = suc m} ℕ.z≤n = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
-  ≤-nat⁺ (ℕ.s≤s n≤m) with ≤-nat⁺ n≤m
-  ... | ≤-refl = ≤-refl
-  ... | <→≤ (nat n<m) = <→≤ (nat (ℕ.s≤s n<m))
+⟦zero⟧ ⟦∞⟧ ⟦⋆⟧ : Size
+⟦zero⟧ = zero+ 0
+⟦∞⟧ = ∞+ 0
+⟦⋆⟧ = ⋆+ 0
 
 
-  0≤n : nat 0 ≤ n
-  0≤n {nat zero} = ≤-refl
-  0≤n {nat (suc n)} = <→≤ (nat (ℕ.s≤s ℕ.z≤n))
-  0≤n {∞} = <→≤ nat<∞
-  0≤n {⋆} = <→≤ nat<⋆
+⟦suc⟧ : Size → Size
+⟦suc⟧ (zero+ i) = zero+ (suc i)
+⟦suc⟧ (∞+ i) = ∞+ (suc i)
+⟦suc⟧ (⋆+ i) = ⋆+ (suc i)
 
 
-  n<m→Sn≤m : ∀ {n} → nat n < m → nat (suc n) ≤ m
-  n<m→Sn≤m (nat (ℕ.s≤s n≤m)) = ≤-nat⁺ (ℕ.s≤s n≤m)
-  n<m→Sn≤m nat<∞ = <→≤ nat<∞
-  n<m→Sn≤m nat<⋆ = <→≤ nat<⋆
+abstract
+  ⟦zero⟧<⟦suc⟧ : ⟦zero⟧ < ⟦suc⟧ n
+  ⟦zero⟧<⟦suc⟧ {zero+ i} = zero+ (ℕ.s≤s ℕ.z≤n)
+  ⟦zero⟧<⟦suc⟧ {∞+ i} = zero<∞
+  ⟦zero⟧<⟦suc⟧ {⋆+ i} = zero<⋆
 
 
-  Sn≤m→n<m : ∀ {n} → nat (suc n) ≤ m → nat n < m
-  Sn≤m→n<m ≤-refl = nat (ℕ.s≤s ℕ.≤-refl)
-  Sn≤m→n<m (<→≤ (nat Sn<m)) = nat (ℕ.<-trans (ℕ.s≤s ℕ.≤-refl) Sn<m)
-  Sn≤m→n<m (<→≤ nat<∞) = nat<∞
-  Sn≤m→n<m (<→≤ nat<⋆) = nat<⋆
+  ⟦zero⟧<⟦∞⟧ : ⟦zero⟧ < ⟦∞⟧
+  ⟦zero⟧<⟦∞⟧ = zero<∞
 
 
-  <-irrefl : ¬ (n < n)
-  <-irrefl (nat n<n) = ℕ.<-irrefl refl n<n
+  ⟦suc⟧<⟦suc⟧ : n < m → ⟦suc⟧ n < ⟦suc⟧ m
+  ⟦suc⟧<⟦suc⟧ (zero+ i<j) = zero+ (ℕ.s≤s i<j)
+  ⟦suc⟧<⟦suc⟧ (∞+ i<j) = ∞+ (ℕ.s≤s i<j)
+  ⟦suc⟧<⟦suc⟧ (⋆+ i<j) = ⋆+ (ℕ.s≤s i<j)
+  ⟦suc⟧<⟦suc⟧ zero<∞ = zero<∞
+  ⟦suc⟧<⟦suc⟧ zero<⋆ = zero<⋆
+  ⟦suc⟧<⟦suc⟧ ∞<⋆ = ∞<⋆
 
 
-  ≤-antisym : n ≤ m → m ≤ n → n ≡ m
-  ≤-antisym ≤-refl m≤n = refl
-  ≤-antisym (<→≤ n<m) m≤n = ⊥-elim (<-irrefl (<→≤→< n<m m≤n))
+  ⟦suc⟧<⟦∞⟧ : n < ⟦∞⟧ → ⟦suc⟧ n < ⟦∞⟧
+  ⟦suc⟧<⟦∞⟧ zero<∞ = zero<∞
 
 
-  <-IsProp : (p q : n < m) → p ≡ q
-  <-IsProp (nat p) (nat q) = cong nat (ℕ.<-irrelevant p q)
-  <-IsProp nat<∞ nat<∞ = refl
-  <-IsProp nat<⋆ nat<⋆ = refl
-  <-IsProp ∞<⋆ ∞<⋆ = refl
+  ⟦suc⟧<⟦⋆⟧ : n < ⟦⋆⟧ → ⟦suc⟧ n < ⟦⋆⟧
+  ⟦suc⟧<⟦⋆⟧ zero<⋆ = zero<⋆
+  ⟦suc⟧<⟦⋆⟧ ∞<⋆ = ∞<⋆
 
 
-  ≤-IsProp : (p q : n ≤ m) → p ≡ q
-  ≤-IsProp ≤-refl (reflexive p) = cong reflexive (Size-IsSet _ _)
-  ≤-IsProp ≤-refl (<→≤ n<n) = ⊥-elim (<-irrefl n<n)
-  ≤-IsProp (<→≤ n<n) ≤-refl = ⊥-elim (<-irrefl n<n)
-  ≤-IsProp (<→≤ n<m) (<→≤ n<m₁) = cong <→≤ (<-IsProp _ _)
+  ⟦∞⟧<⟦⋆⟧ : ⟦∞⟧ < ⟦⋆⟧
+  ⟦∞⟧<⟦⋆⟧ = ∞<⋆
 
 
-  <ℕ-acc→<-acc : ∀ {n} → Acc ℕ._<_ n → Acc _<_ (nat n)
-  <ℕ-acc→<-acc (acc rs) = acc λ where
-    (nat m) (nat m<n) → <ℕ-acc→<-acc (rs m m<n)
-
-
-  <-acc-nat : ∀ {n} → Acc _<_ (nat n)
-  <-acc-nat = <ℕ-acc→<-acc (ℕ.<-wellFounded _)
-
-
-  <-acc : n < m → Acc _<_ n
-  <-acc {nat n} {nat m} (nat n<m) = <-acc-nat
-  <-acc {nat n} {∞} nat<∞ = <-acc-nat
-  <-acc {nat n} {⋆} nat<⋆ = <-acc-nat
-  <-acc {∞} {.⋆} ∞<⋆ = acc λ where
-    .(nat _) nat<∞ → <-acc-nat
-
-
-  <-wf : WellFounded _<_
-  <-wf x = acc (λ y y<x → <-acc y<x)
-
-
-open WFInd.Build <-wf public using () renaming
-  ( wfInd to <-ind
-  ; wfRec to <-rec
-  ; wfInd-unfold to <-ind-unfold
-  ; wfRec-unfold to <-rec-unfold
-  ; wfInd-ind to <-ind-ind
-  ; wfIndΣ to <-indΣ
-  ; wfIndΣ-unfold to <-indΣ-unfold
-  ; wfIndΣ′ to <-indΣ′
-  )
-
-
-<-ind-ind₂ = WFInd.wfInd-ind₂ <-wf
+  <⟦suc⟧ : n < ⟦suc⟧ n
+  <⟦suc⟧ {zero+ i} = zero+ (ℕ.s≤s ℕ.≤-refl)
+  <⟦suc⟧ {∞+ i} = ∞+ (ℕ.s≤s ℕ.≤-refl)
+  <⟦suc⟧ {⋆+ i} = ⋆+ (ℕ.s≤s ℕ.≤-refl)
 
 
 Size< : Size → Set
 Size< n = ∃[ m ] (m < n)
-
-
-abstract
-  Size<-≡⁺ : (m k : Size< n) → proj₁ m ≡ proj₁ k → m ≡ k
-  Size<-≡⁺ (m , _) (k , _) refl = cong (m ,_) (<-IsProp _ _)
-
-
-Size<-IsSet : ∀ {n} → IsSet (Size< n)
-Size<-IsSet = Σ-IsSet Size-IsSet λ _ → IsOfHLevel-suc 1 <-IsProp
-
-
-szero : Size
-szero = nat zero
-
-
-ssuc : Size → Size
-ssuc (nat n) = nat (suc n)
-ssuc ∞ = ∞
-ssuc ⋆ = ⋆
-
-
-abstract
-  ssuc-resp-< : n < m → ssuc n < ssuc m
-  ssuc-resp-< (nat n<m) = nat (ℕ.+-mono-≤-< ℕ.≤-refl n<m)
-  ssuc-resp-< nat<∞ = nat<∞
-  ssuc-resp-< nat<⋆ = nat<⋆
-  ssuc-resp-< ∞<⋆ = ∞<⋆
-
-
-  ssuc-resp-≤ : n ≤ m → ssuc n ≤ ssuc m
-  ssuc-resp-≤ ≤-refl = ≤-refl
-  ssuc-resp-≤ (<→≤ n<m) = <→≤ (ssuc-resp-< n<m)
-
-
-  n<ssucn : n < ∞ → n < ssuc n
-  n<ssucn nat<∞ = nat (ℕ.s≤s ℕ.≤-refl)
 
 
 mutual
@@ -232,13 +203,77 @@ mutual
 
   ⟦_⟧n′ : S.Size Δ → ⟦ Δ ⟧Δ′ → Size
   ⟦ var x ⟧n′ = ⟦ x ⟧x′
-  ⟦ ∞ ⟧n′ _ = ∞
-  ⟦ ⋆ ⟧n′ _ = ⋆
-  ⟦ zero ⟧n′ _ = szero
-  ⟦ suc n ⟧n′ = ssuc ∘ ⟦ n ⟧n′
+  ⟦ ∞ ⟧n′ _ = ⟦∞⟧
+  ⟦ ⋆ ⟧n′ _ = ⟦⋆⟧
+  ⟦ zero ⟧n′ _ = ⟦zero⟧
+  ⟦ suc n ⟧n′ = ⟦suc⟧ ∘ ⟦ n ⟧n′
 
 
 abstract
+  ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n′ δ ≡ ⟦ m ⟧n′ (proj₁ δ)
+  ⟦wk⟧ n (var x) = refl
+  ⟦wk⟧ n ∞ = refl
+  ⟦wk⟧ n ⋆ = refl
+  ⟦wk⟧ n zero = refl
+  ⟦wk⟧ n (suc m) = cong ⟦suc⟧ (⟦wk⟧ n m)
+
+
+  ⟦<⟧ₓ : ∀ (x : S.Var Δ) {δ}
+    → ⟦ x ⟧x′ δ < ⟦ S.bound x ⟧n′ δ
+  ⟦<⟧ₓ {Δ ∙ n} zero {δ , m , m<n} = subst (m <_) (sym (⟦wk⟧ n n)) m<n
+  ⟦<⟧ₓ {Δ ∙ n} (suc x) {δ , m , m<n}
+    = subst (⟦ x ⟧x′ δ <_) (sym (⟦wk⟧ n (S.bound x))) (⟦<⟧ₓ x)
+
+
+  ⟦<⟧ : ∀ {n m : S.Size Δ} {δ}
+    → n S.< m
+    → ⟦ n ⟧n′ δ < ⟦ m ⟧n′ δ
+  ⟦<⟧ (var {x = x} refl) = ⟦<⟧ₓ x
+  ⟦<⟧ zero<suc = ⟦zero⟧<⟦suc⟧
+  ⟦<⟧ zero<∞ = ⟦zero⟧<⟦∞⟧
+  ⟦<⟧ (suc<suc n<m) = ⟦suc⟧<⟦suc⟧ (⟦<⟧ n<m)
+  ⟦<⟧ (suc<∞ n<m) = ⟦suc⟧<⟦∞⟧ (⟦<⟧ n<m)
+  ⟦<⟧ (suc<⋆ n<m) = ⟦suc⟧<⟦⋆⟧ (⟦<⟧ n<m)
+  ⟦<⟧ ∞<⋆ = ⟦∞⟧<⟦⋆⟧
+  ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
+  ⟦<⟧ <suc = <⟦suc⟧
+
+
+  <-irrefl : ¬ n < n
+  <-irrefl {zero+ i} (zero+ i<i) = ℕ.<⇒≢ i<i refl
+  <-irrefl {∞+ i} (∞+ i<i) = ℕ.<⇒≢ i<i refl
+  <-irrefl {⋆+ i} (⋆+ i<i) = ℕ.<⇒≢ i<i refl
+
+
+  ≤-antisym : n ≤ m → m ≤ n → n ≡ m
+  ≤-antisym ≤-refl m≤n = refl
+  ≤-antisym (<→≤ n<m) m≤n = ⊥-elim (<-irrefl (<→≤→< n<m m≤n))
+
+
+  <-IsProp : IsProp (n < m)
+  <-IsProp (zero+ i<j) (zero+ i<j₁) = cong zero+ (ℕ.<-irrelevant _ _)
+  <-IsProp (∞+ i<j) (∞+ i<j₁) = cong ∞+ (ℕ.<-irrelevant _ _)
+  <-IsProp (⋆+ i<j) (⋆+ i<j₁) = cong ⋆+ (ℕ.<-irrelevant _ _)
+  <-IsProp zero<∞ zero<∞ = refl
+  <-IsProp zero<⋆ zero<⋆ = refl
+  <-IsProp ∞<⋆ ∞<⋆ = refl
+
+
+  ≤-IsProp : IsProp (n ≤ m)
+  ≤-IsProp (reflexive p) (reflexive q) = cong reflexive (Size-IsSet _ _)
+  ≤-IsProp ≤-refl (<→≤ q) = ⊥-elim (<-irrefl q)
+  ≤-IsProp (<→≤ p) ≤-refl = ⊥-elim (<-irrefl p)
+  ≤-IsProp (<→≤ p) (<→≤ q) = cong <→≤ (<-IsProp p q)
+
+
+  Size<-≡⁺ : (m k : Size< n) → proj₁ m ≡ proj₁ k → m ≡ k
+  Size<-≡⁺ (m , _) (k , _) refl = cong (m ,_) (<-IsProp _ _)
+
+
+  Size<-IsSet : ∀ {n} → IsSet (Size< n)
+  Size<-IsSet = Σ-IsSet Size-IsSet λ _ → IsOfHLevel-suc 1 <-IsProp
+
+
   ⟦Δ⟧-IsSet : ∀ Δ → IsSet ⟦ Δ ⟧Δ′
   ⟦Δ⟧-IsSet [] = ⊤-IsSet
   ⟦Δ⟧-IsSet (Δ ∙ n) = Σ-IsSet (⟦Δ⟧-IsSet Δ) λ _ → Size<-IsSet
@@ -259,29 +294,59 @@ abstract
     = cong (δ ,_) (Size<-≡⁺ _ _ eq₂)
 
 
-abstract
-  ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n′ δ ≡ ⟦ m ⟧n′ (proj₁ δ)
-  ⟦wk⟧ n (var x) = refl
-  ⟦wk⟧ n ∞ = refl
-  ⟦wk⟧ n ⋆ = refl
-  ⟦wk⟧ n zero = refl
-  ⟦wk⟧ n (suc m) = cong ssuc (⟦wk⟧ n m)
+  zero+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (zero+ i)
+  zero+-<ℕ-acc→<-acc (acc rs) = acc λ where
+    (zero+ i) (zero+ i<j) → zero+-<ℕ-acc→<-acc (rs i i<j)
 
 
-  ⟦<⟧ₓ : ∀ (x : S.Var Δ) {δ} → ⟦ x ⟧x′ δ < ⟦ S.bound x ⟧n′ δ
-  ⟦<⟧ₓ (zero {n = n}) {δ , m , m<n}
-    = subst (m <_) (sym (⟦wk⟧ _ n)) m<n
-  ⟦<⟧ₓ (suc x) {δ , m , m<n}
-    = subst (⟦ x ⟧x′ δ <_) (sym (⟦wk⟧ _ (S.bound x))) (⟦<⟧ₓ x)
+  zero+-acc : Acc _<_ (zero+ i)
+  zero+-acc = zero+-<ℕ-acc→<-acc (ℕ.<-wellFounded _)
 
 
-  ⟦<⟧ : ∀ {n m : S.Size Δ} {δ} → n S.< m → ⟦ n ⟧n′ δ < ⟦ m ⟧n′ δ
-  ⟦<⟧ (var {x = x} _ refl) = ⟦<⟧ₓ x
-  ⟦<⟧ (<suc n n<∞) = n<ssucn (⟦<⟧ n<∞)
-  ⟦<⟧ zero<∞ = nat<∞
-  ⟦<⟧ (suc<∞ n n<∞) = ssuc-resp-< (⟦<⟧ n<∞)
-  ⟦<⟧ ∞<⋆ = ∞<⋆
-  ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
+  ∞+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (∞+ i)
+  ∞+-<ℕ-acc→<-acc (acc rs) = acc λ where
+    (∞+ i) (∞+ i<j) → ∞+-<ℕ-acc→<-acc (rs i i<j)
+    (zero+ i) zero<∞ → zero+-acc
+
+
+  ∞+-acc : Acc _<_ (∞+ i)
+  ∞+-acc = ∞+-<ℕ-acc→<-acc (ℕ.<-wellFounded _)
+
+
+  ⋆+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (⋆+ i)
+  ⋆+-<ℕ-acc→<-acc (acc rs) = acc λ where
+    (⋆+ i) (⋆+ i<j) → ⋆+-<ℕ-acc→<-acc (rs i i<j)
+    (zero+ i) zero<⋆ → zero+-acc
+    (∞+ i) ∞<⋆ → ∞+-acc
+
+
+  ⋆+-acc : Acc _<_ (⋆+ i)
+  ⋆+-acc = ⋆+-<ℕ-acc→<-acc (ℕ.<-wellFounded _)
+
+
+  <-wf : WellFounded _<_
+  <-wf m = acc λ where
+    _ (zero+ i<j) → zero+-acc
+    _ (∞+ i<j) → ∞+-acc
+    _ (⋆+ i<j) → ⋆+-acc
+    _ zero<∞ → zero+-acc
+    _ zero<⋆ → zero+-acc
+    _ ∞<⋆ → ∞+-acc
+
+
+open WFInd.Build <-wf public using () renaming
+  ( wfInd to <-ind
+  ; wfRec to <-rec
+  ; wfInd-unfold to <-ind-unfold
+  ; wfRec-unfold to <-rec-unfold
+  ; wfInd-ind to <-ind-ind
+  ; wfIndΣ to <-indΣ
+  ; wfIndΣ-unfold to <-indΣ-unfold
+  ; wfIndΣ′ to <-indΣ′
+  )
+
+
+<-ind-ind₂ = WFInd.wfInd-ind₂ <-wf
 
 
 mutual
@@ -318,7 +383,7 @@ mutual
     ⟦sub′⟧ σ ∞ = refl
     ⟦sub′⟧ σ ⋆ = refl
     ⟦sub′⟧ σ zero = refl
-    ⟦sub′⟧ σ (suc n) = cong ssuc (⟦sub′⟧ σ n)
+    ⟦sub′⟧ σ (suc n) = cong ⟦suc⟧ (⟦sub′⟧ σ n)
 
 
     ⟦sub⟧ :  ∀ {σ} (⊢σ : σ ∶ Δ ⇒ᵤ Ω) (n : S.Size Ω) {δ}
@@ -372,3 +437,61 @@ Sizes = record
 ⟦ σ ⟧σ = record
   { fobj = ⟦ σ ⟧σ′
   }
+
+
+data _≤′_ : (n m : Size) → Set where
+  zero+ : (i≤j : i ℕ.≤ j) → zero+ i ≤′ zero+ j
+  ∞+ : (i≤j : i ℕ.≤ j) → ∞+ i ≤′ ∞+ j
+  ⋆+ : (i≤j : i ℕ.≤ j) → ⋆+ i ≤′ ⋆+ j
+  zero<∞ : zero+ i ≤′ ∞+ j
+  zero<⋆ : zero+ i ≤′ ⋆+ j
+  ∞<⋆ : ∞+ i ≤′ ⋆+ j
+
+
+abstract
+  ≤→≤′ : n ≤ m → n ≤′ m
+  ≤→≤′ {zero+ i} ≤-refl = zero+ ℕ.≤-refl
+  ≤→≤′ {∞+ i} ≤-refl = ∞+ ℕ.≤-refl
+  ≤→≤′ {⋆+ i} ≤-refl = ⋆+ ℕ.≤-refl
+  ≤→≤′ (<→≤ (zero+ i<j)) = zero+ (ℕ.<⇒≤ i<j)
+  ≤→≤′ (<→≤ (∞+ i<j)) = ∞+ (ℕ.<⇒≤ i<j)
+  ≤→≤′ (<→≤ (⋆+ i<j)) = ⋆+ (ℕ.<⇒≤ i<j)
+  ≤→≤′ (<→≤ zero<∞) = zero<∞
+  ≤→≤′ (<→≤ zero<⋆) = zero<⋆
+  ≤→≤′ (<→≤ ∞<⋆) = ∞<⋆
+
+
+  ≤′→≤ : n ≤′ m → n ≤ m
+  ≤′→≤ (zero+ i≤j) with ℕ.≤⇒≤′ i≤j
+  ... | ℕ.≤′-refl = ≤-refl
+  ... | ℕ.≤′-step i≤′j = <→≤ (zero+ (ℕ.s≤s (ℕ.≤′⇒≤ i≤′j)))
+  ≤′→≤ (∞+ i≤j) with ℕ.≤⇒≤′ i≤j
+  ... | ℕ.≤′-refl = ≤-refl
+  ... | ℕ.≤′-step i≤′j = <→≤ (∞+ (ℕ.s≤s (ℕ.≤′⇒≤ i≤′j)))
+  ≤′→≤ (⋆+ i≤j) with ℕ.≤⇒≤′ i≤j
+  ... | ℕ.≤′-refl = ≤-refl
+  ... | ℕ.≤′-step i≤′j = <→≤ (⋆+ (ℕ.s≤s (ℕ.≤′⇒≤ i≤′j)))
+  ≤′→≤ zero<∞ = <→≤ zero<∞
+  ≤′→≤ zero<⋆ = <→≤ zero<⋆
+  ≤′→≤ ∞<⋆ = <→≤ ∞<⋆
+
+
+  0≤n : ⟦zero⟧ ≤ n
+  0≤n {zero+ zero} = ≤-refl
+  0≤n {zero+ (suc i)} = <→≤ (zero+ (ℕ.s≤s ℕ.z≤n))
+  0≤n {∞+ i} = <→≤ zero<∞
+  0≤n {⋆+ i} = <→≤ zero<⋆
+
+
+  n<m→Sn≤m : n < m → ⟦suc⟧ n ≤ m
+  n<m→Sn≤m (zero+ (ℕ.s≤s i≤j)) = ≤′→≤ (zero+ (ℕ.s≤s i≤j))
+  n<m→Sn≤m (∞+ (ℕ.s≤s i≤j)) = ≤′→≤ (∞+ (ℕ.s≤s i≤j))
+  n<m→Sn≤m (⋆+ (ℕ.s≤s i≤j)) = ≤′→≤ (⋆+ (ℕ.s≤s i≤j))
+  n<m→Sn≤m zero<∞ = <→≤ zero<∞
+  n<m→Sn≤m zero<⋆ = <→≤ zero<⋆
+  n<m→Sn≤m ∞<⋆ = <→≤ ∞<⋆
+
+
+  Sn≤m→n<m : ⟦suc⟧ n ≤ m → n < m
+  Sn≤m→n<m ≤-refl = <⟦suc⟧
+  Sn≤m→n<m (<→≤ Sn<m) = <-trans <⟦suc⟧ Sn<m

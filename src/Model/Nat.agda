@@ -2,7 +2,7 @@
 module Model.Nat where
 
 open import Model.Size as MS using
-  ( Size ; Sizes ; _≤_ ; _<_ ; ≤-IsProp )
+  ( Size ; Sizes ; _≤_ ; _<_ ; ≤-IsProp ; nat )
 open import Model.Type.Core
 open import Util.HoTT.HLevel
 open import Util.Prelude
