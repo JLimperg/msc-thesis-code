@@ -109,11 +109,11 @@ suc∞ = Λ (Nat ∞) , caseNat (Nat ∞) ∞ (var 0)
 suc∞⊢ : ∀ {Δ Γ} → Δ , Γ ⊢ suc∞ ∶ Nat ∞ ⇒ Nat ∞
 suc∞⊢
   = abs
-      (caseNat ∞<⋆ (var zero) (suc ∞<⋆ zero<∞ (zero (<-trans zero<∞ ∞<⋆)))
+      (caseNat <suc (var zero) (suc <suc zero<∞ (zero (<-trans zero<∞ <suc)))
         (absₛ
           (abs
-            (suc ∞<⋆ (suc<∞ (var refl))
-              (suc (<-trans (suc<∞ (var refl)) ∞<⋆) <suc
+            (suc <suc (suc<∞ (var refl))
+              (suc (<-trans (suc<∞ (var refl)) <suc) <suc
                 (var zero))))
           refl)
         refl)
@@ -184,7 +184,7 @@ zeros⊢
       (fix (var refl)
         (absₛ
           (abs
-            (cons (var refl) (zero ∞<⋆) (var zero)))
+            (cons (var refl) (zero <suc) (var zero)))
           refl)
         refl
         refl)

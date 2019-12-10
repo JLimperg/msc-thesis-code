@@ -7,7 +7,7 @@ open import Model.Size as MS using (_<_ ; ⟦_⟧Δ ; ⟦_⟧n ; ⟦_⟧σ)
 open import Model.Type as MT
 open import Util.HoTT.Equiv
 open import Util.Prelude hiding (id ; _∘_ ; _×_)
-open import Source.Size as SS using (v0 ; v1)
+open import Source.Size as SS using (v0 ; v1 ; ⋆)
 open import Source.Size.Substitution.Theory
 open import Source.Size.Substitution.Universe as SU using (Sub⊢ᵤ)
 open import Source.Term

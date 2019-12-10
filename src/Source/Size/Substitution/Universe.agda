@@ -138,7 +138,6 @@ mutual
   sub′ : Sub Δ Ω → Size Ω → Size Δ
   sub′ σ (var x) = subV′ σ x
   sub′ σ ∞ = ∞
-  sub′ σ ⋆ = ⋆
   sub′ σ zero = zero
   sub′ σ (suc n) = suc (sub′ σ n)
 
@@ -164,6 +163,5 @@ mutual
     sub′≡sub : ∀ (σ : Sub Δ Ω) n → sub′ σ n ≡ sub σ n
     sub′≡sub σ (var x) = subV′≡subV σ x
     sub′≡sub σ ∞ = refl
-    sub′≡sub σ ⋆ = refl
     sub′≡sub σ zero = refl
     sub′≡sub σ (suc n) = cong suc (sub′≡sub σ n)

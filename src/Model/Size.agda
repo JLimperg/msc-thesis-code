@@ -37,14 +37,13 @@ private
 {-
 This is an encoding of the set of ordinals
 
-  { i ∈ ℕ } ∪ { ω + i | i ∈ ℕ } ∪ { ω*2 + i | i ∈ ℕ }
+  ℕ ∪ { ω + i | i ∈ ℕ }
 
-i.e. of the ordinals below ω*3.
+i.e. of the ordinals below ω*2.
 -}
 data Size : Set where
   zero+ : (i : ℕ) → Size
   ∞+ : (i : ℕ) → Size
-  ⋆+ : (i : ℕ) → Size
 
 
 variable
@@ -72,30 +71,17 @@ abstract
   ∞+-≡-canon refl = refl
 
 
-  ⋆+-inj : ⋆+ i ≡ ⋆+ j → i ≡ j
-  ⋆+-inj refl = refl
-
-
-  ⋆+-≡-canon : (p : ⋆+ i ≡ ⋆+ j) → p ≡ cong ⋆+ (⋆+-inj p)
-  ⋆+-≡-canon refl = refl
-
-
   Size-IsSet : IsSet Size
   Size-IsSet {zero+ i} {zero+ j} p refl
     = trans (zero+-≡-canon p) (cong (cong zero+) (ℕ.≡-irrelevant _ _))
   Size-IsSet {∞+ i} {∞+ j} p refl
     = trans (∞+-≡-canon p) (cong (cong ∞+) (ℕ.≡-irrelevant _ _))
-  Size-IsSet {⋆+ i} {⋆+ j} p refl
-    = trans (⋆+-≡-canon p) (cong (cong ⋆+) (ℕ.≡-irrelevant _ _))
 
 
 data _<_ : (n m : Size) → Set where
   zero+ : (i<j : i ℕ.< j) → zero+ i < zero+ j
   ∞+ : (i<j : i ℕ.< j) → ∞+ i < ∞+ j
-  ⋆+ : (i<j : i ℕ.< j) → ⋆+ i < ⋆+ j
   zero<∞ : zero+ i < ∞+ j
-  zero<⋆ : zero+ i < ⋆+ j
-  ∞<⋆ : ∞+ i < ⋆+ j
 
 
 data _≤_ (n m : Size) : Set where
@@ -110,14 +96,8 @@ abstract
   <-trans : n < m → m < o → n < o
   <-trans (zero+ i<j) (zero+ j<k) = zero+ (ℕ.<-trans i<j j<k)
   <-trans (zero+ i<j) zero<∞ = zero<∞
-  <-trans (zero+ i<j) zero<⋆ = zero<⋆
   <-trans (∞+ i<j) (∞+ j<k) = ∞+ (ℕ.<-trans i<j j<k)
-  <-trans (∞+ i<j) ∞<⋆ = ∞<⋆
-  <-trans (⋆+ i<j) (⋆+ j<k) = ⋆+ (ℕ.<-trans i<j j<k)
   <-trans zero<∞ (∞+ i<j) = zero<∞
-  <-trans zero<∞ ∞<⋆ = zero<⋆
-  <-trans zero<⋆ (⋆+ i<j) = zero<⋆
-  <-trans ∞<⋆ (⋆+ i<j) = ∞<⋆
 
 
   ≤→<→< : n ≤ m → m < o → n < o
@@ -135,23 +115,20 @@ abstract
   ≤-trans n≤m (<→≤ m<o) = <→≤ (≤→<→< n≤m m<o)
 
 
-⟦zero⟧ ⟦∞⟧ ⟦⋆⟧ : Size
+⟦zero⟧ ⟦∞⟧ : Size
 ⟦zero⟧ = zero+ 0
 ⟦∞⟧ = ∞+ 0
-⟦⋆⟧ = ⋆+ 0
 
 
 ⟦suc⟧ : Size → Size
 ⟦suc⟧ (zero+ i) = zero+ (suc i)
 ⟦suc⟧ (∞+ i) = ∞+ (suc i)
-⟦suc⟧ (⋆+ i) = ⋆+ (suc i)
 
 
 abstract
   ⟦zero⟧<⟦suc⟧ : ⟦zero⟧ < ⟦suc⟧ n
   ⟦zero⟧<⟦suc⟧ {zero+ i} = zero+ (ℕ.s≤s ℕ.z≤n)
   ⟦zero⟧<⟦suc⟧ {∞+ i} = zero<∞
-  ⟦zero⟧<⟦suc⟧ {⋆+ i} = zero<⋆
 
 
   ⟦zero⟧<⟦∞⟧ : ⟦zero⟧ < ⟦∞⟧
@@ -161,29 +138,16 @@ abstract
   ⟦suc⟧<⟦suc⟧ : n < m → ⟦suc⟧ n < ⟦suc⟧ m
   ⟦suc⟧<⟦suc⟧ (zero+ i<j) = zero+ (ℕ.s≤s i<j)
   ⟦suc⟧<⟦suc⟧ (∞+ i<j) = ∞+ (ℕ.s≤s i<j)
-  ⟦suc⟧<⟦suc⟧ (⋆+ i<j) = ⋆+ (ℕ.s≤s i<j)
   ⟦suc⟧<⟦suc⟧ zero<∞ = zero<∞
-  ⟦suc⟧<⟦suc⟧ zero<⋆ = zero<⋆
-  ⟦suc⟧<⟦suc⟧ ∞<⋆ = ∞<⋆
 
 
   ⟦suc⟧<⟦∞⟧ : n < ⟦∞⟧ → ⟦suc⟧ n < ⟦∞⟧
   ⟦suc⟧<⟦∞⟧ zero<∞ = zero<∞
 
 
-  ⟦suc⟧<⟦⋆⟧ : n < ⟦⋆⟧ → ⟦suc⟧ n < ⟦⋆⟧
-  ⟦suc⟧<⟦⋆⟧ zero<⋆ = zero<⋆
-  ⟦suc⟧<⟦⋆⟧ ∞<⋆ = ∞<⋆
-
-
-  ⟦∞⟧<⟦⋆⟧ : ⟦∞⟧ < ⟦⋆⟧
-  ⟦∞⟧<⟦⋆⟧ = ∞<⋆
-
-
   <⟦suc⟧ : n < ⟦suc⟧ n
   <⟦suc⟧ {zero+ i} = zero+ (ℕ.s≤s ℕ.≤-refl)
   <⟦suc⟧ {∞+ i} = ∞+ (ℕ.s≤s ℕ.≤-refl)
-  <⟦suc⟧ {⋆+ i} = ⋆+ (ℕ.s≤s ℕ.≤-refl)
 
 
 Size< : Size → Set
@@ -204,7 +168,6 @@ mutual
   ⟦_⟧n′ : S.Size Δ → ⟦ Δ ⟧Δ′ → Size
   ⟦ var x ⟧n′ = ⟦ x ⟧x′
   ⟦ ∞ ⟧n′ _ = ⟦∞⟧
-  ⟦ ⋆ ⟧n′ _ = ⟦⋆⟧
   ⟦ zero ⟧n′ _ = ⟦zero⟧
   ⟦ suc n ⟧n′ = ⟦suc⟧ ∘ ⟦ n ⟧n′
 
@@ -213,7 +176,6 @@ abstract
   ⟦wk⟧ : ∀ (n m : S.Size Δ) {δ} → ⟦ S.wk {n = n} m ⟧n′ δ ≡ ⟦ m ⟧n′ (proj₁ δ)
   ⟦wk⟧ n (var x) = refl
   ⟦wk⟧ n ∞ = refl
-  ⟦wk⟧ n ⋆ = refl
   ⟦wk⟧ n zero = refl
   ⟦wk⟧ n (suc m) = cong ⟦suc⟧ (⟦wk⟧ n m)
 
@@ -233,8 +195,6 @@ abstract
   ⟦<⟧ zero<∞ = ⟦zero⟧<⟦∞⟧
   ⟦<⟧ (suc<suc n<m) = ⟦suc⟧<⟦suc⟧ (⟦<⟧ n<m)
   ⟦<⟧ (suc<∞ n<m) = ⟦suc⟧<⟦∞⟧ (⟦<⟧ n<m)
-  ⟦<⟧ (suc<⋆ n<m) = ⟦suc⟧<⟦⋆⟧ (⟦<⟧ n<m)
-  ⟦<⟧ ∞<⋆ = ⟦∞⟧<⟦⋆⟧
   ⟦<⟧ (S.<-trans n<m m<o) = <-trans (⟦<⟧ n<m) (⟦<⟧ m<o)
   ⟦<⟧ <suc = <⟦suc⟧
 
@@ -242,7 +202,6 @@ abstract
   <-irrefl : ¬ n < n
   <-irrefl {zero+ i} (zero+ i<i) = ℕ.<⇒≢ i<i refl
   <-irrefl {∞+ i} (∞+ i<i) = ℕ.<⇒≢ i<i refl
-  <-irrefl {⋆+ i} (⋆+ i<i) = ℕ.<⇒≢ i<i refl
 
 
   ≤-antisym : n ≤ m → m ≤ n → n ≡ m
@@ -253,10 +212,7 @@ abstract
   <-IsProp : IsProp (n < m)
   <-IsProp (zero+ i<j) (zero+ i<j₁) = cong zero+ (ℕ.<-irrelevant _ _)
   <-IsProp (∞+ i<j) (∞+ i<j₁) = cong ∞+ (ℕ.<-irrelevant _ _)
-  <-IsProp (⋆+ i<j) (⋆+ i<j₁) = cong ⋆+ (ℕ.<-irrelevant _ _)
   <-IsProp zero<∞ zero<∞ = refl
-  <-IsProp zero<⋆ zero<⋆ = refl
-  <-IsProp ∞<⋆ ∞<⋆ = refl
 
 
   ≤-IsProp : IsProp (n ≤ m)
@@ -313,25 +269,11 @@ abstract
   ∞+-acc = ∞+-<ℕ-acc→<-acc (ℕ.<-wellFounded _)
 
 
-  ⋆+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (⋆+ i)
-  ⋆+-<ℕ-acc→<-acc (acc rs) = acc λ where
-    (⋆+ i) (⋆+ i<j) → ⋆+-<ℕ-acc→<-acc (rs i i<j)
-    (zero+ i) zero<⋆ → zero+-acc
-    (∞+ i) ∞<⋆ → ∞+-acc
-
-
-  ⋆+-acc : Acc _<_ (⋆+ i)
-  ⋆+-acc = ⋆+-<ℕ-acc→<-acc (ℕ.<-wellFounded _)
-
-
   <-wf : WellFounded _<_
   <-wf m = acc λ where
     _ (zero+ i<j) → zero+-acc
     _ (∞+ i<j) → ∞+-acc
-    _ (⋆+ i<j) → ⋆+-acc
     _ zero<∞ → zero+-acc
-    _ zero<⋆ → zero+-acc
-    _ ∞<⋆ → ∞+-acc
 
 
 open WFInd.Build <-wf public using () renaming
@@ -381,7 +323,6 @@ mutual
       → ⟦ S.sub′ σ n ⟧n′ δ ≡ ⟦ n ⟧n′ (⟦ ⊢σ ⟧σ′ δ)
     ⟦sub′⟧ σ (var x) = ⟦subV′⟧ σ x
     ⟦sub′⟧ σ ∞ = refl
-    ⟦sub′⟧ σ ⋆ = refl
     ⟦sub′⟧ σ zero = refl
     ⟦sub′⟧ σ (suc n) = cong ⟦suc⟧ (⟦sub′⟧ σ n)
 
@@ -442,23 +383,16 @@ Sizes = record
 data _≤′_ : (n m : Size) → Set where
   zero+ : (i≤j : i ℕ.≤ j) → zero+ i ≤′ zero+ j
   ∞+ : (i≤j : i ℕ.≤ j) → ∞+ i ≤′ ∞+ j
-  ⋆+ : (i≤j : i ℕ.≤ j) → ⋆+ i ≤′ ⋆+ j
   zero<∞ : zero+ i ≤′ ∞+ j
-  zero<⋆ : zero+ i ≤′ ⋆+ j
-  ∞<⋆ : ∞+ i ≤′ ⋆+ j
 
 
 abstract
   ≤→≤′ : n ≤ m → n ≤′ m
   ≤→≤′ {zero+ i} ≤-refl = zero+ ℕ.≤-refl
   ≤→≤′ {∞+ i} ≤-refl = ∞+ ℕ.≤-refl
-  ≤→≤′ {⋆+ i} ≤-refl = ⋆+ ℕ.≤-refl
   ≤→≤′ (<→≤ (zero+ i<j)) = zero+ (ℕ.<⇒≤ i<j)
   ≤→≤′ (<→≤ (∞+ i<j)) = ∞+ (ℕ.<⇒≤ i<j)
-  ≤→≤′ (<→≤ (⋆+ i<j)) = ⋆+ (ℕ.<⇒≤ i<j)
   ≤→≤′ (<→≤ zero<∞) = zero<∞
-  ≤→≤′ (<→≤ zero<⋆) = zero<⋆
-  ≤→≤′ (<→≤ ∞<⋆) = ∞<⋆
 
 
   ≤′→≤ : n ≤′ m → n ≤ m
@@ -468,28 +402,19 @@ abstract
   ≤′→≤ (∞+ i≤j) with ℕ.≤⇒≤′ i≤j
   ... | ℕ.≤′-refl = ≤-refl
   ... | ℕ.≤′-step i≤′j = <→≤ (∞+ (ℕ.s≤s (ℕ.≤′⇒≤ i≤′j)))
-  ≤′→≤ (⋆+ i≤j) with ℕ.≤⇒≤′ i≤j
-  ... | ℕ.≤′-refl = ≤-refl
-  ... | ℕ.≤′-step i≤′j = <→≤ (⋆+ (ℕ.s≤s (ℕ.≤′⇒≤ i≤′j)))
   ≤′→≤ zero<∞ = <→≤ zero<∞
-  ≤′→≤ zero<⋆ = <→≤ zero<⋆
-  ≤′→≤ ∞<⋆ = <→≤ ∞<⋆
 
 
   0≤n : ⟦zero⟧ ≤ n
   0≤n {zero+ zero} = ≤-refl
   0≤n {zero+ (suc i)} = <→≤ (zero+ (ℕ.s≤s ℕ.z≤n))
   0≤n {∞+ i} = <→≤ zero<∞
-  0≤n {⋆+ i} = <→≤ zero<⋆
 
 
   n<m→Sn≤m : n < m → ⟦suc⟧ n ≤ m
   n<m→Sn≤m (zero+ (ℕ.s≤s i≤j)) = ≤′→≤ (zero+ (ℕ.s≤s i≤j))
   n<m→Sn≤m (∞+ (ℕ.s≤s i≤j)) = ≤′→≤ (∞+ (ℕ.s≤s i≤j))
-  n<m→Sn≤m (⋆+ (ℕ.s≤s i≤j)) = ≤′→≤ (⋆+ (ℕ.s≤s i≤j))
   n<m→Sn≤m zero<∞ = <→≤ zero<∞
-  n<m→Sn≤m zero<⋆ = <→≤ zero<⋆
-  n<m→Sn≤m ∞<⋆ = <→≤ ∞<⋆
 
 
   Sn≤m→n<m : ⟦suc⟧ n ≤ m → n < m

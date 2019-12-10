@@ -22,8 +22,11 @@ mutual
 
   data Size : (Δ : Ctx) → Set where
     var : ∀ {Δ} (x : Var Δ) → Size Δ
-    ∞ ⋆ zero : ∀ {Δ} → Size Δ
+    ∞ zero : ∀ {Δ} → Size Δ
     suc : ∀ {Δ} (n : Size Δ) → Size Δ
+
+
+pattern ⋆ = suc ∞
 
 
 variable
@@ -35,7 +38,6 @@ variable
 wk : Size Δ → Size (Δ ∙ n)
 wk (var x) = var (suc x)
 wk ∞ = ∞
-wk ⋆ = ⋆
 wk zero = zero
 wk (suc m) = suc (wk m)
 
@@ -51,8 +53,6 @@ data _<_ {Δ} : (n m : Size Δ) → Set where
   zero<∞ : zero < ∞
   suc<suc : (n<m : n < m) → suc n < suc m
   suc<∞ : (n<∞ : n < ∞) → suc n < ∞
-  suc<⋆ : (n<⋆ : n < ⋆) → suc n < ⋆
-  ∞<⋆ : ∞ < ⋆
   <-trans : n < m → m < o → n < o
   <suc : n < suc n
 
@@ -83,22 +83,13 @@ abstract
   var<suc = n≤m→n<Sm
 
 
-  zero<⋆ : zero {Δ} < ⋆
-  zero<⋆ = <-trans zero<∞ ∞<⋆
-
-
   ∞<suc : ∞ ≤ n → ∞ < suc n
   ∞<suc = n≤m→n<Sm
-
-
-  ⋆<suc : ⋆ ≤ n → ⋆ < suc n
-  ⋆<suc = n≤m→n<Sm
 
 
   Sn<m→n<m : suc n < m → n < m
   Sn<m→n<m (suc<suc n<m) = <-trans n<m <suc
   Sn<m→n<m (suc<∞ n<∞) = n<∞
-  Sn<m→n<m (suc<⋆ n<⋆) = n<⋆
   Sn<m→n<m (<-trans Sn<o o<m) = <-trans (Sn<m→n<m Sn<o) o<m
   Sn<m→n<m <suc = <-trans <suc (suc<suc <suc)
 
@@ -137,7 +128,6 @@ abstract
   Size-IsSet {n = var x} {var .x} p refl
     = trans (var≡-prop-Size p) (cong (cong var) (Var-IsSet _ _))
   Size-IsSet {n = ∞} {∞} refl refl = refl
-  Size-IsSet {n = ⋆} {⋆} refl refl = refl
   Size-IsSet {n = zero} {zero} refl refl = refl
   Size-IsSet {n = suc n} {suc .n} p refl
     = trans (suc≡-prop-Size p) (cong (cong suc) (Size-IsSet _ _))
@@ -149,7 +139,5 @@ abstract
   wk-resp-< zero<∞ = zero<∞
   wk-resp-< (suc<suc n<m) = suc<suc (wk-resp-< n<m)
   wk-resp-< (suc<∞ n<∞) = suc<∞ (wk-resp-< n<∞)
-  wk-resp-< (suc<⋆ n<⋆) = suc<⋆ (wk-resp-< n<⋆)
-  wk-resp-< ∞<⋆ = ∞<⋆
   wk-resp-< (<-trans n<o o<m) = <-trans (wk-resp-< n<o) (wk-resp-< o<m)
   wk-resp-< <suc = <suc

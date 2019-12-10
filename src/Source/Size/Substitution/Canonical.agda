@@ -26,7 +26,6 @@ subV (Snoc σ n) (suc x) = subV σ x
 sub : Sub Δ Ω → Size Ω → Size Δ
 sub σ (var x) = subV σ x
 sub σ ∞ = ∞
-sub σ ⋆ = ⋆
 sub σ zero = zero
 sub σ (suc n) = suc (sub σ n)
 
@@ -44,7 +43,6 @@ abstract
     → sub (Snoc {m = m} σ n) (wk o) ≡ sub σ o
   sub-Snoc σ n (var x) = refl
   sub-Snoc σ n ∞ = refl
-  sub-Snoc σ n ⋆ = refl
   sub-Snoc σ n zero = refl
   sub-Snoc σ n (suc o) = cong suc (sub-Snoc σ n o)
 
@@ -67,8 +65,6 @@ abstract
     sub-resp-< ⊢σ zero<∞ = zero<∞
     sub-resp-< ⊢σ (suc<suc n<m) = suc<suc (sub-resp-< ⊢σ n<m)
     sub-resp-< ⊢σ (suc<∞ n<∞) = suc<∞ (sub-resp-< ⊢σ n<∞)
-    sub-resp-< ⊢σ (suc<⋆ n<⋆) = suc<⋆ (sub-resp-< ⊢σ n<⋆)
-    sub-resp-< ⊢σ ∞<⋆ = ∞<⋆
     sub-resp-< ⊢σ (<-trans n<o o<m)
       = <-trans (sub-resp-< ⊢σ n<o) (sub-resp-< ⊢σ o<m)
     sub-resp-< ⊢σ <suc = <suc
@@ -88,7 +84,6 @@ abstract
   sub-Weaken : ∀ (σ : Sub Δ Ω) n → sub (Weaken {n = o} σ) n ≡ wk (sub σ n)
   sub-Weaken σ (var x) = subV-Weaken σ x
   sub-Weaken σ ∞ = refl
-  sub-Weaken σ ⋆ = refl
   sub-Weaken σ zero = refl
   sub-Weaken σ (suc n) = cong suc (sub-Weaken σ n)
 
@@ -125,7 +120,6 @@ mutual
     sub-Id : ∀ n → σ ≡ Id → sub σ n ≡ n
     sub-Id (var x) refl  = subV-Id x
     sub-Id ∞ _ = refl
-    sub-Id ⋆ _ = refl
     sub-Id zero _ = refl
     sub-Id (suc n) p = cong suc (sub-Id n p)
 
@@ -175,7 +169,6 @@ abstract
     → sub ι n ≡ sub σ (sub τ n)
   sub->> {σ = σ} {τ} (var x) refl = subV->> σ τ x
   sub->> ∞ _ = refl
-  sub->> ⋆ _ = refl
   sub->> zero _ = refl
   sub->> (suc n) p = cong suc (sub->> n p)
 
