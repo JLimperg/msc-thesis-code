@@ -1,9 +1,12 @@
 -- Ordinals as defined in the HoTT book.
 
+{-# OPTIONS --without-K --safe #-}
 module Ordinal.HoTT where
 
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤)
 open import Induction.WellFounded using (Acc ; acc ; WellFounded)
-open import Level using (Level ; _⊔_) renaming (suc to lsuc)
+open import Level using (Level ; _⊔_ ; 0ℓ) renaming (suc to lsuc)
 open import Relation.Binary using (Rel ; IsEquivalence ; Transitive)
 
 
@@ -34,7 +37,31 @@ record IsOrdinal (A : Set α) ε ρ : Set (α ⊔ lsuc (ε ⊔ ρ)) where
     <-ext : IsExtensional _≈_ _<_
     <-trans : Transitive _<_
 
-  open IsEquivalence ≈-equiv public renaming
+  open IsEquivalence ≈-equiv public using () renaming
     ( refl to ≈-refl
     ; sym to ≈-sym
     ; trans to ≈-trans)
+
+open IsOrdinal public
+
+
+record Ordinal α ε ρ : Set (lsuc (α ⊔ ε ⊔ ρ)) where
+  field
+    _↓ : Set α
+    isOrdinal : IsOrdinal _↓ ε ρ
+
+open Ordinal public
+
+
+zero : Ordinal 0ℓ 0ℓ 0ℓ
+zero = record
+  { _↓ = ⊤
+  ; isOrdinal = record
+    { _≈_ = λ _ _ → ⊤
+    ; ≈-equiv = _
+    ; _<_ = λ _ _ → ⊥
+    ; <-wf = λ _ → acc λ y ()
+    ; <-ext = _
+    ; <-trans = λ()
+    }
+  }
