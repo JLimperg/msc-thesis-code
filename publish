@@ -1,0 +1,7 @@
+#!/bin/bash
+
+work="$(dirname "$0")"
+
+agda --html --html-dir "$work/html" "$work/src/everything.agda" && \
+  rsync -avz "$work/html/" srv:/srv/http/limperg.de/paper/msc-thesis/code/ && \
+  rm -r "$work/html"
