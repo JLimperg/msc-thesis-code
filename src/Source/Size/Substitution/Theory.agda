@@ -7,14 +7,10 @@ open import Source.Size.Substitution.Universe as SU using (⟨_⟩ ; Sub⊢ᵤ)
 open import Util.Prelude
 
 
-record SubTheory (A : Ctx → Set) (A⊢ : ∀ {Δ} → A Δ → Set) : Set where
+record SubTheory (A : Ctx → Set) : Set where
   infixl 5 _[_] _[_]ᵤ
   field
     _[_] : A Ω → SC.Sub Δ Ω → A Δ
-    []-resp-⊢ : ∀ {Δ Ω a σ}
-      → A⊢ a
-      → σ ∶ Δ ⇒ Ω
-      → A⊢ (a [ σ ])
     [Id] : ∀ {Δ} (a : A Δ) → a [ SC.Id ] ≡ a
     [>>] : ∀ {Δ Δ′ Δ″} (σ : SC.Sub Δ Δ′) (τ : SC.Sub Δ′ Δ″) a
       → a [ σ SC.>> τ ] ≡ a [ τ ] [ σ ]
@@ -53,13 +49,6 @@ record SubTheory (A : Ctx → Set) (A⊢ : ∀ {Δ} → A Δ → Set) : Set wher
     []ᵤ-resp-≈ (SU.≈⁺ p) a = cong (λ σ → a [ σ ]) p
 
 
-    []ᵤ-resp-⊢ : ∀ {Δ Ω σ a}
-      → σ ∶ Δ ⇒ᵤ Ω
-      → A⊢ a
-      → A⊢ (a [ σ ]ᵤ)
-    []ᵤ-resp-⊢ σ ⊢a = []-resp-⊢ ⊢a (SU.⟨⟩-resp-⊢ σ)
-
-
     [Id]ᵤ : ∀ {Δ} (a : A Δ) → a [ SU.Id ]ᵤ ≡ a
     [Id]ᵤ a = [Id] a
 
@@ -92,7 +81,7 @@ open SubTheory {{...}} public
 
 
 instance
-  SubTheory-Size : SubTheory Size (λ {Δ} n → ⊤)
+  SubTheory-Size : SubTheory Size
   SubTheory-Size = record
     { _[_] = λ n σ → SC.sub σ n
     ; [Id] = λ n → SC.sub-Id n refl

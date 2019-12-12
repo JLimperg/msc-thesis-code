@@ -73,7 +73,7 @@ abstract
 
 
 instance
-  SubTheory-Type : SubTheory Type (λ {Δ} n → ⊤)
+  SubTheory-Type : SubTheory Type
   SubTheory-Type = record
     { _[_] = λ T σ → sub σ T
     ; [Id] = sub-Id
@@ -99,7 +99,7 @@ abstract
 
 
 instance
-  SubTheory-Ctx : SubTheory Ctx (λ {Δ} Γ → ⊤)
+  SubTheory-Ctx : SubTheory Ctx
   SubTheory-Ctx = record
     { _[_] = λ Γ σ → subΓ σ Γ
     ; [Id] = subΓ-Id
