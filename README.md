@@ -1,4 +1,4 @@
-# Formalisation of a lambda calculus with sized types
+# A Reflexive Graph Model of Sized Types
 
 This is the companion formalisation for my Master's thesis. To build it, you'll
 need [Agda](https://agda.readthedocs.io/en/v2.6.0.1/) version 2.6.0.1 and a
