@@ -10,7 +10,7 @@ git clone https://github.com/JLimperg/msc-thesis-code <dir>
 cd <dir>
 git submodule init
 git submodule update
-agda src/everything.agda
+agda src/index.agda
 ```
 
 The last command typechecks all modules belonging to the formalisation.
