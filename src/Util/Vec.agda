@@ -2,8 +2,8 @@
 module Util.Vec where
 
 open import Data.Vec public
-open import Data.Vec.All as All public using (All ; [] ; _∷_)
-open import Data.Vec.Any as Any public using (Any ; here ; there)
+open import Data.Vec.Relation.Unary.All as All public using (All ; [] ; _∷_)
+open import Data.Vec.Relation.Unary.Any as Any public using (Any ; here ; there)
 open import Data.Vec.Membership.Propositional public using (_∈_)
 
 open import Data.Nat as ℕ using (_≤_)

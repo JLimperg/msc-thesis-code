@@ -114,7 +114,7 @@ open ST.Ctx
   → ⟦ Γ ⟧Γ ⇒ ⟦ ST.Nat ∞ ⟧T
 ⟦head⟧ Δ Γ n is = record
   { fobj = λ γ → MT.head (is .fobj γ) , MS.<→≤ MS.zero<∞
-  ; feq = λ δ≈δ′ γ≈γ′ → head-≡⁺ (is .feq ⊤.tt γ≈γ′)
+  ; feq = λ δ≈δ′ γ≈γ′ → head-≡⁺ (is .feq _ γ≈γ′)
   }
 
 

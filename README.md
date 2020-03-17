@@ -1,8 +1,8 @@
 # A Reflexive Graph Model of Sized Types
 
 This is the companion formalisation for my Master's thesis. To build it, you'll
-need [Agda](https://agda.readthedocs.io/en/v2.6.0.1/) version 2.6.0.1 and a
-registered [agda-stdlib](https://github.com/agda/agda-stdlib) version 1.2. Then
+need [Agda](https://agda.readthedocs.io/en/v2.6.1/) version 2.6.1 and a
+registered [agda-stdlib](https://github.com/agda/agda-stdlib) version 1.3. Then
 proceed as follows:
 
 ```

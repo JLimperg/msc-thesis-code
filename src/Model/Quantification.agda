@@ -122,7 +122,7 @@ absₛ {Δ} {n} {Γ} {T} f = record
     { arr = λ m m<n → f .fobj x
     ; param = λ m m<n m′ m′<n → f .feq _ (Γ .eq-refl x)
     }
-  ; feq = λ _ x≈y m m′ m<nγ m′<nγ′ → f .feq ⊤.tt x≈y
+  ; feq = λ _ x≈y m m′ m<nγ m′<nγ′ → f .feq _ x≈y
   }
 
 

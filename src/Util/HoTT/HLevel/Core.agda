@@ -131,7 +131,7 @@ HLevel-suc (HLevel⁺ A A-level) = HLevel⁺ A (IsOfHLevel-suc _ A-level)
 
 
 ⊤-IsContr : IsContr ⊤
-⊤-IsContr = ⊤.tt , λ { ⊤.tt → refl }
+⊤-IsContr = _ , λ _ → refl
 
 
 ⊤-IsProp : IsProp ⊤

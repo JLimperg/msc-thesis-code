@@ -274,7 +274,7 @@ abstract
 
 
   LiftSing>>Wk>>Wk : Lift {m = o} {m} (Sing n) >> (Wk >> Wk) ≡ Wk
-  LiftSing>>Wk>>Wk {n = n} {m} = let open ≡-Reasoning in
+  LiftSing>>Wk>>Wk {n = n} = let open ≡-Reasoning in
     begin
       Lift (Sing n) >> (Wk >> Wk)
     ≡⟨ cong (Lift (Sing n) >>_) Wk>> ⟩
