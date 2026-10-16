@@ -156,16 +156,16 @@ abstract
   subₛ-resp-⊢ ⊢σ (var ⊢x) = var (subₛ-resp-⊢ₓ ⊢σ ⊢x)
   subₛ-resp-⊢ ⊢σ (abs ⊢t) = abs (subₛ-resp-⊢ ⊢σ ⊢t)
   subₛ-resp-⊢ ⊢σ (app ⊢t ⊢u) = app (subₛ-resp-⊢ ⊢σ ⊢t) (subₛ-resp-⊢ ⊢σ ⊢u)
-  subₛ-resp-⊢ {Δ} {Γ = Γ} {σ = σ} ⊢σ (absₛ {Ψ = Ψ} ⊢t p)
+  subₛ-resp-⊢ {Δ} {Γ = Γ} {σ = σ} ⊢σ (absₛ {n = n} {Ψ = Ψ} ⊢t p)
     = absₛ (subₛ-resp-⊢ (SC.Lift⊢ ⊢σ refl) ⊢t) eq
     where
-      eq : Ψ [ SC.Lift σ ] ≡ Γ [ σ ] [ SC.Wk ]
+      eq : ∀{m} → Ψ [ SC.Lift {m = m} σ ] ≡ Γ [ σ ] [ SC.Wk ]
       eq = trans (cong (λ Ψ → Ψ [ SC.Lift σ ]) p)
         ([>>]″ (SC.Lift σ) SC.Wk SC.Wk σ Γ SC.Lift>>Wk)
   subₛ-resp-⊢ {σ = σ} ⊢σ (appₛ {m = m} {T = T} {U = U} m<n ⊢t p)
     = appₛ (SC.sub-resp-< ⊢σ m<n) (subₛ-resp-⊢ ⊢σ ⊢t) eq
     where
-      eq : U [ σ ] ≡ T [ SC.Lift σ ] [ SC.Sing (m [ σ ]) ]
+      eq : ∀{l} → U [ σ ] ≡ T [ SC.Lift {m = l} σ ] [ SC.Sing (m [ σ ]) ]
       eq = trans (cong (λ U → U [ σ ]) p)
         ([>>]″ _ _ _ _ _ (sym (SC.Sing>>Lift m)))
   subₛ-resp-⊢ ⊢σ (zero n<⋆)
@@ -182,20 +182,19 @@ abstract
     = caseNat (SC.sub-resp-< ⊢σ n<⋆) (subₛ-resp-⊢ ⊢σ ⊢i) (subₛ-resp-⊢ ⊢σ ⊢z)
         (subₛ-resp-⊢ ⊢σ ⊢s) eq
     where
-      eq : U [ SC.Lift σ ] ≡ T [ σ ] [ SC.Wk ]
+      eq : ∀{m} → U [ SC.Lift {m = m} σ ] ≡ T [ σ ] [ SC.Wk ]
       eq = trans (cong (λ U → U [ SC.Lift σ ]) p)
         ([>>]″ _ _ _ _ _ SC.Lift>>Wk)
   subₛ-resp-⊢ {σ = σ} ⊢σ (fix {n = n} {U = U} {T = T} {V = V} n<⋆ ⊢t p q)
     = fix (SC.sub-resp-< ⊢σ n<⋆) (subₛ-resp-⊢ ⊢σ ⊢t) eq₀ eq₁
     where
-      eq₀ : U [ SC.Lift (SC.Lift σ) ] ≡ T [ SC.Lift σ ] [ SC.Skip ]
+      eq₀ : ∀{m} → U [ SC.Lift (SC.Lift {m = m} σ) ] ≡ T [ SC.Lift σ ] [ SC.Skip ]
       eq₀ = trans (cong (λ U → U [ SC.Lift (SC.Lift σ) ]) p)
         ([>>]″ _ _ _ _ _ SC.LiftLift>>Skip)
 
-      eq₁ : V [ σ ] ≡ T [ SC.Lift σ ] [ SC.Sing (n [ σ ]) ]
+      eq₁ : ∀{m} → V [ σ ] ≡ T [ SC.Lift {m = m} σ ] [ SC.Sing (n [ σ ]) ]
       eq₁ = trans (cong (λ V → V [ σ ]) q)
         ([>>]″ _ _ _ _ _ (sym (SC.Sing>>Lift n)))
-
 
   subₛ-Id : (t : Term Δ) → subₛ SC.Id t ≡ t
   subₛ-Id (var x) = refl

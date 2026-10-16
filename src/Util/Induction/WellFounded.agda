@@ -2,12 +2,11 @@
 module Util.Induction.WellFounded where
 
 open import Induction.WellFounded public using
-  ( Acc ; acc ; WellFounded ; module Subrelation ; module InverseImage
-  ; module TransitiveClosure ; module Lexicographic )
+  ( Acc ; acc ; WellFounded ; module Subrelation )
 
 open import Relation.Binary using (Rel)
 
-open import Util.HoTT.FunctionalExtensionality using (funext)
+open import Util.HoTT.FunctionalExtensionality using (funext; funext∙)
 open import Util.HoTT.HLevel using (IsProp ; ∀-IsProp)
 open import Util.Prelude
 
@@ -17,7 +16,7 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
 
   Acc-IsProp : ∀ {x} → IsProp (Acc _<_ x)
   Acc-IsProp (acc rs₀) (acc rs₁)
-    = cong acc (funext λ y → funext λ y<x → Acc-IsProp _ _)
+    = cong acc (funext∙ λ {y} → funext λ y<x → Acc-IsProp _ _)
 
 
   WellFounded-IsProp : IsProp (WellFounded _<_)
@@ -27,7 +26,7 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
   wfInd-acc : ∀ {γ} (P : A → Set γ)
     → (∀ x → (∀ y → y < x → P y) → P x)
     → ∀ x → Acc _<_ x → P x
-  wfInd-acc P f x (acc rs) = f x (λ y y<x → wfInd-acc P f y (rs y y<x))
+  wfInd-acc P f x (acc rs) = f x (λ y y<x → wfInd-acc P f y (rs {y} y<x))
 
 
   mutual
@@ -43,9 +42,9 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
       → ∀ x → Acc _<_ x → P x
     wfIndΣ-acc P Q f f-resp x (acc rs)
       = f x
-         (λ y y<x → wfIndΣ-acc P Q f f-resp y (rs y y<x))
+         (λ y y<x → wfIndΣ-acc P Q f f-resp y (rs {y} y<x))
          (λ y y<x z z<x
-            → wfIndΣ-acc-resp P Q f f-resp y (rs y y<x) z (rs z z<x))
+            → wfIndΣ-acc-resp P Q f f-resp y (rs {y} y<x) z (rs {z} z<x))
 
 
     wfIndΣ-acc-resp : ∀ {γ} (P : A → Set γ)
@@ -61,7 +60,7 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
       → Q x y (wfIndΣ-acc P Q f f-resp x x-acc) (wfIndΣ-acc P Q f f-resp y y-acc)
     wfIndΣ-acc-resp P Q f f-resp x (acc rsx) y (acc rsy)
       = f-resp _ _ _ _ _ _ λ z z<x z′ z′<y
-          → wfIndΣ-acc-resp P Q f f-resp z (rsx z z<x) z′ (rsy z′ z′<y)
+          → wfIndΣ-acc-resp P Q f f-resp z (rsx {z} z<x) z′ (rsy {z′} z′<y)
 
 
   module Build (<-wf : WellFounded _<_) where
@@ -87,7 +86,7 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
     ... | acc rs
       = cong (f x)
           (funext λ y → funext λ y<x →
-            cong (wfInd-acc P f y) (Acc-IsProp (rs y y<x) (<-wf y)))
+            cong (wfInd-acc P f y) (Acc-IsProp (rs {y} y<x) (<-wf y)))
 
 
     wfRec-unfold : ∀ {γ} {B : Set γ}
@@ -135,17 +134,17 @@ module _ {α β} {A : Set α} {_<_ : Rel A β} where
             (λ y y<x z z<x → wfIndΣ .proj₂ y z)
       wfIndΣ-unfold {x} with <-wf x
       ... | acc rs
-        = go rs (λ y y<x → <-wf y)
+        = go rs (λ {y} y<x → <-wf y)
         where
-          go : (p q : (y : A) → y < x → Acc _<_ y)
-            → f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (p y y<x))
+          go : (p q : {y : A} → y < x → Acc _<_ y)
+            → f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (p {y} y<x))
                 (λ y y<x z z<x
-                  → wfIndΣ-acc-resp P Q f f-resp y (p y y<x) z (p z z<x))
-            ≡ f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (q y y<x))
+                  → wfIndΣ-acc-resp P Q f f-resp y (p {y} y<x) z (p {z} z<x))
+            ≡ f x (λ y y<x → wfIndΣ-acc P Q f f-resp y (q {y} y<x))
                 (λ y y<x z z<x
-                  → wfIndΣ-acc-resp P Q f f-resp y (q y y<x) z (q z z<x))
+                  → wfIndΣ-acc-resp P Q f f-resp y (q {y} y<x) z (q {z} z<x))
           go p q
-            rewrite (funext λ y → funext λ y<x → Acc-IsProp (p y y<x) (q y y<x))
+            rewrite (funext∙ λ {y} → funext λ y<x → Acc-IsProp (p {y} y<x) (q {y} y<x))
             = refl
 
 
@@ -170,7 +169,7 @@ module _ {α β γ δ} {A : Set α} {B : Set β} where
     where
       ×-acc : ∀ {x y} → Acc R x → Acc S y → Acc (×-Rel R S) (x , y)
       ×-acc (acc rsa) (acc rsb)
-        = acc (λ { (a , b) (a<x , b<y) → ×-acc (rsa a a<x) (rsb b b<y) })
+        = acc (λ { {a , b} (a<x , b<y) → ×-acc (rsa {a} a<x) (rsb {b} b<y) })
 
 
 -- This is not in Build because the implementation uses wfInd at

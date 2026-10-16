@@ -16,7 +16,7 @@ private
     A B C : Set α
 
 
-infix 4 _◁_
+infix 1 _◁_
 
 
 record HasSection {A : Set α} {B : Set β} (f : A → B) : Set (α ⊔ℓ β) where

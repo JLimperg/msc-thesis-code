@@ -5,7 +5,7 @@ open import Util.Prelude
 open import Util.HoTT.HLevel.Core
 
 
-infix 4 _≅_ _≃_
+infix 1 _≅_ _≃_
 
 
 private

@@ -20,7 +20,7 @@ max = foldr _ ℕ._⊔_ 0
 
 
 max-weaken : ∀ {n} x (xs : Vec ℕ n) → max xs ≤ max (x ∷ xs)
-max-weaken _ _ = ℕ.n≤m⊔n _ _
+max-weaken _ _ = ℕ.m≤n⊔m _ _
 
 
 max-maximal : ∀ {n} (xs : Vec ℕ n) → All (_≤ max xs) xs

@@ -9,6 +9,8 @@
 -- irrelevance. This document lists all modules belonging to the development,
 -- roughly in dependency order.
 
+{-# OPTIONS --sized-types #-}
+
 module index where
 
 

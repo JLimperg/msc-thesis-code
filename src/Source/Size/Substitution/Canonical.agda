@@ -287,10 +287,10 @@ abstract
 
 
   LiftSing>>Skip
-    : Lift {m = m} (Sing {m = m} n) >> Skip ≡ Sing {m = o} (var zero) >> Lift Wk
-  LiftSing>>Skip {n = n} = cong₂ Snoc go refl
+    : Lift (Sing {m = m} n) >> Skip ≡ Sing {m = o} v0 >> Lift Wk
+  LiftSing>>Skip {m = m} {n = n} {o = o} = cong₂ Snoc go refl
     where
-      go : Lift (Sing n) >> Weaken Wk ≡ Sing (var zero) >> Weaken Wk
+      go : Lift (Sing {m = m} n) >> Weaken {n = v0} Wk ≡ Sing {m = o} v0 >> Weaken Wk
       go = let open ≡-Reasoning in
         begin
           Lift (Sing n) >> Weaken Wk
@@ -299,7 +299,7 @@ abstract
         ≡⟨ cong Weaken Sing>>Wk ⟩
           Wk
         ≡⟨ sym Sing>>Weaken ⟩
-          Sing (var zero) >> Weaken Wk
+          Sing v0 >> Weaken Wk
         ∎
 
 

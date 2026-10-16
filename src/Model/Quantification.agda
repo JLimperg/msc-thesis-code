@@ -23,7 +23,7 @@ open SS.Sub⊢ᵤ
 
 
 record ⟦∀⟧′ {Δ} n (T : ⟦Type⟧ ⟦ Δ ∙ n ⟧Δ) (δ : Obj ⟦ Δ ⟧Δ) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   field
     arr : ∀ m (m<n : m < ⟦ n ⟧n .fobj δ) → Obj T (δ , m , m<n)
     param : ∀ m m<n m′ m′<n → eq T _ (arr m m<n) (arr m′ m′<n)

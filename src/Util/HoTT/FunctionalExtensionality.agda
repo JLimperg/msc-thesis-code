@@ -1,6 +1,8 @@
 -- This module closely follows a section of Martín Escardó's HoTT lecture notes:
 -- https://www.cs.bham.ac.uk/~mhe/HoTT-UF-in-Agda-Lecture-Notes/HoTT-UF-Agda.html#funextfromua
+
 {-# OPTIONS --without-K #-}
+
 module Util.HoTT.FunctionalExtensionality where
 
 open import Axiom.Extensionality.Propositional using

@@ -37,8 +37,11 @@ Nat = record
 
 
 castℕ≤ : ∀ {n m} → n ≤ m → ℕ≤ n → ℕ≤ m
-castℕ≤ n≤m (k , k≤n) = k , go
-  where abstract go = MS.≤-trans k≤n n≤m
+castℕ≤ {m = m} n≤m (k , k≤n) = k , go
+  where
+    abstract
+      go : nat k ≤ m
+      go = MS.≤-trans k≤n n≤m
 
 
 zero≤ : ∀ n → ℕ≤ n

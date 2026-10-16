@@ -33,9 +33,6 @@ open import Relation.Binary.PropositionalEquality public using
   ; module ≡-Reasoning )
 
 
-infix 1 triangle⟨_⟩⟨_⟩⟨_⟩
-
-
 triangle⟨_⟩⟨_⟩⟨_⟩ : ∀ {a} {A : Set a} x {y z : A}
   → y ≡ x
   → z ≡ x

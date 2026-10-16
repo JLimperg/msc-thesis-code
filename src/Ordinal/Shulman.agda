@@ -174,15 +174,15 @@ open Pred
 
 <-acc-≤ : ∀ {ℓ} {a b : Ord ℓ} → a ≤ b → Acc _<_ b → Acc _<_ a
 <-acc-≤ {ℓ} {limSuc A fa} {b} fai<b (acc rs) = acc λ where
-  x (i , x≤fai) → rs x (≤-trans-< x≤fai (fai<b i))
+  {x} (i , x≤fai) → rs {x} (≤-trans-< x≤fai (fai<b i))
 
 <-wf : ∀ {ℓ} → WellFounded (_<_ {ℓ})
-<-wf (limSuc I f) = acc λ { x (i , x≤fi) → <-acc-≤ x≤fi (<-wf (f i)) }
+<-wf (limSuc I f) = acc λ { {x} (i , x≤fi) → <-acc-≤ x≤fi (<-wf (f i)) }
 
 <-ind : ∀ {ℓ ℓ′} (P : Ord ℓ → Set ℓ′)
   → (∀ a → (∀ b → b < a → P b) → P a)
   → ∀ a → P a
-<-ind = WfRec.All.wfRec <-wf _
+<-ind P f = WfRec.All.wfRec <-wf _ P (λ a ih → f a (λ b → ih {b}))
 
 -- Ordinals are ordinals (in the sense of the HoTT book).
 

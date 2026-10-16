@@ -252,7 +252,7 @@ abstract
 
   zero+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (zero+ i)
   zero+-<ℕ-acc→<-acc (acc rs) = acc λ where
-    (zero+ i) (zero+ i<j) → zero+-<ℕ-acc→<-acc (rs i i<j)
+    {zero+ i} (zero+ i<j) → zero+-<ℕ-acc→<-acc (rs {i} i<j)
 
 
   zero+-acc : Acc _<_ (zero+ i)
@@ -261,8 +261,8 @@ abstract
 
   ∞+-<ℕ-acc→<-acc : Acc ℕ._<_ i → Acc _<_ (∞+ i)
   ∞+-<ℕ-acc→<-acc (acc rs) = acc λ where
-    (∞+ i) (∞+ i<j) → ∞+-<ℕ-acc→<-acc (rs i i<j)
-    (zero+ i) zero<∞ → zero+-acc
+    {∞+ i} (∞+ i<j) → ∞+-<ℕ-acc→<-acc (rs {i} i<j)
+    {zero+ i} zero<∞ → zero+-acc
 
 
   ∞+-acc : Acc _<_ (∞+ i)
@@ -271,9 +271,9 @@ abstract
 
   <-wf : WellFounded _<_
   <-wf m = acc λ where
-    _ (zero+ i<j) → zero+-acc
-    _ (∞+ i<j) → ∞+-acc
-    _ zero<∞ → zero+-acc
+    (zero+ i<j) → zero+-acc
+    (∞+ i<j) → ∞+-acc
+    zero<∞ → zero+-acc
 
 
 open WFInd.Build <-wf public using () renaming

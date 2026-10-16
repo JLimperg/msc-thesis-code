@@ -31,7 +31,7 @@ private
 
 -- This is an RGraph-indexed family of RGraphs.
 record ⟦Type⟧ (Δ : RGraph) : Set₁ where
-  no-eta-equality
+  no-eta-equality; pattern
   field
     ObjHSet : Δ .RG.Obj → HSet 0ℓ
 
@@ -114,7 +114,7 @@ abstract
 
 
 record _⇒_ (T U : ⟦Type⟧ Δ) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   field
     fobj : ∀ {δ} → Obj T δ → Obj U δ
     feq : ∀ {δ δ′} (δ≈δ′ : Δ .RG.eq δ δ′) {x y}
@@ -125,7 +125,7 @@ open _⇒_ public
 
 
 record _≈_ (f g : T ⇒ U) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   constructor ≈⁺
   field
     ≈⁻ : ∀ δ (x : Obj T δ) → f .fobj x ≡ g .fobj x
@@ -331,7 +331,17 @@ proj₁∘subst B C refl x = refl
         → HProp-≡⁺ _ _ (eq δ δ′ δ≈δ′ x y)
 
 
-      T≈≡U≈ : _
+      T≈≡U≈
+        : _≡_ {A = ∀ {δ δ′} → Δ .eq δ δ′ → U .Obj δ → U .Obj δ′ → HProp 0ℓ}
+            (proj₁
+              (subst
+                (λ T → Σ (∀ {δ δ′} → Δ .eq δ δ′ → T δ .type → T δ′ .type
+                           → HProp 0ℓ)
+                         (λ eq → ∀ {δ} (x : T δ .type)
+                           → eq (Δ .eq-refl δ) x x .type))
+                T≡U
+                ((λ {δ δ′} → T .eqHProp {δ} {δ′}) , (λ {δ} x → T .eq-refl {δ} x))))
+            (λ {δ δ′} → U .eqHProp {δ} {δ′})
       T≈≡U≈
         = trans
             (proj₁∘subst

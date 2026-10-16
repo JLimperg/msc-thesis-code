@@ -35,8 +35,11 @@ abstract
 
 
 castColist : ∀ {n m} → n ≤ m → Colist m → Colist n
-castColist n≤m xs k k≤n = xs k go
-  where abstract go = ≤-trans k≤n n≤m
+castColist {m = m} n≤m xs k k≤n = xs k go
+  where
+    abstract
+      go : nat k ≤ m
+      go = ≤-trans k≤n n≤m
 
 
 Stream : ⟦Type⟧ Sizes
@@ -51,8 +54,11 @@ Stream = record
 
 cons : ∀ {n} → ℕ → (∀ m → m < n → Colist m) → Colist n
 cons x xs zero _ = x
-cons x xs (suc k) Sk≤n = xs (nat k) go k MS.≤-refl
-  where abstract go = MS.Sn≤m→n<m Sk≤n
+cons {n} x xs (suc k) Sk≤n = xs (nat k) go k MS.≤-refl
+  where
+    abstract
+      go : nat k < n
+      go = MS.Sn≤m→n<m Sk≤n
 
 
 head : ∀ {n} → Colist n → ℕ
@@ -60,8 +66,11 @@ head xs = xs 0 MS.0≤n
 
 
 tail : ∀ {n} → Colist n → ∀ m → m < n → Colist m
-tail xs m m<n k k≤m = xs (suc k) go
-  where abstract go = MS.n<m→Sn≤m (MS.≤→<→< k≤m m<n)
+tail {n} xs m m<n k k≤m = xs (suc k) go
+  where
+    abstract
+      go : nat (suc k) ≤ n
+      go = MS.n<m→Sn≤m (MS.≤→<→< k≤m m<n)
 
 
 abstract

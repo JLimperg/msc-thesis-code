@@ -7,7 +7,7 @@
    that doesn't have this rule.
 -}
 
-{-# OPTIONS --postfix-projections #-}
+{-# OPTIONS --postfix-projections --sized-types #-}
 module irreflexive-lt where
 
 open import Size
@@ -152,7 +152,7 @@ open CoList′
 
 
 open import Data.Product using (∃-syntax)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; inspect ; [_])
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
 open import Relation.Binary.HeterogeneousEquality using (_≅_ ; refl)
 
 

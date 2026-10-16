@@ -60,7 +60,7 @@ zero = record
     { _≈_ = λ _ _ → ⊤
     ; ≈-equiv = _
     ; _<_ = λ _ _ → ⊥
-    ; <-wf = λ _ → acc λ y ()
+    ; <-wf = λ _ → acc λ ()
     ; <-ext = _
     ; <-trans = λ()
     }

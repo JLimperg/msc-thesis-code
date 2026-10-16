@@ -49,7 +49,7 @@ private
 
 
 record _⇒_ (Γ Δ : RGraph) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   field
     fobj : Γ .Obj → Δ .Obj
     feq : ∀ {x y} → Γ .eq x y → Δ .eq (fobj x) (fobj y)
@@ -91,7 +91,7 @@ private
 
 
 record _≈_ (f g : Γ ⇒ Δ) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   constructor ≈⁺
   field
     ≈⁻ : ∀ x → f .fobj x ≡ g .fobj x
